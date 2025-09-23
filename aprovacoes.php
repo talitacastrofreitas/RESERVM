@@ -50,8 +50,8 @@
                                       LEFT JOIN solicitacao_status ON solicitacao_status.solic_sta_solic_id = solicitacao.solic_id
                                       LEFT JOIN status_solicitacao ON status_solicitacao.stsolic_id = solicitacao_status.solic_sta_status
                                       LEFT JOIN componente_curricular ON componente_curricular.compc_id = solicitacao.solic_comp_curric
-                                      LEFT JOIN cursos ON cursos.curs_id = solicitacao.solic_curso
-                                      INNER JOIN usuarios ON usuarios.user_matricula = cursos.curs_matricula_prof
+                                      LEFT JOIN curso_coordenador ON curso_coordenador.curs_id = solicitacao.solic_curso
+                                      INNER JOIN usuarios ON usuarios.user_matricula = curso_coordenador.coordenador_matricula
                                       WHERE solic_etapa != 1 AND solic_cad_por != :solic_cad_por");
               $stmt->execute([':solic_cad_por' => $_SESSION['reservm_user_id']]);
               while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -71,9 +71,11 @@
                   1 => 'bg_info_laranja', // EM ELABORAÇÃO
                   2 => 'bg_info_azul', // SOLICITADO
                   3 => 'bg_info_roxo', // EM ANÁLISE
-                  4 => 'bg_info_azul_escuro',
-                  5 => 'bg_info_verde', // DEFERIDO
-                  6 => 'bg_info_vermelho' // INDEFERIDO
+                  4 => 'bg_info_verde', //RESERVADO
+                  5 => 'bg_info_azul_escuro', // AGUARDANDO RESERVA
+                  6 => 'bg_info_vermelho', // INDEFERIDO
+                  7 => 'bg_info_laranja', // AGUARDANDO CANCELAMENTO
+                  8 => 'bg_info_vermelho' // CANCELADO
                 ];
                 $status_color = $status_classes[$solic_sta_status] ?? '';
             ?>

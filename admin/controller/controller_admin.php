@@ -23,23 +23,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       }
 
       // POST
-      $admin_id             = bin2hex(random_bytes(16)); // GERA ID COM 32 CARACTERES HEXADECIMAIS
+      $admin_id = bin2hex(random_bytes(16)); // GERA ID COM 32 CARACTERES HEXADECIMAIS
       $admin_matricula_nome = trim($_POST['admin_matricula_nome']);
       //
       if ($acao === 'cadastrar') {
         $parts = explode(' - ', $admin_matricula_nome, 2);
         if (count($parts) === 2 && is_numeric(trim($parts[0])) && !empty(trim($parts[1]))) {
           $admin_matricula = trim($parts[0]);
-          $admin_nome      = trim($parts[1]);
+          $admin_nome = trim($parts[1]);
         } else {
           throw new Exception("Formato inválido. Informe matrícula e nome!");
         }
       }
       //
-      $admin_email          = filter_var(trim($_POST['admin_email']), FILTER_SANITIZE_EMAIL);
-      $admin_perfil         = $_POST['admin_perfil'];
-      $admin_status         = $_POST['admin_status'] === '1' ? 1 : 0;
-      $nivel_acesso         = 1;
+      $admin_email = filter_var(trim($_POST['admin_email']), FILTER_SANITIZE_EMAIL);
+      $admin_perfil = $_POST['admin_perfil'];
+      $admin_status = $_POST['admin_status'] === '1' ? 1 : 0;
+      $nivel_acesso = 1;
     }
 
     $reservm_admin_id = $_SESSION['reservm_admin_id'];
@@ -90,18 +90,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
                                 )";
       $stmt = $conn->prepare($sql);
       $stmt->execute([
-        ':admin_id'        => $admin_id,
+        ':admin_id' => $admin_id,
         ':admin_matricula' => $admin_matricula,
-        ':admin_nome'      => $admin_nome,
-        ':admin_email'     => $admin_email,
-        ':admin_perfil'    => $admin_perfil,
-        ':admin_status'    => $admin_status,
-        ':nivel_acesso'    => $nivel_acesso,
-        ':admin_user_id'   => $reservm_admin_id
+        ':admin_nome' => $admin_nome,
+        ':admin_email' => $admin_email,
+        ':admin_perfil' => $admin_perfil,
+        ':admin_status' => $admin_status,
+        ':nivel_acesso' => $nivel_acesso,
+        ':admin_user_id' => $reservm_admin_id
       ]);
 
       // CRIA O TOKEN DE VALIDAÇÃO
-      $codigo      = str_pad(random_int(1000000, 9999999), 7, '0', STR_PAD_LEFT); // GERA UM CÓDIGO DE 7 DÍGITOS
+      $codigo = str_pad(random_int(1000000, 9999999), 7, '0', STR_PAD_LEFT); // GERA UM CÓDIGO DE 7 DÍGITOS
       $codigo_hash = password_hash($codigo, PASSWORD_DEFAULT); // CRIPTOGRAFA O CÓDIGO
 
       // CRIA UM TOKEN PARA O ID DO ADMINISTRADOR, CASO NÃO EXISTA
@@ -112,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       // DISPARA E-MAIL
       $mail = new PHPMailer(true);
       include '../conexao/email.php';
-      $mail->addAddress($email_saap); // E-MAIL DO ADMINISTRADOR
+      $mail->addAddress($admin_email); // E-MAIL DO ADMINISTRADOR
       $mail->isHTML(true);
       $mail->Subject = 'Seu código de acesso chegou'; //TÍTULO DO E-MAIL
 
@@ -144,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       </tr>";
       include '../includes/email/email_footer.php';
 
-      $mail->Body  = $email_conteudo;
+      $mail->Body = $email_conteudo;
 
       try {
         $mail->send();
@@ -181,9 +181,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
                                 admin_id = :admin_id";
       $stmt = $conn->prepare($sql);
       $stmt->execute([
-        ':admin_id'      => $admin_id,
-        ':admin_perfil'  => $admin_perfil,
-        ':admin_status'  => $admin_status,
+        ':admin_id' => $admin_id,
+        ':admin_perfil' => $admin_perfil,
+        ':admin_status' => $admin_status,
         ':admin_user_id' => $reservm_admin_id
       ]);
 
@@ -244,10 +244,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
               VALUES (:modulo, upper(:acao), :acao_id, :dados, :user_id, GETDATE())";
     $stmtLog = $conn->prepare($sqlLog);
     $stmtLog->execute([
-      ':modulo'  => 'ADMINISTRADOR',
-      ':acao'    => $log_acao,
+      ':modulo' => 'ADMINISTRADOR',
+      ':acao' => $log_acao,
       ':acao_id' => $admin_id,
-      ':dados'   => json_encode($log_dados, JSON_UNESCAPED_UNICODE),
+      ':dados' => json_encode($log_dados, JSON_UNESCAPED_UNICODE),
       ':user_id' => $reservm_admin_id
     ]);
     // -------------------------------

@@ -8,6 +8,7 @@ if (!empty($global_admin_id) && $global_admin_perfil != 1) {
 }
 ?>
 
+
 <div class="row">
   <div class="col-12">
     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -144,13 +145,35 @@ if (!empty($global_admin_id) && $global_admin_perfil != 1) {
 
             <input type="hidden" name="acao" value="cadastrar">
 
-            <div class="col-12">
-              <label class="form-label">Nome <span>*</span></label>
-              <select class="form-select" name="admin_matricula_nome" id="cad_admin_matricula" required>
-                <option selected disabled value=""></option>
-              </select>
-              <div class="invalid-feedback">Este campo é obrigatório</div>
-            </div>
+      <div class="col-12">
+    <label class="form-label">Nome <span>*</span></label>
+    <select class="form-select" name="admin_matricula_nome" id="cad_admin_matricula" required>
+        <option selected disabled value="">Selecione um colaborador</option>
+        <?php
+        // ATENÇÃO: Verifique o caminho da conexão.
+        // Se admin.php está em 'admin/', e conexao.php em 'conexao/', então ../conexao/conexao.php
+        include_once '../conexao/conexao.php';
+
+        try {
+            // Certifique-se de que $view_colaboradores está definida em conexao.php
+            // ou defina-a aqui temporariamente: $view_colaboradores = "sua_view_colaboradores";
+            $stmt_col = $conn->prepare("SELECT CHAPA, NOMESOCIAL, EMAIL FROM " . $view_colaboradores . " ORDER BY NOMESOCIAL ASC");
+            $stmt_col->execute();
+            $colaboradores = $stmt_col->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($colaboradores as $col) {
+                // O valor da option será "CHAPA - NOMESOCIAL"
+                // Adicione o EMAIL como um atributo data-email para fácil acesso via JS
+                echo '<option value="' . htmlspecialchars($col['CHAPA'] . ' - ' . $col['NOMESOCIAL']) . '" data-email="' . htmlspecialchars($col['EMAIL']) . '">' . htmlspecialchars($col['CHAPA'] . ' - ' . $col['NOMESOCIAL']) . '</option>';
+            }
+        } catch (PDOException $e) {
+            error_log("Erro PDO ao popular select em admin.php: " . $e->getMessage());
+            echo '<option value="">Erro ao carregar colaboradores</option>';
+        }
+        ?>
+    </select>
+    <div class="invalid-feedback">Este campo é obrigatório</div>
+</div>
 
             <div class="col-12">
               <label class="form-label">E-mail <span>*</span></label>
@@ -266,6 +289,12 @@ unset($_SESSION['form_admin']);
   </div>
 </div>
 
+
+
+
+
+
+
 <script>
   const modal_edit_admin = document.getElementById('modal_edit_admin')
   if (modal_edit_admin) {
@@ -304,10 +333,12 @@ unset($_SESSION['form_admin']);
 
 <!-- ITENS DOS SELECTS -->
 <script src="../assets/js/351.jquery.min.js"></script>
+<!-- SELECT2 FORM -->
+ <?php include 'includes/footer.php'; ?>
+<script src="includes/select/select2.js"></script>
 <script src="includes/select/select_colaboradores.js"></script>
-<!-- FOOTER -->
-<?php include 'includes/footer.php'; ?>
 <!-- COMPLETO FORM -->
 <script src="includes/select/completa_form.js"></script>
-<!-- SELECT2 FORM -->
-<script src="includes/select/select2.js"></script>
+<!-- FOOTER -->
+
+

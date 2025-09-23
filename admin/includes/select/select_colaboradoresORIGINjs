@@ -1,0 +1,486 @@
+// // BUSCA OS DADOS DA TABELA USANDO AJAX
+// var SA = jQuery.noConflict();
+// SA(document).ready(function () {
+//   SA.ajax({
+//     url: "controller/select_colaborador.php",
+//     type: "GET",
+//     dataType: "json",
+//     success: function (data) {
+//       SA.each(data, function (key, value) {
+//         SA("#cad_admin_matricula").append(
+//           '<option value="' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             '">' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             "</option>",
+//         );
+//       });
+//     },
+//   });
+
+// });
+
+// // CADASTRAR CURSO
+// var SA = jQuery.noConflict();
+// SA(document).ready(function () {
+//   SA.ajax({
+//     url: "controller/select_colaborador.php",
+//     type: "GET",
+//     dataType: "json",
+//     success: function (data) {
+//       SA.each(data, function (key, value) {
+//         SA("#cad_curs_matricula_prof").append(
+//           '<option value="' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             '">' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             "</option>",
+//         );
+//       });
+//     },
+//   });
+// });
+
+// // ATUALIZAR CURSO
+// var SA = jQuery.noConflict();
+// SA(document).ready(function () {
+//   SA.ajax({
+//     url: "controller/select_colaborador.php",
+//     type: "GET",
+//     dataType: "json",
+//     success: function (data) {
+//       SA.each(data, function (key, value) {
+//         SA("#edit_curs_matricula_prof").append(
+//           '<option value="' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             '">' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             "</option>",
+//         );
+//       });
+//     },
+//   });
+// });
+
+// ================================= o de cima é o correto
+
+// USE UM ÚNICO jQuery.noConflict()
+var SA = jQuery.noConflict();
+
+// =========================================================================
+// FUNÇÃO AUXILIAR: LÓGICA PARA PRÉ-SELECIONAR VALORES E PREENCHER EMAILS NA EDIÇÃO
+// ATRIBUÍDA A window. para ser global
+// =========================================================================
+window.preloadEditCoordinators = function (curs_id_to_load) {
+  console.log("preloadEditCoordinators chamado para curs_id:", curs_id_to_load);
+  SA.ajax({
+    url: "controller/get_course_coordinators.php", // Seu script que retorna ['CHAPA - NOMESOCIAL']
+    type: "GET",
+    dataType: "json",
+    data: { curs_id: curs_id_to_load },
+    success: function (data) {
+      const selectedCoordinatorsForPreload = [];
+      const selectedMatriculasForEmail = [];
+      SA.each(data, function (index, coordinator) {
+        selectedCoordinatorsForPreload.push(
+          coordinator.CHAPA + " - " + coordinator.NOMESOCIAL
+        );
+        selectedMatriculasForEmail.push(coordinator.CHAPA);
+      });
+      console.log(
+        "Coordenadores para pré-selecionar:",
+        selectedCoordinatorsForPreload
+      );
+
+      SA("#edit_curs_matricula_prof")
+        .val(selectedCoordinatorsForPreload)
+        .trigger("change");
+
+      // O trigger('change') já disparará updateCoordinatorsEmailField. Não precisa de mais AJAX aqui.
+    },
+    error: function (xhr, status, error) {
+      console.error(
+        "Erro ao buscar os coordenadores do curso para pré-seleção:",
+        error
+      );
+    },
+  });
+};
+
+// =========================================================================
+// FUNÇÃO AUXILIAR: LÓGICA PARA PREENCHER E-MAIL(S) BASEADO NA SELEÇÃO DE COLABORADORES
+// AGORA ATRIBUÍDA A window. para estar disponível globalmente
+// =========================================================================
+window.updateCoordinatorsEmailField = function (
+  selectElement,
+  emailFieldElement
+) {
+  var selectedValues = selectElement.val();
+  console.log("Valores selecionados no select:", selectedValues);
+
+  if (selectedValues && selectedValues.length > 0) {
+    var matriculas = [];
+    SA.each(selectedValues, function (index, value) {
+      matriculas.push(value.split(" - ")[0]);
+    });
+    console.log("Matrículas extraídas para envio ao PHP:", matriculas);
+
+    SA.ajax({
+      url: "includes/select/get_colaborador.php",
+      method: "POST",
+      data: {
+        matriculas: matriculas,
+      },
+      dataType: "json",
+      success: function (data) {
+        console.log("Resposta AJAX para e-mails:", data);
+        if (data && data.length > 0) {
+          var allEmails = data.join(", ");
+          emailFieldElement.val(allEmails);
+          console.log("Emails concatenados e definidos no campo:", allEmails);
+        } else {
+          emailFieldElement.val("");
+          console.log("Nenhum email retornado ou campo vazio.");
+        }
+      },
+      error: function (xhr, status, error) {
+        console.error(
+          "Erro na chamada AJAX para buscar e-mails:",
+          status,
+          error,
+          xhr.responseText
+        );
+        emailFieldElement.val("");
+      },
+    });
+  } else {
+    emailFieldElement.val("");
+    console.log("Nenhum coordenador selecionado, campo de e-mail limpo.");
+  }
+};
+
+// INÍCIO DO SA(document).ready() - ESTE É O ÚNICO ready() BLOCK ATIVO
+SA(document).ready(function () {
+  // =========================================================================
+  // LÓGICA CONSOLIDADA PARA POPULAR TODOS OS SELECTS DE COLABORADORES E INICIALIZAR SELECT2
+  // =========================================================================
+  SA.ajax({
+    url: "includes/select/get_colaborador.php", // Seu script PHP que retorna TODOS os colaboradores (GET)
+    type: "GET",
+    dataType: "json",
+    success: function (data) {
+      console.log("Dados recebidos para popular selects:", data); // Log 1
+
+      // Função auxiliar para popular e inicializar Select2 para QUALQUER SELECT
+      function populateAndInitSelect2(
+        selector,
+        dataToPopulate,
+        customPlaceholder = "Selecione um(s) Colaborador(es)"
+      ) {
+        // Verifica se o elemento existe no DOM antes de tentar manipulá-lo
+        if (SA(selector).length === 0) {
+          // console.warn("Elemento não encontrado para Select2:", selector);
+          return; // Sai da função se o elemento não existe
+        }
+
+        SA(selector).empty(); // Limpa opções existentes
+        SA(selector).append('<option value=""></option>'); // Adiciona uma opção vazia para placeholder
+
+        SA.each(dataToPopulate, function (key, value) {
+          // Verifica se as propriedades CHAPA e NOMESOCIAL existem nos dados
+          if (value.CHAPA && value.NOMESOCIAL) {
+            SA(selector).append(
+              '<option value="' +
+                value.CHAPA +
+                " - " +
+                value.NOMESOCIAL +
+                '">' +
+                value.CHAPA +
+                " - " +
+                value.NOMESOCIAL +
+                "</option>"
+            );
+          }
+        });
+
+        // Inicializa Select2 APÓS popular as opções
+        SA(selector).select2({
+          placeholder: customPlaceholder, // Usa placeholder customizado
+          allowClear: true,
+          width: "100%",
+          tags: false, // Por padrão, não permite tags customizadas a menos que explicitamente solicitado
+        });
+        console.log("Select2 inicializado para:", selector);
+      }
+
+      // =========================================================================
+      // CHAMADAS populateAndInitSelect2 PARA TODOS OS SELECTS DO SISTEMA QUE USAM COLABORADORES
+      // =========================================================================
+
+      // Página de Cursos (Cursos.php)
+      populateAndInitSelect2(
+        "#cad_curs_matricula_prof",
+        data,
+        "Selecione um(s) Coordenador(es)"
+      );
+      populateAndInitSelect2(
+        "#edit_curs_matricula_prof",
+        data,
+        "Selecione um(s) Coordenador(es)"
+      );
+
+      // Página de Administradores (se tiver modais de admin)
+      populateAndInitSelect2(
+        "#cad_admin_matricula",
+        data,
+        "Selecione um Administrador"
+      );
+      // populateAndInitSelect2("#edit_admin_matricula", data, "Selecione um Administrador"); // Exemplo se existir
+
+      // Página de Usuários (se tiver selects de usuário/NTI)
+      populateAndInitSelect2(
+        "#cad_user_matricula",
+        data,
+        "Selecione um Usuário"
+      ); // Exemplo: user_matricula
+      // populateAndInitSelect2("#edit_user_matricula", data, "Selecione um Usuário"); // Exemplo
+      // populateAndInitSelect2("#cad_user_nti_matricula", data, "Selecione um Usuário NTI"); // Exemplo
+      // populateAndInitSelect2("#edit_user_nti_matricula", data, "Selecione um Usuário NTI"); // Exemplo
+
+      // Se você tiver outros selects que precisam ser populados com colaboradores, adicione aqui.
+      // Utilize populateAndInitSelect2("#ID_DO_SEU_SELECT", data, "Selecione...");
+    },
+    error: function (xhr, status, error) {
+      console.error(
+        "Erro ao carregar lista de colaboradores (AJAX principal):",
+        error
+      );
+      // Você pode adicionar um alerta visual aqui se o erro persistir.
+    },
+  });
+
+  // =========================================================================
+  // ACIONADORES DOS EVENTOS CHANGE PARA PREENCHIMENTO DE E-MAIL(S)
+  // ESTES CHAMAM AS FUNÇÕES GLOBAIS updateCoordinatorsEmailField
+  // =========================================================================
+
+  SA("#cad_curs_matricula_prof").on("change", function () {
+    console.log("Evento change disparado para #cad_curs_matricula_prof");
+    window.updateCoordinatorsEmailField(SA(this), SA("#cad_curs_email_prof"));
+  });
+
+  SA("#edit_curs_matricula_prof").on("change", function () {
+    console.log("Evento change disparado para #edit_curs_matricula_prof");
+    window.updateCoordinatorsEmailField(SA(this), SA("#edit_curs_email_prof"));
+  });
+
+  // =========================================================================
+  // LÓGICA DO MODAL DE EDIÇÃO (MOVIDA DE cursos.php)
+  // =========================================================================
+  const modal_edit_curso = document.getElementById("modal_edit_curso");
+  if (modal_edit_curso) {
+    modal_edit_curso.addEventListener("show.bs.modal", (event) => {
+      const button = event.relatedTarget;
+      const curs_id = button.getAttribute("data-bs-curs_id");
+      const curs_curso = button.getAttribute("data-bs-curs_curso");
+      const curs_status = button.getAttribute("data-bs-curs_status");
+
+      const modalTitle = modal_edit_curso.querySelector(".modal-title");
+      const modal_curs_id = modal_edit_curso.querySelector(".curs_id");
+      const modal_curs_curso = modal_edit_curso.querySelector(".curs_curso");
+      const modal_curs_status = modal_edit_curso.querySelector(".curs_status");
+
+      modalTitle.textContent = "Atualizar Dados";
+      modal_curs_id.value = curs_id;
+      modal_curs_curso.value = curs_curso;
+
+      if (curs_status === "1") {
+        modal_curs_status.checked = true;
+      } else {
+        modal_curs_status.checked = false;
+      }
+
+      // Chama a função global para pré-selecionar e preencher os e-mails.
+      if (typeof window.preloadEditCoordinators === "function") {
+        window.preloadEditCoordinators(curs_id);
+      } else {
+        console.error(
+          "Função preloadEditCoordinators não encontrada (fallback)."
+        );
+      }
+    });
+  }
+  // =========================================================================
+}); // Fim do SA(document).ready(function () {
+//   SA.ajax({
+//     url: "controller/select_colaborador.php",
+//     type: "GET",
+//     dataType: "json",
+//     success: function (data) {
+//       SA.each(data, function (key, value) {
+//         SA("#edit_admin_matricula").append(
+//           '<option value="' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             '">' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             "</option>",
+//         );
+//       });
+//     },
+//   });
+// });
+
+//
+// BUSCA OS DADOS DA TABELA USANDO AJAX
+// var SA = jQuery.noConflict();
+// SA(document).ready(function () {
+//   SA.ajax({
+//     url: "controller/select_alunos.php", // Script PHP para recuperar os dados
+//     type: "GET",
+//     dataType: "json",
+//     success: function (data) {
+//       // Atualizar o select com os dados retornados
+//       SA.each(data, function (key, value) {
+//         SA("#cad_user_matricula").append(
+//           '<option value="' +
+//             value.Matricula +
+//             '">' +
+//             value.Matricula +
+//             " - " +
+//             value.Nome +
+//             "</option>",
+//         );
+//       });
+//     },
+//   });
+// });
+// //
+// SA(document).ready(function () {
+//   SA.ajax({
+//     url: "controller/select_colaborador.php", // Script PHP para recuperar os dados
+//     type: "GET",
+//     dataType: "json",
+//     success: function (data) {
+//       // Atualizar o select com os dados retornados
+//       SA.each(data, function (key, value) {
+//         SA("#cad_col_matricula").append(
+//           '<option value="' +
+//             value.CHAPA +
+//             '">' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             "</option>",
+//         );
+//       });
+//     },
+//   });
+// });
+// // NTI - BUSCA OS DADOS PARA O CADASTRO DOS USUÁRIOS
+// var SA = jQuery.noConflict();
+// SA(document).ready(function () {
+//   SA.ajax({
+//     url: "controller/select_colaborador.php", // Script PHP para recuperar os dados
+//     type: "GET",
+//     dataType: "json",
+//     success: function (data) {
+//       // Atualizar o select com os dados retornados
+//       SA.each(data, function (key, value) {
+//         SA("#cad_user_nti_matricula").append(
+//           '<option value="' +
+//             value.CHAPA +
+//             '">' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             "</option>",
+//         );
+//       });
+//     },
+//   });
+// });
+// // NTI - BUSCA OS DADOS PARA A EDIÇÃO DOS USUÁRIOS
+// var SA = jQuery.noConflict();
+// SA(document).ready(function () {
+//   SA.ajax({
+//     url: "controller/select_colaborador.php", // Script PHP para recuperar os dados
+//     type: "GET",
+//     dataType: "json",
+//     success: function (data) {
+//       // Atualizar o select com os dados retornados
+//       SA.each(data, function (key, value) {
+//         SA("#edit_user_nti_matricula").append(
+//           '<option value="' +
+//             value.CHAPA +
+//             '">' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             "</option>",
+//         );
+//       });
+//     },
+//   });
+// });
+// // BUSCA OS DADOS PARA O CADASTRO DOS USUÁRIOS
+// var SA = jQuery.noConflict();
+// SA(document).ready(function () {
+//   SA.ajax({
+//     url: "controller/select_colaborador.php", // Script PHP para recuperar os dados
+//     type: "GET",
+//     dataType: "json",
+//     success: function (data) {
+//       // Atualizar o select com os dados retornados
+//       SA.each(data, function (key, value) {
+//         SA("#user_matricula").append(
+//           '<option value="' +
+//             value.CHAPA +
+//             '">' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             "</option>",
+//         );
+//       });
+//     },
+//   });
+// });
+// // BUSCA OS DADOS PARA A EDIÇÃO DOS USUÁRIOS
+// var SA = jQuery.noConflict();
+// SA(document).ready(function () {
+//   SA.ajax({
+//     url: "controller/select_colaborador.php", // Script PHP para recuperar os dados
+//     type: "GET",
+//     dataType: "json",
+//     success: function (data) {
+//       // Atualizar o select com os dados retornados
+//       SA.each(data, function (key, value) {
+//         SA("#edit_user_matricula").append(
+//           '<option value="' +
+//             value.CHAPA +
+//             '">' +
+//             value.CHAPA +
+//             " - " +
+//             value.NOMESOCIAL +
+//             "</option>",
+//         );
+//       });
+//     },
+//   });
+// });

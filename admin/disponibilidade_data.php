@@ -28,13 +28,14 @@
           <div class="row g-3">
 
             <div class="col-sm-8 col-xl-10">
-              <input type="date" class="form-control flatpickr-input" name="data" id="data" value="<?= htmlspecialchars($_GET['data'] ?? date('Y-m-d')) ?>">
+              <input type="date" class="form-control flatpickr-input" name="data" id="data"
+                value="<?= htmlspecialchars($_GET['data'] ?? date('Y-m-d')) ?>">
               <script>
                 flatpickr("#data", {
-                  dateFormat: "Y-m-d", // formato do valor REAL do input (enviado na query)
-                  altInput: true, // ativa um input visível com formato alternativo
-                  altFormat: "d/m/Y", // formato exibido para o usuário
-                  locale: "pt" // idioma português
+                  dateFormat: "Y-m-d",
+                  altInput: true,
+                  altFormat: "d/m/Y",
+                  locale: "pt"
                 });
               </script>
             </div>
@@ -42,7 +43,8 @@
             <div class="col-sm-4 col-xl-2">
               <div class="d-flex">
                 <button type="submit" class="btn botao botao_azul_escuro waves-effect w-100">Filtrar</button>
-                <div onclick="window.location.href='painel.php'" class="btn botao botao_cinza waves-effect w-100 ms-3">Limpar</div>
+                <div onclick="window.location.href='painel.php'" class="btn botao botao_cinza waves-effect w-100 ms-3">
+                  Limpar</div>
               </div>
             </div>
 
@@ -212,25 +214,56 @@
 </style>
 
 <?php
+// try {
+//   // $date = date('Y-m-d');
+//   $date = isset($_GET['data']) ? $_GET['data'] : date('Y-m-d');
+//   $diaSemanaNumero = (new DateTime($date))->format('N');
+
+//   $stmt = $conn->prepare("SELECT esp_id, esp_nome_local, esp_codigo, tipesp_tipo_espaco_icone, and_andar_icone, pav_pavilhao_icone, uni_unidade_icone, res_data, res_hora_inicio, res_hora_fim, res_solic_id
+//                           FROM espaco
+//                           LEFT JOIN reservas 
+//                             ON reservas.res_espaco_id = espaco.esp_id
+//                             AND (
+//                               (reservas.res_tipo_reserva = 1 AND reservas.res_data = :res_data)
+//                               OR 
+//                               (reservas.res_tipo_reserva = 2 AND reservas.res_dia_semana = :res_dia_semana)
+//                             )
+//                           INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
+//                           LEFT JOIN andares ON andares.and_id = espaco.esp_andar
+//                           LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
+//                           INNER JOIN unidades ON unidades.uni_id = espaco.esp_unidade
+//                           ORDER BY esp_nome_local");
+
+//   $stmt->execute([
+//     ':res_data' => $date,
+//     ':res_dia_semana' => $diaSemanaNumero
+//   ]);
+
+//   $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// } catch (PDOException $e) {
+//   echo 'Connection failed: ' . $e->getMessage();
+// }
+
+
 try {
   // $date = date('Y-m-d');
   $date = isset($_GET['data']) ? $_GET['data'] : date('Y-m-d');
   $diaSemanaNumero = (new DateTime($date))->format('N');
 
-  $stmt = $conn->prepare("SELECT esp_id, esp_nome_local, esp_codigo, tipesp_tipo_espaco_icone, and_andar_icone, pav_pavilhao_icone, uni_unidade_icone, res_data, res_hora_inicio, res_hora_fim, res_solic_id
-                          FROM espaco
-                          LEFT JOIN reservas 
-                            ON reservas.res_espaco_id = espaco.esp_id
-                            AND (
-                              (reservas.res_tipo_reserva = 1 AND reservas.res_data = :res_data)
-                              OR 
-                              (reservas.res_tipo_reserva = 2 AND reservas.res_dia_semana = :res_dia_semana)
-                            )
-                          INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
-                          LEFT JOIN andares ON andares.and_id = espaco.esp_andar
-                          LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
-                          INNER JOIN unidades ON unidades.uni_id = espaco.esp_unidade
-                          ORDER BY esp_nome_local");
+  $stmt = $conn->prepare("SELECT esp_id, esp_nome_local, esp_codigo, esp.esp_unidade, tipesp_tipo_espaco_icone, and_andar_icone, pav_pavilhao_icone, uni_unidade_icone, res_data, res_hora_inicio, res_hora_fim, res_solic_id
+             FROM espaco AS esp
+             LEFT JOIN reservas 
+              ON reservas.res_espaco_id = esp.esp_id
+              AND (
+               (reservas.res_tipo_reserva = 1 AND reservas.res_data = :res_data)
+               OR 
+               (reservas.res_tipo_reserva = 2 AND reservas.res_dia_semana = :res_dia_semana)
+              )
+             INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = esp.esp_tipo_espaco
+             LEFT JOIN andares ON andares.and_id = esp.esp_andar
+             LEFT JOIN pavilhoes ON pavilhoes.pav_id = esp.esp_pavilhao
+             INNER JOIN unidades ON unidades.uni_id = esp.esp_unidade
+             ORDER BY esp.esp_unidade, esp_nome_local");
 
   $stmt->execute([
     ':res_data' => $date,
@@ -242,6 +275,7 @@ try {
   echo 'Connection failed: ' . $e->getMessage();
 }
 ?>
+
 
 <div class="row">
   <div class="col-lg-12">
@@ -270,13 +304,13 @@ try {
             ];
 
             $diasSemana = [
-              'Sunday'    => 'Domingo',
-              'Monday'    => 'Segunda-feira',
-              'Tuesday'   => 'Terça-feira',
+              'Sunday' => 'Domingo',
+              'Monday' => 'Segunda-feira',
+              'Tuesday' => 'Terça-feira',
               'Wednesday' => 'Quarta-feira',
-              'Thursday'  => 'Quinta-feira',
-              'Friday'    => 'Sexta-feira',
-              'Saturday'  => 'Sábado'
+              'Thursday' => 'Quinta-feira',
+              'Friday' => 'Sexta-feira',
+              'Saturday' => 'Sábado'
             ];
 
             // Usa data do GET, se existir, senão usa a atual
@@ -287,7 +321,7 @@ try {
 
             // Extrai partes da data
             $dia = $dataObj->format('d');
-            $mes = (int)$dataObj->format('m');
+            $mes = (int) $dataObj->format('m');
             $ano = $dataObj->format('Y');
             $diaSemanaIngles = $dataObj->format('l');
             $diaSemana = $diasSemana[$diaSemanaIngles];
@@ -314,7 +348,7 @@ try {
                 $start = strtotime("07:00");
                 $end = strtotime("22:00");
                 for ($i = $start; $i <= $end; $i += 1800) { // 1800 segundos = 30 minutos 
-                ?>
+                  ?>
                   <!-- <th class="header_time"></th> -->
                   <th class="header_time"><?= date("H:i", $i) ?></th>
                 <?php } ?>
@@ -331,7 +365,7 @@ try {
 
               foreach ($salas as $chave => $reservas_sala) {
                 list($esp_id, $sala) = explode('|', $chave);
-              ?>
+                ?>
                 <tr>
                   <th class="col_cod text-start">
                     <div class="px-2"><?= htmlspecialchars($reservas_sala[0]['esp_codigo']) ?></div>
@@ -340,20 +374,28 @@ try {
                     <div class="col_loc" title="<?= htmlspecialchars($sala) ?>"><?= htmlspecialchars($sala) ?></div>
                   </td>
                   <td>
-                    <div role="button" data-bs-toggle="modal" data-bs-target="#modal_legenda" class="box_s"><?= htmlspecialchars($reservas_sala[0]['tipesp_tipo_espaco_icone']) ?></div>
+                    <div role="button" data-bs-toggle="modal" data-bs-target="#modal_legenda" class="box_s">
+                      <?= htmlspecialchars($reservas_sala[0]['tipesp_tipo_espaco_icone']) ?>
+                    </div>
                   </td>
                   <td>
                     <?php if ($reservas_sala[0]['and_andar_icone']) { ?>
-                      <div role="button" data-bs-toggle="modal" data-bs-target="#modal_legenda" class="box_a"><?= htmlspecialchars($reservas_sala[0]['and_andar_icone']) ?></div>
+                      <div role="button" data-bs-toggle="modal" data-bs-target="#modal_legenda" class="box_a">
+                        <?= htmlspecialchars($reservas_sala[0]['and_andar_icone']) ?>
+                      </div>
                     <?php } ?>
                   </td>
                   <td>
                     <?php if ($reservas_sala[0]['pav_pavilhao_icone']) { ?>
-                      <div role="button" data-bs-toggle="modal" data-bs-target="#modal_legenda" class="box_p"><?= htmlspecialchars($reservas_sala[0]['pav_pavilhao_icone']) ?></div>
+                      <div role="button" data-bs-toggle="modal" data-bs-target="#modal_legenda" class="box_p">
+                        <?= htmlspecialchars($reservas_sala[0]['pav_pavilhao_icone']) ?>
+                      </div>
                     <?php } ?>
                   </td>
                   <td>
-                    <div role="button" data-bs-toggle="modal" data-bs-target="#modal_legenda" class="box_c"><?= htmlspecialchars($reservas_sala[0]['uni_unidade_icone']) ?></div>
+                    <div role="button" data-bs-toggle="modal" data-bs-target="#modal_legenda" class="box_c">
+                      <?= htmlspecialchars($reservas_sala[0]['uni_unidade_icone']) ?>
+                    </div>
                   </td>
 
                   <?php for ($i = $start; $i <= $end; $i += 1800): ?>
@@ -363,7 +405,8 @@ try {
 
                     foreach ($reservas_sala as $reserva) {
 
-                      if ($reserva['res_data'] !== $date) continue;
+                      if ($reserva['res_data'] !== $date)
+                        continue;
 
                       $hora_inicio_real = $reserva['res_hora_inicio'];
                       $hora_fim_real = $reserva['res_hora_fim'];
@@ -390,9 +433,10 @@ try {
                       $mostra_fim = ($hora_coluna == date("H:i", strtotime($hora_fim_arred) - 1800)) ? date("H:i", strtotime($hora_fim_real)) : '';
 
                       $classe = 'barra' . ($conflito ? ' conflito' : '');
-                    ?>
-                      <td role="button" onclick="location.href='solicitacao_analise.php?i=<?= $reserva['res_solic_id'] ?>'" class="<?= $classe ?> <?= ($hora_coluna == $hora_inicio_arred) ? 'border_l' : ''; ?> <?= ($hora_coluna == date("H:i", strtotime($hora_fim_arred) - 1800)) ? 'border_r' : ''; ?>">
-                        <?= $mostra_inicio ?> <?= $mostra_fim ?>
+                      ?>
+                      <td role="button" onclick="location.href='solicitacao_analise.php?i=<?= $reserva['res_solic_id'] ?>'"
+                        class="<?= $classe ?> <?= ($hora_coluna == $hora_inicio_arred) ? 'border_l' : ''; ?> <?= ($hora_coluna == date("H:i", strtotime($hora_fim_arred) - 1800)) ? 'border_r' : ''; ?>">
+                        <?= $mostra_inicio ?>       <?= $mostra_fim ?>
                       </td>
                     <?php else: ?>
                       <td></td>
@@ -409,7 +453,8 @@ try {
 </div>
 
 <!-- MODAL LEGENDA -->
-<div id="modal_legenda" class="modal zoomIn fade" tabindex="-1" aria-labelledby="ModalLegLabel" aria-hidden="true" style="display: none;">
+<div id="modal_legenda" class="modal zoomIn fade" tabindex="-1" aria-labelledby="ModalLegLabel" aria-hidden="true"
+  style="display: none;">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header d-sm-none d-inline text-end">

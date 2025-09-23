@@ -20,9 +20,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $curs_curso   = trim($_POST['curs_curso']);
 
       // MATRICULA - NOME
-      $curs_matricula_prof = trim($_POST['curs_matricula_prof']) !== '' ? trim($_POST['curs_matricula_prof']) : NULL;
-      $parts = explode(' - ', $curs_matricula_prof, 2);
-      $curs_matricula = trim($parts[0]) !== '' ? trim($parts[0]) : NULL;
+      // $curs_matricula_prof = trim($_POST['curs_matricula_prof']) !== '' ? trim($_POST['curs_matricula_prof']) : NULL;
+      // $parts = explode(' - ', $curs_matricula_prof, 2);
+      // $curs_matricula = trim($parts[0]) !== '' ? trim($parts[0]) : NULL;
+
+      // COORDENADORES: RECEBER UM ARRAY DE MATRICULAS E NOMES
+      $selected_coordinators_raw = isset($_POST['curs_matricula_prof']) ? (array) $_POST['curs_matricula_prof'] : [];
+      $coordinators_to_save = []; // Array para armazenar apenas as matrículas
+      $main_coordinator_matricula = NULL; // Opcional: para manter uma matrícula principal no curso original
+
+      if (!empty($selected_coordinators_raw)) {
+        // Pega a matrícula do primeiro coordenador para a coluna principal, se necessário.
+        // Ou você pode decidir remover curs_matricula_prof da tabela cursos.
+        $first_coordinator_parts = explode(' - ', $selected_coordinators_raw[0], 2);
+        $main_coordinator_matricula = trim($first_coordinator_parts[0]) !== '' ? trim($first_coordinator_parts[0]) : NULL;
+
+        foreach ($selected_coordinators_raw as $coordinator_data) {
+          $parts = explode(' - ', $coordinator_data, 2);
+          $matricula = trim($parts[0]);
+          if (!empty($matricula)) {
+            $coordinators_to_save[] = $matricula;
+          }
+        }
+      }
       // -------------------------------
 
       $curs_status  = $_POST['curs_status'] === '1' ? 1 : 0;
@@ -34,6 +54,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
     // -------------------------------
     // CADASTRO
     // -------------------------------
+    // if ($acao === 'cadastrar') {
+
+    //   $log_acao = 'Cadastro';
+
+    //   // IMPEDE CADASTRO DUPLICADO
+    //   $sqlVerifica = "SELECT COUNT(*) FROM cursos WHERE curs_curso = :curs_curso";
+    //   $stmtVerifica = $conn->prepare($sqlVerifica);
+    //   $stmtVerifica->execute([':curs_curso' => $curs_curso]);
+    //   $existe = $stmtVerifica->fetchColumn();
+    //   if ($existe > 0) {
+    //     throw new Exception("Curso já cadastrada!");
+    //   }
+
+    //   $sql = "INSERT INTO cursos (
+    //                                 curs_curso,
+    //                                 curs_matricula_prof,
+    //                                 curs_status, 
+    //                                 curs_user_id,
+    //                                 curs_data_cad,
+    //                                 curs_data_upd
+    //                               ) VALUES (
+    //                                 UPPER(:curs_curso),
+    //                                 :curs_matricula_prof,
+    //                                 :curs_status,
+    //                                 :curs_user_id,
+    //                                 GETDATE(),
+    //                                 GETDATE()
+    //                               )";
+    //   $stmt = $conn->prepare($sql);
+    //   $stmt->execute([
+    //     ':curs_curso'          => $curs_curso,
+    //     ':curs_matricula_prof' => $curs_matricula,
+    //     ':curs_status'         => $curs_status,
+    //     ':curs_user_id'        => $rvm_admin_id
+    //   ]);
+
+    //   // ÚLTIMO ID CADASTRADO
+    //   if ($stmt->rowCount() > 0) {
+    //     $curs_id = $conn->lastInsertId();
+    //   } else {
+    //     throw new Exception('Erro ao obter o último ID inserido.');
+    //   }
+
     if ($acao === 'cadastrar') {
 
       $log_acao = 'Cadastro';
@@ -49,8 +112,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
       $sql = "INSERT INTO cursos (
                                     curs_curso,
-                                    curs_matricula_prof,
-                                    curs_status, 
+                                    curs_matricula_prof, -- Mantido para compatibilidade, mas pode ser removido
+                                    curs_status,
                                     curs_user_id,
                                     curs_data_cad,
                                     curs_data_upd
@@ -65,7 +128,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $stmt = $conn->prepare($sql);
       $stmt->execute([
         ':curs_curso'          => $curs_curso,
-        ':curs_matricula_prof' => $curs_matricula,
+        ':curs_matricula_prof' => $main_coordinator_matricula, // Usando a matrícula principal
         ':curs_status'         => $curs_status,
         ':curs_user_id'        => $rvm_admin_id
       ]);
@@ -73,16 +136,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       // ÚLTIMO ID CADASTRADO
       if ($stmt->rowCount() > 0) {
         $curs_id = $conn->lastInsertId();
+
+        // INSERIR COORDENADORES NA NOVA TABELA curso_coordenador
+        foreach ($coordinators_to_save as $matricula_coord) {
+          $sqlInsertCoord = "INSERT INTO curso_coordenador (curs_id, coordenador_matricula) VALUES (:curs_id, :coordenador_matricula)";
+          $stmtInsertCoord = $conn->prepare($sqlInsertCoord);
+          $stmtInsertCoord->execute([
+            ':curs_id' => $curs_id,
+            ':coordenador_matricula' => $matricula_coord
+          ]);
+        }
       } else {
         throw new Exception('Erro ao obter o último ID inserido.');
       }
 
 
-
-
       // -------------------------------
       // ATUALIZAR
       // -------------------------------
+      // } elseif ($acao === 'atualizar') {
+
+      //   if (empty($_POST['curs_id'])) {
+      //     throw new Exception("Erro ao obter o ID!");
+      //   }
+      //   $curs_id  = (int) $_POST['curs_id'];
+      //   $log_acao = 'Atualização';
+
+      //   // IMPEDE CADASTRO DUPLICADO
+      //   $sqlVerifica = "SELECT COUNT(*) FROM cursos WHERE curs_curso = :curs_curso AND curs_id != :curs_id";
+      //   $stmtVerifica = $conn->prepare($sqlVerifica);
+      //   $stmtVerifica->execute([':curs_curso' => $curs_curso, ':curs_id' => $curs_id]);
+      //   $existe = $stmtVerifica->fetchColumn();
+      //   if ($existe > 0) {
+      //     throw new Exception("Curso já cadastrada!");
+      //   }
+
+      //   $sql = "UPDATE cursos SET 
+      //                             curs_curso          = UPPER(:curs_curso),
+      //                             curs_matricula_prof = :curs_matricula_prof,
+      //                             curs_status         = :curs_status,
+      //                             curs_user_id        = :curs_user_id,
+      //                             curs_data_upd       = GETDATE()
+      //                       WHERE
+      //                             curs_id = :curs_id";
+
+      //   $stmt = $conn->prepare($sql);
+      //   $stmt->execute([
+      //     ':curs_id'             => $curs_id,
+      //     ':curs_curso'          => $curs_curso,
+      //     ':curs_matricula_prof' => $curs_matricula,
+      //     ':curs_status'         => $curs_status,
+      //     ':curs_user_id'        => $rvm_admin_id
+      //   ]);
+
     } elseif ($acao === 'atualizar') {
 
       if (empty($_POST['curs_id'])) {
@@ -100,9 +206,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
         throw new Exception("Curso já cadastrada!");
       }
 
-      $sql = "UPDATE cursos SET 
+      $sql = "UPDATE cursos SET
                                 curs_curso          = UPPER(:curs_curso),
-                                curs_matricula_prof = :curs_matricula_prof,
+                                curs_matricula_prof = :curs_matricula_prof, -- Mantido para compatibilidade
                                 curs_status         = :curs_status,
                                 curs_user_id        = :curs_user_id,
                                 curs_data_upd       = GETDATE()
@@ -113,10 +219,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $stmt->execute([
         ':curs_id'             => $curs_id,
         ':curs_curso'          => $curs_curso,
-        ':curs_matricula_prof' => $curs_matricula,
+        ':curs_matricula_prof' => $main_coordinator_matricula, // Usando a matrícula principal
         ':curs_status'         => $curs_status,
         ':curs_user_id'        => $rvm_admin_id
       ]);
+
+      // EXCLUIR COORDENADORES ATUAIS NA TABELA curso_coordenador
+      $sqlDeleteCoords = "DELETE FROM curso_coordenador WHERE curs_id = :curs_id";
+      $stmtDeleteCoords = $conn->prepare($sqlDeleteCoords);
+      $stmtDeleteCoords->execute([':curs_id' => $curs_id]);
+
+      // INSERIR NOVOS COORDENADORES NA TABELA curso_coordenador
+      foreach ($coordinators_to_save as $matricula_coord) {
+        $sqlInsertCoord = "INSERT INTO curso_coordenador (curs_id, coordenador_matricula) VALUES (:curs_id, :coordenador_matricula)";
+        $stmtInsertCoord = $conn->prepare($sqlInsertCoord);
+        $stmtInsertCoord->execute([
+          ':curs_id' => $curs_id,
+          ':coordenador_matricula' => $matricula_coord
+        ]);
+      }
 
 
 

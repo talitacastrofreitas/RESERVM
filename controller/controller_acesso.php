@@ -90,9 +90,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $stmt->execute([$user_id]);
 
       // GERA UM TOKEN DE VALIDAÇÃO
-      $codigo      = str_pad(random_int(1000000, 9999999), 7, '0', STR_PAD_LEFT); // GERA UM CÓDIGO DE 7 DÍGITOS
+      $codigo = str_pad(random_int(1000000, 9999999), 7, '0', STR_PAD_LEFT); // GERA UM CÓDIGO DE 7 DÍGITOS
       $codigo_hash = password_hash($codigo, PASSWORD_DEFAULT); // CRIPTOGRAFA O CÓDIGO
-      $expira_em   = date('Y-m-d H:i:s', strtotime('+2 minutes'));
+      $expira_em = date('Y-m-d H:i:s', strtotime('+2 minutes'));
 
       if ($stmt->fetchColumn() > 0) {
         // SE HOUVER, ATUALIZA O TOKEN E A DATA DE VALIDADE
@@ -108,7 +108,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $mail = new PHPMailer(true);
       include '../conexao/email.php';
       // $mail->addAddress($row['user_email'], 'RESERVM');
-      $mail->addAddress($email_saap, 'RESERVM');
+
+      $mail->addAddress($user_email, 'RESERVM');
       $mail->isHTML(true);
       $mail->Subject = 'Seu código de acesso chegou'; //TÍTULO DO E-MAIL
 
@@ -144,7 +145,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
         </tr>";
       include '../includes/email/email_footer.php';
 
-      $mail->Body  = $email_conteudo;
+      $mail->Body = $email_conteudo;
 
       try {
         $mail->send();
@@ -198,7 +199,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       if ((!empty($row_tok)) && ($val_token != 0)) {
 
         // O TOKEN TEM VALIDADE DE 24 HORAS
-        $dataReal    = new DateTime(); // DATA EM TEMPO REAL
+        $dataReal = new DateTime(); // DATA EM TEMPO REAL
         $data_valida = new DateTime($row_tok['tok_data_valida']); // DATA DE VALIDADE DO TOKEN
 
         $tok_codigo = $_POST['cod1'] . $_POST['cod2'] . $_POST['cod3'] . $_POST['cod4'] . $_POST['cod5'] . $_POST['cod6'] . $_POST['cod7'];
@@ -245,7 +246,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $log_acao = 'Criar Senha';
 
       // POST
-      $user_id    = $_POST['i']; // DECODIFICA O ID DO USUÁRIO - 'true' EVITA ERROS SILENCIOSOS
+      $user_id = $_POST['i']; // DECODIFICA O ID DO USUÁRIO - 'true' EVITA ERROS SILENCIOSOS
       $user_senha = password_hash($_POST['senha'], PASSWORD_DEFAULT); //CODIFICA A NOVA SENHA DIGITADA
 
       // VERIFICA SE É UM NÚMERO (CHAR(32)) VÁLIDO
@@ -297,7 +298,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       if (empty($_GET['i'])) {
         throw new Exception("Erro ao obter o ID!");
       }
-      $user_id  = $_GET['i'];
+      $user_id = $_GET['i'];
       $log_acao = 'Reenviar Código';
 
       // BUSCA O E-MAIL DO USUÁRIO
@@ -307,9 +308,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $user_email = $row['user_email'];
 
       // GERA UM TOKEN DE VALIDAÇÃO
-      $codigo      = str_pad(random_int(1000000, 9999999), 7, '0', STR_PAD_LEFT); // GERA UM CÓDIGO DE 7 DÍGITOS
+      $codigo = str_pad(random_int(1000000, 9999999), 7, '0', STR_PAD_LEFT); // GERA UM CÓDIGO DE 7 DÍGITOS
       $codigo_hash = password_hash($codigo, PASSWORD_DEFAULT); // CRIPTOGRAFA O CÓDIGO
-      $expira_em   = date('Y-m-d H:i:s', strtotime('+2 minutes'));
+      $expira_em = date('Y-m-d H:i:s', strtotime('+2 minutes'));
 
       // ATUALIZA O TOKEN DO ID DO USUÁRIO
       $stmt = $conn->prepare("UPDATE token SET tok_codigo = :tok_codigo, tok_data_valida = :tok_data_valida WHERE tok_user_id = :tok_user_id");
@@ -321,7 +322,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
       $mail = new PHPMailer(true);
       include '../conexao/email.php';
-      $mail->addAddress($email_saap); // E-MAIL DO ADMINISTRADOR
+      $mail->addAddress($user_email); // E-MAIL DO ADMINISTRADOR
       $mail->isHTML(true);
       $mail->Subject = 'Seu código de acesso chegou'; //TÍTULO DO E-MAIL
 
@@ -359,7 +360,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       </tr>";
       include '../includes/email/email_footer.php';
 
-      $mail->Body  = $email_conteudo;
+      $mail->Body = $email_conteudo;
 
       try {
         $mail->send();
@@ -395,10 +396,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
               VALUES (:modulo, upper(:acao), :acao_id, :dados, :user_id, GETDATE())";
     $stmtLog = $conn->prepare($sqlLog);
     $stmtLog->execute([
-      ':modulo'  => 'AUTENTICAÇÃO',
-      ':acao'    => $log_acao,
+      ':modulo' => 'AUTENTICAÇÃO',
+      ':acao' => $log_acao,
       ':acao_id' => $user_id,
-      ':dados'   => json_encode($log_dados, JSON_UNESCAPED_UNICODE),
+      ':dados' => json_encode($log_dados, JSON_UNESCAPED_UNICODE),
       ':user_id' => $user_id
     ]);
     // -------------------------------

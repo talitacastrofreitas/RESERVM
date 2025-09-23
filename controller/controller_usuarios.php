@@ -136,7 +136,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
       $mail = new PHPMailer(true);
       include '../conexao/email.php';
-      $mail->addAddress($email_saap); // E-MAIL DO ADMINISTRADOR
+      $mail->addAddress($user_email); // E-MAIL DO ADMINISTRADOR
       $mail->isHTML(true);
       $mail->Subject = 'Seu código de acesso chegou'; //TÍTULO DO E-MAIL
 

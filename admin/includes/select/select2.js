@@ -1,14 +1,16 @@
 // CADASTRA ADMINISTRADOR
-$("#cad_admin_matricula").select2({
-  dropdownParent: $("#modal_cad_admin"),
-  placeholder: "Selecionar usuário",
-  //allowClear: true,
-  language: {
-    noResults: function (params) {
-      return "Dados não encontrado";
-    },
-  },
-});
+// $("#cad_admin_matricula").select2({
+//   dropdownParent: $("#modal_cad_admin"),
+//   placeholder: "Selecionar usuário",
+//   //allowClear: true,
+//   language: {
+//     noResults: function (params) {
+//       return "Dados não encontrado";
+//     },
+//   },
+// });
+
+
 // EDITA ADMINISTRADOR
 // $("#edit_admin_matricula").select2({
 //   dropdownParent: $("#modal_edit_admin"),
@@ -27,6 +29,15 @@ $("#cad_user_matricula").select2({
     },
   },
 });
+//
+$("#espaco_id").select2({
+  language: {
+    noResults: function (params) {
+      return "Usuário não encontrado";
+    },
+  },
+});
+
 ///
 $("#cad_col_matricula").select2({
   dropdownParent: $("#cad_emprestimo"),

@@ -16,17 +16,20 @@
             echo "Erro ao tentar recuperar os dados";
           } ?>
           <label class="form-label">Curso <span>*</span></label>
-          <select class="form-select text-uppercase" name="solic_curso" id="cad_solic_curso">
-            <option selected value="<?= $solic_curso ?>"><?= $curs_curso ?></option>
+          <select class="form-select text-uppercase" name="solic_curso" id="cad_solic_curso" required>
+            <option value="" disabled <?= (empty($solic_curso)) ? 'selected' : '' ?>>-- Selecione um Curso --</option>
             <?php foreach ($result as $res) : ?>
-              <option value="<?= $res['curs_id'] ?>"><?= $res['curs_curso'] ?></option>
+              <option value="<?= htmlspecialchars($res['curs_id']) ?>"
+                <?= (!empty($solic_curso) && $solic_curso == $res['curs_id']) ? 'selected' : '' ?>>
+                <?= htmlspecialchars($res['curs_curso']) ?>
+              </option>
             <?php endforeach; ?>
           </select>
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
         <script>
           const cad_solic_tipo_ativ = document.getElementById("cad_solic_tipo_ativ");
-          const campo_solic_curso = document.getElementById("campo_solic_curso");
+          // const campo_solic_curso = document.getElementById("campo_solic_curso");
 
           cad_solic_tipo_ativ.addEventListener("change", function() {
             if (cad_solic_tipo_ativ.value === "1") {

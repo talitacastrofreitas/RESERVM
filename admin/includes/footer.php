@@ -37,26 +37,29 @@
 
 <!-- ALERTAS -->
 <script>
-  // EXCLUIR
-  $('.del-btn').on('click', function (e) {
+  $('.del-btn-publicidade').on('click', function (e) {
     e.preventDefault();
-    const href = $(this).attr('href')
+
+    // CORREÇÃO: Obter o ID do item a ser excluído do atributo 'data-id' do link clicado
+    const pubId = $(this).data('id');
+    const pubCaminho = $(this).data('caminho'); // Obter o caminho também para a mensagem de confirmação
+
     Swal.fire({
-      text: 'Deseja excluir este resgistro?',
-      // title: "You won't be able to revert this!",
+      text: `Deseja excluir a publicidade?`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#0461AD',
       cancelButtonColor: '#C4453E',
       confirmButtonText: 'Excluir',
       cancelButtonText: 'Cancelar',
-      // reverseButtons: true
     }).then((result) => {
-      if (result.value) {
-        document.location.href = href;
+      if (result.isConfirmed) {
+        // Se o usuário confirmar, encontra o formulário de exclusão oculto e o submete
+        // O seletor agora usa o ID da publicidade obtido do link
+        $(`.form-delete-${pubId}`).submit();
       }
-    })
-  })
+    });
+  });
 
   // EXCLUIR CERTIFICADO
   $('.delCert').on('click', function (e) {
@@ -102,24 +105,29 @@
 
 
   // EXCLUIR PUBLICIDADE
-  $('.form-delete-publicidade').on('submit', function (e) {
+  $('.del-btn').on('click', function (e) {
     e.preventDefault();
-    const form = this;
-
+    const href = $(this).attr('href')
     Swal.fire({
-      text: 'Deseja excluir esta publicidade?',
+      text: 'Deseja excluir esse registro?',
+      // title: "You won't be able to revert this!",
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#285FAB',
       cancelButtonColor: '#C4453E',
       confirmButtonText: 'Excluir',
       cancelButtonText: 'Cancelar',
+      //reverseButtons: true
     }).then((result) => {
       if (result.value) {
-        form.submit();
+        document.location.href = href;
       }
-    });
-  });
+    })
+  })
+
+
+
+
 </script>
 
 <!-- VALIDA CPF -->

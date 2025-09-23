@@ -3584,6 +3584,14 @@ table.dataTable.dtr-inline.collapsed
   margin: 5px 0 10px 0 !important;
 }
 
+.form_solicitacao .label_info.label_info_vermelho {
+  background: var(--vermelho_alpha) !important;
+  padding: 8px 10px;
+  border-radius: 4px;
+  color: var(--vermelho) !important;
+  margin: 5px 0 10px 0 !important;
+}
+
 .form_solicitacao .form-select,
 .form_solicitacao .form-control,
 .form_solicitacao .select2-selection {

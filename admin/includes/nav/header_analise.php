@@ -31,8 +31,8 @@ if (isset($_GET['i'])) {
       1  => 'tag_header_laranja',
       2  => 'tag_header_azul',
       3  => 'tag_header_roxo',
-      4  => 'tag_header_azul',
-      5  => 'tag_header_verde',
+      4  => 'tag_header_verde ',
+      5  => 'tag_header_azul',
       6  => 'tag_header_vermelho'
     ];
 
@@ -68,7 +68,7 @@ if (isset($_GET['i'])) {
 
           <div class="col-xl-3 col-lg-6 mb-3">
             <span>Solicitante</span>
-            <p><?=  $solic_row['user_nome'] ? $solic_row['user_nome'] : $solic_row['admin_nome'] ?></p>
+            <p><?= $solic_row['user_nome'] ? $solic_row['user_nome'] : $solic_row['admin_nome'] ?></p>
           </div>
 
           <div class="col-xl-3 col-lg-6 mb-3">

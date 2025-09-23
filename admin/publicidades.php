@@ -62,8 +62,8 @@ include 'includes/header.php';
                         <tr>
                             <th>Tipo</th>
                             <th>Título</th>
-                            <th>Visualizar</th>
-                            <th class="text-end">Ativo</th>
+                            <th>Prévia</th>
+                            <th>Status</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -92,12 +92,25 @@ include 'includes/header.php';
                                     } else {
                                         $previewHtml = '<span class="text-danger">Dados ausentes</span>';
                                     }
+
                                     ?>
+
+
+
+
                                     <tr data-id="<?= $pub['id'] ?>">
+
+
+
+
                                         <td>
                                             <?= htmlspecialchars($pub['media_type'] == 'image' ? 'Imagem' : 'Vídeo') ?>
                                         </td>
                                         <td><?= htmlspecialchars($pub['titulo']) ?></td>
+
+
+
+
                                         <td>
                                             <?php if ($pub['media_type'] === 'image'): ?>
                                                 <a href="#" class="view-media" data-bs-toggle="modal" data-bs-target="#mediaViewerModal"
@@ -110,30 +123,61 @@ include 'includes/header.php';
                                             <?php else: ?>
                                                 <?= $previewHtml ?>             <?php endif; ?>
                                         </td>
-                                        <td class="">
-                                            <form action="controller/controller_publicidades.php" method="POST" class="d-inline">
-                                                <input type="hidden" name="action" value="toggle_status_single">
-                                                <input type="hidden" name="id" value="<?= $pub['id'] ?>">
-                                                <div class="form-check form-switch form-switch-success text-end">
-                                                    <input class="form-check-input" type="checkbox" id="switch-<?= $pub['id'] ?>"
-                                                        name="ativo" value="1" <?= $pub['ativo'] ? 'checked' : '' ?>
-                                                        onchange="this.form.submit()">
-                                                    <label class="form-check-label" for="switch-<?= $pub['id'] ?>"></label>
-                                                </div>
-                                            </form>
+
+                                        <td>
+                                            <?php
+                                            if ($pub['ativo']) {
+                                                $status_color_class = 'bg_info_verde';
+                                                $status_text = 'Ativo';
+                                            } else {
+                                                $status_color_class = 'bg_info_cinza';
+                                                $status_text = 'Inativo';
+                                            }
+                                            ?>
+                                            <span class="badge <?= $status_color_class ?>">
+                                                <?= $status_text ?>
+                                            </span>
                                         </td>
+
                                         <td class="text-end">
+                                            <div class="dropdown drop_tabela d-inline-block">
+                                                <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button"
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="ri-more-fill align-middle"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item edit-publicidade-btn" href="#"
+                                                            data-bs-toggle="modal" data-bs-target="#modalEditarPublicidade"
+                                                            data-id="<?= htmlspecialchars($pub['id']) ?>"
+                                                            data-titulo="<?= htmlspecialchars($pub['titulo']) ?>"
+                                                            data-caminho-imagem="<?= htmlspecialchars($pub['caminho_imagem']) ?>"
+                                                            data-media-type="<?= htmlspecialchars($pub['media_type']) ?>"
+                                                            data-ativo="<?= htmlspecialchars($pub['ativo']) ?>"
+                                                            data-preview-url="<?= $mediaPath ?>" title="Editar">
+                                                            <i class="fa-regular fa-pen-to-square me-2"></i>Editar
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item del-btn-publicidade" href="#"
+                                                            data-id="<?= htmlspecialchars($pub['id']) ?>"
+                                                            data-caminho="<?= htmlspecialchars($pub['caminho_imagem']) ?>"
+                                                            title="Excluir">
+                                                            <i class="fa-regular fa-trash-can me-2"></i>Excluir
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
                                             <form action="controller/controller_publicidades.php" method="POST"
-                                                class="d-inline form-delete-publicidade">
+                                                class="d-none form-delete-publicidade form-delete-<?= htmlspecialchars($pub['id']) ?>">
                                                 <input type="hidden" name="action" value="delete_publicidade_single">
-                                                <input type="hidden" name="id" value="<?= $pub['id'] ?>">
+                                                <input type="hidden" name="id" value="<?= htmlspecialchars($pub['id']) ?>">
                                                 <input type="hidden" name="caminho"
                                                     value="<?= htmlspecialchars($pub['caminho_imagem']) ?>">
-                                                <button type="submit" class="btn text-danger">
-                                                    <i class="ri-delete-bin-line fa-lg"></i>
-                                                </button>
                                             </form>
                                         </td>
+
                                     </tr>
                                     <?php
                                 }
@@ -231,6 +275,63 @@ include 'includes/header.php';
     </div>
 </div>
 
+<!-- MODAL DE EDITAR -->
+<div class="modal fade modal_padrao" id="modalEditarPublicidade" tabindex="-1"
+    aria-labelledby="modalEditarPublicidadeLabel" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal_padrao_cinza">
+                <h5 class="modal-title" id="modalEditarPublicidadeLabel">Editar Publicidade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formEditarPublicidadeModal" action="controller/controller_publicidades.php" method="POST"
+                enctype="multipart/form-data">
+                <input type="hidden" name="action" value="toggle_status_single">
+                <input type="hidden" name="id" id="editPublicidadeId">
+                <input type="hidden" name="caminho_imagem_original" id="editPublicidadeCaminhoOriginal">
+                <input type="hidden" name="media_type_original" id="editPublicidadeMediaTypeOriginal">
+
+
+                <div class="modal-body">
+                    <div class="col-12 mb-3">
+                        <label for="editPublicidadeTitulo" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="editPublicidadeTitulo" name="titulo">
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <label for="editPublicidadeFile" class="form-label">Alterar Imagem/Vídeo</label>
+                        <input class="form-control" type="file" id="editPublicidadeFile" name="novo_arquivo"
+                            accept="image/*,video/*">
+                        <small class="form-text text-muted">A imagem/vídeo atual será substituído.</small>
+                    </div>
+
+                    <!-- <div class="col-12 mb-3">
+                        <div class="current-media-preview text-start">
+                            <h6>Mídia Atual:</h6>
+                            <div id="editPublicidadePreviewContent"
+                                class="d-flex justify-content-center align-items-center"
+                                style="max-height: 200px; overflow: hidden;">
+                            </div>
+                        </div>
+                    </div> -->
+
+                    <div class="col-12 mb-3">
+                        <div class="form-check ">
+                            <input class="form-check-input" type="checkbox" id="editPublicidadeAtivo" name="ativo"
+                                value="1">
+                            <label class="form-check-label" for="editPublicidadeAtivo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn botao btn-light waves-effect"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn botao botao_verde waves-effect">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <?php include 'includes/footer.php'; ?>
 
@@ -254,5 +355,38 @@ include 'includes/header.php';
             }
 
         });
+
+
+        $(document).on('click', '.edit-publicidade-btn', function () {
+            const id = $(this).data('id');
+            const titulo = $(this).data('titulo');
+            const caminhoImagem = $(this).data('caminho-imagem');
+            const mediaType = $(this).data('media-type');
+            const ativo = $(this).data('ativo');
+            const previewUrl = $(this).data('preview-url');
+            $('#editPublicidadeId').val(id);
+            $('#editPublicidadeTitulo').val(titulo);
+            $('#editPublicidadeCaminhoOriginal').val(caminhoImagem);
+            $('#editPublicidadeMediaTypeOriginal').val(mediaType);
+
+            $('#editPublicidadeAtivo').prop('checked', ativo == 1);
+
+
+            const previewContentDiv = $('#editPublicidadePreviewContent');
+            previewContentDiv.empty();
+
+            if (mediaType === 'image') {
+                previewContentDiv.html('<img src="' + previewUrl + '" class="img-fluid" style="max-height: 180px;" alt="Prévia Imagem">');
+            } else if (mediaType === 'video') {
+                const videoType = caminhoImagem.split('.').pop();
+                previewContentDiv.html('<video controls muted loop playsinline style="max-height: 180px; max-width: 100%;"><source src="' + previewUrl + '" type="video/' + videoType + '">Seu navegador não suporta.</video>');
+            } else {
+                previewContentDiv.html('<span class="text-danger">Mídia não visualizável.</span>');
+            }
+        });
+
+
     });
+
+
 </script>

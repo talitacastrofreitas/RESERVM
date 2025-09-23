@@ -25,14 +25,15 @@
       <div class="card-header">
         <div class="row align-items-center">
           <div class="col-md-6 text-md-start text-center">
-            <h5 class="card-title mb-0">Lista de Solicitações</h5>
+            <h5 class="card-title mb-0">Lista de Solicitações Indeferidas</h5>
           </div>
           <div class="col-md-6 d-flex align-items-center d-flex justify-content-md-end justify-content-center">
 
             <div class="d-inline-flex justify-content-center justify-content-md-end gap-2">
               <!-- <button class="btn botao botao_roxo waves-effect mt-3 mt-md-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample"><i class="ri-filter-3-line align-bottom me-1"></i> Filtro</button> -->
 
-              <button class="btn botao botao_amarelo waves-effect mt-3 mt-md-0" data-bs-toggle="modal" data-bs-toggle="button" data-bs-target="#modal_cad_solicitacao">+ Nova Solicitação</button>
+              <button class="btn botao botao_amarelo waves-effect mt-3 mt-md-0" data-bs-toggle="modal"
+                data-bs-toggle="button" data-bs-target="#modal_cad_solicitacao">+ Nova Solicitação</button>
             </div>
 
             <script src="assets/js/filter_card.js"></script>
@@ -54,7 +55,7 @@
                   <label class="form-label">Código</label>
                   <select class="form-select text-uppercase" name="" id="solic_codigo">
                     <option></option>
-                    <?php foreach ($result as $res) : ?>
+                    <?php foreach ($result as $res): ?>
                       <option value="<?= $res['solic_codigo'] ?>"><?= $res['solic_codigo'] ?></option>
                     <?php endforeach; ?>
                   </select>
@@ -66,7 +67,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -86,7 +87,7 @@
                   <label class="form-label">Tipo de Atividade</label>
                   <select class="form-select text-uppercase" name="" id="">
                     <option></option>
-                    <?php foreach ($result as $res) : ?>
+                    <?php foreach ($result as $res): ?>
                       <option value="<?= $res['cta_id'] ?>"><?= $res['cta_tipo_atividade'] ?></option>
                     <?php endforeach; ?>
                   </select>
@@ -98,7 +99,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -120,7 +121,7 @@
                   <label class="form-label">Curso</label>
                   <select class="form-select text-uppercase" name="" id="solic_curso">
                     <option></option>
-                    <?php foreach ($result as $res) : ?>
+                    <?php foreach ($result as $res): ?>
                       <option value="<?= $res['curs_id'] ?>"><?= $res['curs_curso'] ?></option>
                     <?php endforeach; ?>
                   </select>
@@ -132,7 +133,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -154,7 +155,7 @@
                   <label class="form-label">Componente/Atividade</label>
                   <select class="form-select text-uppercase" name="" id="solic_comp_ativ">
                     <option></option>
-                    <?php foreach ($result as $res) : ?>
+                    <?php foreach ($result as $res): ?>
                       <option value="<?= $res['compc_id'] ?>"><?= $res['compc_componente'] ?></option>
                       <option value="<?= $res['solic_nome_atividade'] ?>"><?= $res['solic_nome_atividade'] ?></option>
                       <option value="<?= $res['solic_nome_comp_ativ'] ?>"><?= $res['solic_nome_comp_ativ'] ?></option>
@@ -168,7 +169,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -188,7 +189,7 @@
                   <label class="form-label">Professor/Responsável</label>
                   <select class="form-select text-uppercase" name="" id="solic_nome_prof_resp">
                     <option></option>
-                    <?php foreach ($result as $res) : ?>
+                    <?php foreach ($result as $res): ?>
                       <option value="<?= $res['solic_nome_prof_resp'] ?>"><?= $res['solic_nome_prof_resp'] ?></option>
                     <?php endforeach; ?>
                   </select>
@@ -200,7 +201,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -222,7 +223,7 @@
                   <label class="form-label">Semestre</label>
                   <select class="form-select text-uppercase" name="" id="solic_semestre">
                     <option></option>
-                    <?php foreach ($result as $res) : ?>
+                    <?php foreach ($result as $res): ?>
                       <option value="<?= $res['cs_id'] ?>"><?= $res['cs_semestre'] ?></option>
                     <?php endforeach; ?>
                   </select>
@@ -234,7 +235,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -254,7 +255,7 @@
                   <label class="form-label">Campus - Aula Prática</label>
                   <select class="form-select text-uppercase" name="" id="">
                     <option></option>
-                    <?php foreach ($result as $res) : ?>
+                    <?php foreach ($result as $res): ?>
                       <option value="<?= $res['uni_id'] ?>"><?= $res['uni_unidade'] ?></option>
                     <?php endforeach; ?>
                   </select>
@@ -266,7 +267,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -290,7 +291,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -310,7 +311,7 @@
                   <label class="form-label">Campus - Aula Teórica</label>
                   <select class="form-select text-uppercase" name="" id="">
                     <option></option>
-                    <?php foreach ($result as $res) : ?>
+                    <?php foreach ($result as $res): ?>
                       <option value="<?= $res['uni_id'] ?>"><?= $res['uni_unidade'] ?></option>
                     <?php endforeach; ?>
                   </select>
@@ -322,7 +323,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -346,7 +347,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -373,7 +374,7 @@
                     placeholder: "",
                     allowClear: true, // opcional: mostra o "x" para limpar a seleção
                     language: {
-                      noResults: function(params) {
+                      noResults: function (params) {
                         return "Dados não encontrado";
                       },
                     },
@@ -427,6 +428,7 @@
                                       LEFT JOIN conf_semestre ON conf_semestre.cs_id = solicitacao.solic_semestre
                                       LEFT JOIN usuarios ON usuarios.user_id = solicitacao.solic_cad_por
                                       LEFT JOIN admin ON admin.admin_id = solicitacao.solic_cad_por
+                                      WHERE solicitacao_status.solic_sta_status = 6
                                       ");
               $stmt->execute();
               while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -443,10 +445,10 @@
                   $status_color = 'bg_info_roxo';
                 }
                 if ($solic_sta_status == 4) {
-                  $status_color = 'bg_info_azul_escuro';
+                  $status_color = 'bg_info_verde';
                 }
                 if ($solic_sta_status == 5) {
-                  $status_color = 'bg_info_verde';
+                  $status_color = 'bg_info_azul_escuro';
                 }
                 if ($solic_sta_status == 6) {
                   $status_color = 'bg_info_vermelho';
@@ -462,13 +464,15 @@
                 $primeiroNome = $partesNome[0];
                 $ultimoNome = end($partesNome);
 
-            ?>
+                ?>
                 <tr role="button" data-href='solicitacao_analise.php?i=<?= $solic_id ?>'>
                   <th scope="row"><?= $solic_codigo ?></th>
                   <td scope="row"><?= $curs_curso ?></td>
                   <td scope="row"><?= $compc_componente ?><?= $solic_nome_atividade ?><?= $solic_nome_comp_ativ ?></td>
                   <td scope="row" nowrap="nowrap"><?= $primeiroNome . ' ' . $ultimoNome ?></td>
-                  <td scope="row" nowrap="nowrap"><span class="hide_data"><?= date('Ymd', strtotime($solic_data_cad)) ?></span><?= date('d/m/Y H:i', strtotime($solic_data_cad)) ?></td>
+                  <td scope="row" nowrap="nowrap"><span
+                      class="hide_data"><?= date('Ymd', strtotime($solic_data_cad)) ?></span><?= date('d/m/Y H:i', strtotime($solic_data_cad)) ?>
+                  </td>
                   <td scope="row"><span class="badge <?= $status_color ?>"><?= $stsolic_status ?></span></td>
                   <!-- <td class="text-end">
                     <div class="dropdown dropdown drop_tabela d-inline-block">
@@ -496,7 +500,7 @@
                     </div>
                   </td> -->
                 </tr>
-            <?php }
+              <?php }
             } catch (PDOException $e) {
               // echo "Erro: " . $e->getMessage();
               echo "Erro ao tentar recuperar os dados";
@@ -509,9 +513,9 @@
 </div>
 
 <script>
-  $(document).ready(function() {
+  $(document).ready(function () {
     // Clique na linha da tabela, com exceções
-    $('table').on('click', 'tr', function(e) {
+    $('table').on('click', 'tr', function (e) {
       // Ignora cliques em dropdowns ou controles de expansão
       if (
         $(e.target).closest('.dropdown').length > 0 ||
@@ -528,7 +532,7 @@
     });
 
     // Apenas por segurança, evita propagação em elementos específicos
-    $(document).on('click', '.dropdown, td.dtr-control', function(e) {
+    $(document).on('click', '.dropdown, td.dtr-control', function (e) {
       e.stopPropagation();
     });
   });
@@ -536,15 +540,18 @@
 
 
 <!-- CADASTRAR SOLICITAÇÃO -->
-<div class="modal fade modal_padrao" id="modal_cad_solicitacao" tabindex="-1" aria-labelledby="modal_cad_solicitacao" aria-modal="true">
+<div class="modal fade modal_padrao" id="modal_cad_solicitacao" tabindex="-1" aria-labelledby="modal_cad_solicitacao"
+  aria-modal="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header modal_padrao_cinza">
         <h5 class="modal-title" id="modal_cad_solicitacao">Cadastrar Solicitação</h5>
-        <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
-        <form class="needs-validation" method="POST" action="../router/web.php?r=AdminSolic" autocomplete="off" novalidate>
+        <form class="needs-validation" method="POST" action="../router/web.php?r=AdminSolic" autocomplete="off"
+          novalidate>
 
           <div class="row grid gx-3">
 
@@ -563,7 +570,7 @@
                 <label class="form-label">Curso <span>*</span></label>
                 <select class="form-select text-uppercase" name="solic_curso" id="cad_solic_curso" required>
                   <option selected disabled value=""></option>
-                  <?php foreach ($result as $res) : ?>
+                  <?php foreach ($result as $res): ?>
                     <option value="<?= $res['curs_id'] ?>"><?= $res['curs_curso'] ?></option>
                   <?php endforeach; ?>
                 </select>
@@ -592,7 +599,7 @@
                 <label class="form-label">Nome do Curso <span>*</span></label>
                 <select class="form-select text-uppercase" name="solic_nome_curso" id="cad_solic_nome_curso">
                   <option selected disabled value=""></option>
-                  <?php foreach ($result as $res) : ?>
+                  <?php foreach ($result as $res): ?>
                     <option value="<?= $res['cexc_id'] ?>"><?= $res['cexc_curso'] ?></option>
                   <?php endforeach; ?>
                 </select>
@@ -603,7 +610,8 @@
             <div class="col-12" id="campo_solic_nome_curso_text" style="display: none;">
               <div class="mb-3">
                 <label class="form-label">Nome do Curso <span>*</span></label>
-                <input type="text" class="form-control text-uppercase" name="solic_nome_curso_text" id="cad_solic_nome_curso_text" maxlength="200">
+                <input type="text" class="form-control text-uppercase" name="solic_nome_curso_text"
+                  id="cad_solic_nome_curso_text" maxlength="200">
                 <div class="invalid-feedback">Este campo é obrigatório</div>
               </div>
             </div>
@@ -611,7 +619,8 @@
             <div class="col-12" id="campo_solic_nome_atividade" style="display: none;">
               <div class="mb-3">
                 <label class="form-label">Nome da Atividade <span>*</span></label>
-                <input type="text" class="form-control text-uppercase" name="solic_nome_atividade" id="cad_solic_nome_atividade" maxlength="200">
+                <input type="text" class="form-control text-uppercase" name="solic_nome_atividade"
+                  id="cad_solic_nome_atividade" maxlength="200">
                 <div class="invalid-feedback">Este campo é obrigatório</div>
               </div>
             </div>
@@ -619,7 +628,8 @@
             <div class="col-12" id="campo_solic_nome_comp_ativ" style="display: none;">
               <div class="mb-3">
                 <label class="form-label">Nome do Componente/Atividade <span>*</span></label>
-                <input type="text" class="form-control text-uppercase" name="solic_nome_comp_ativ" id="cad_solic_nome_comp_ativ" maxlength="200">
+                <input type="text" class="form-control text-uppercase" name="solic_nome_comp_ativ"
+                  id="cad_solic_nome_comp_ativ" maxlength="200">
                 <div class="invalid-feedback">Este campo é obrigatório</div>
               </div>
             </div>
@@ -636,7 +646,7 @@
                 <label class="form-label">Semestre <span>*</span></label>
                 <select class="form-select text-uppercase" name="solic_semestre" id="cad_solic_semestre">
                   <option selected disabled value=""></option>
-                  <?php foreach ($result as $res) : ?>
+                  <?php foreach ($result as $res): ?>
                     <option value="<?= $res['cs_id'] ?>"><?= $res['cs_semestre'] ?></option>
                   <?php endforeach; ?>
                 </select>
@@ -647,7 +657,8 @@
             <div class="col-md-6" id="campo_solic_nome_prof_resp" style="display: none;">
               <div class="mb-3">
                 <label class="form-label">Nome do Professor/Responsável <span>*</span></label>
-                <input type="text" class="form-control text-uppercase" name="solic_nome_prof_resp" id="cad_solic_nome_prof_resp" maxlength="200">
+                <input type="text" class="form-control text-uppercase" name="solic_nome_prof_resp"
+                  id="cad_solic_nome_prof_resp" maxlength="200">
                 <div class="invalid-feedback">Este campo é obrigatório</div>
               </div>
             </div>
@@ -675,7 +686,7 @@
 </div>
 
 <script>
-  $(document).ready(function() {
+  $(document).ready(function () {
     function toggleFields() {
       var tipoAtiv = $('#cad_solic_tipo_ativ').val();
       var curso = $('#cad_solic_curso').val();
@@ -737,7 +748,7 @@
       }
     }
 
-    $('#cad_solic_tipo_ativ, #cad_solic_curso, #cad_solic_comp_curric, #cad_solic_nome_curso, #campo_solic_nome_curso_text').change(function() {
+    $('#cad_solic_tipo_ativ, #cad_solic_curso, #cad_solic_comp_curric, #cad_solic_nome_curso, #campo_solic_nome_curso_text').change(function () {
       $('[id^="campo_"]').hide().find('input, select').prop('required', false);
       toggleFields();
     });
@@ -747,9 +758,9 @@
 </script>
 
 <script>
-  $(document).ready(function() {
+  $(document).ready(function () {
     // Quando o curso for alterado
-    $('#cad_solic_curso').change(function() {
+    $('#cad_solic_curso').change(function () {
       var cursoId = $(this).val();
       if (cursoId !== "") {
         $.ajax({
@@ -758,7 +769,7 @@
           data: {
             curso_id: cursoId
           },
-          success: function(data) {
+          success: function (data) {
             $('#cad_solic_comp_curric').html(data);
           }
         });

@@ -43,7 +43,7 @@
               <th><span class="me-3">Contato</span></th>
               <th><span class="me-3">Perfil</span></th>
               <th><span class="me-3">Status</span></th>
-              
+
             </tr>
           </thead>
           <tbody>
@@ -52,7 +52,7 @@
             try {
               $stmt = $conn->prepare("SELECT * FROM $view_colaboradores
                                       INNER JOIN usuarios ON usuarios.user_email = $view_colaboradores.EMAIL
-                                      LEFT JOIN cursos ON cursos.curs_matricula_prof = $view_colaboradores.CHAPA
+                                      LEFT JOIN curso_coordenador ON curso_coordenador.coordenador_matricula = $view_colaboradores.CHAPA
                                         --WHERE user_status NOT IN (2)
                                         ");
               $stmt->execute();
@@ -62,8 +62,8 @@
 
                 // CONFIGURAÇÃO DO STATUS
                 // Se a matrícula for desativada da base, o usuário deve aparecer como restrito
-                $status_color = (empty($CHAPA) ) ? 'bg_info_cinza' : 'bg_info_verde';
-                $status_nome = (empty($CHAPA) ) ? 'RESTRITO' : 'LIBERADO';
+                $status_color = (empty($CHAPA)) ? 'bg_info_cinza' : 'bg_info_verde';
+                $status_nome = (empty($CHAPA)) ? 'RESTRITO' : 'LIBERADO';
 
                 // CONFIGURAÇÃO DO PERFIL
                 $perfil_color = (empty($curs_id)) ? 'bg_info_azul' : 'bg_info_roxo';

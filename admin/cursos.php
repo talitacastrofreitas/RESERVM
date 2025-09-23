@@ -8,6 +8,23 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
 }
 ?>
 
+<style>
+  .select2-container {
+    display: block !important;
+    height: auto !important;
+    width: 100% !important; /* Ou o que for necessário */
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 9999 !important; /* Para garantir que esteja na frente */
+}
+.select2-dropdown { /* Se o dropdown aparece, mas não o input */
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 9999 !important;
+}
+</style>
+
 <div class="row">
   <div class="col-12">
     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -51,23 +68,56 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
 
             <?php
             try {
-              $stmt = $conn->prepare("SELECT curs_id, curs_curso, curs_matricula_prof, curs_status, st_id, st_status, CHAPA, NOMESOCIAL, EMAIL FROM cursos
-                                      LEFT JOIN $view_colaboradores ON $view_colaboradores.CHAPA = cursos.curs_matricula_prof
-                                      INNER JOIN status ON status.st_id = cursos.curs_status
-                                      ORDER BY curs_curso");
+              $stmt = $conn->prepare("
+                SELECT
+                    c.curs_id,
+                    c.curs_curso,
+                    c.curs_status,
+                    s.st_id,
+                    s.st_status,
+                    -- Coordenadores Matriculas
+                    STUFF((
+                        SELECT ', ' + col.CHAPA
+                        FROM curso_coordenador cc_sub
+                        LEFT JOIN $view_colaboradores col ON col.CHAPA = cc_sub.coordenador_matricula
+                        WHERE cc_sub.curs_id = c.curs_id
+                        ORDER BY col.CHAPA
+                        FOR XML PATH('')
+                    ), 1, 2, '') AS CoordenadoresMatriculas,
+                    -- Coordenadores Nomes
+                    STUFF((
+                        SELECT ', ' + col.NOMESOCIAL
+                        FROM curso_coordenador cc_sub
+                        LEFT JOIN $view_colaboradores col ON col.CHAPA = cc_sub.coordenador_matricula
+                        WHERE cc_sub.curs_id = c.curs_id
+                        ORDER BY col.NOMESOCIAL
+                        FOR XML PATH('')
+                    ), 1, 2, '') AS CoordenadoresNomes,
+                    -- Coordenadores Emails
+                    STUFF((
+                        SELECT ', ' + col.EMAIL
+                        FROM curso_coordenador cc_sub
+                        LEFT JOIN $view_colaboradores col ON col.CHAPA = cc_sub.coordenador_matricula
+                        WHERE cc_sub.curs_id = c.curs_id
+                        ORDER BY col.EMAIL
+                        FOR XML PATH('')
+                    ), 1, 2, '') AS CoordenadoresEmails
+                FROM cursos c
+                INNER JOIN status s ON s.st_id = c.curs_status
+                ORDER BY c.curs_curso
+              ");
               $stmt->execute();
               while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
                 $curs_id             = $row['curs_id'];
                 $curs_curso          = $row['curs_curso'];
-                $curs_matricula_prof = $row['curs_matricula_prof'];
                 $curs_status         = $row['curs_status'];
                 $st_id               = $row['st_id'];
                 $st_status           = $row['st_status'];
-                //
-                $CHAPA               = $row['CHAPA'];
-                $NOMESOCIAL          = $row['NOMESOCIAL'];
-                $EMAIL               = $row['EMAIL'];
+                // Novos campos concatenados da consulta
+                $CoordenadoresMatriculas = $row['CoordenadoresMatriculas'];
+                $CoordenadoresNomes      = $row['CoordenadoresNomes'];
+                $CoordenadoresEmails     = $row['CoordenadoresEmails'];
 
                 //CONFIGURAÇÃO DO STATUS
                 $status_color = ($st_id == 1) ? 'bg_info_verde' : 'bg_info_cinza';
@@ -75,9 +125,9 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
 
                 <tr>
                   <th><?= htmlspecialchars($curs_curso) ?></th>
-                  <td><?= $CHAPA ?></td>
-                  <td><?= $NOMESOCIAL ?></td>
-                  <td><?= $EMAIL ?></td>
+                  <td><?= htmlspecialchars($CoordenadoresMatriculas) ?></td>
+                  <td><?= htmlspecialchars($CoordenadoresNomes) ?></td>
+                  <td><?= htmlspecialchars($CoordenadoresEmails) ?></td>
                   <td><span class="badge <?= $status_color ?>"><?= htmlspecialchars($st_status) ?></span></td>
                   <td class="text-end">
                     <div class="dropdown drop_tabela d-inline-block">
@@ -88,7 +138,6 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
                         <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal" data-bs-target="#modal_edit_curso"
                             data-bs-curs_id="<?= htmlspecialchars($curs_id) ?>"
                             data-bs-curs_curso="<?= htmlspecialchars($curs_curso) ?>"
-                            data-bs-curs_nomesocial="<?= htmlspecialchars($CHAPA) . ' - ' . htmlspecialchars($NOMESOCIAL) ?>"
                             data-bs-curs_status="<?= htmlspecialchars($curs_status) ?>"
                             title="Editar"><i class="fa-regular fa-pen-to-square me-2"></i> Editar</a></li>
                         <li><a href="../router/web.php?r=Curs&acao=deletar&curs_id=<?= $curs_id ?>" class="dropdown-item remove-item-btn del-btn" title="Excluir"><i class="fa-regular fa-trash-can me-2"></i> Excluir</a></li>
@@ -99,8 +148,8 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
 
             <?php }
             } catch (PDOException $e) {
-              // echo "Erro: " . $e->getMessage();
-              echo "Erro ao tentar recuperar os dados";
+              error_log("Erro ao tentar recuperar os dados: " . $e->getMessage()); // Mantenha este log para depuração
+              echo "Erro ao tentar recuperar os dados. Por favor, verifique os logs de erro para mais detalhes."; // Mensagem mais amigável
             } ?>
           </tbody>
         </table>
@@ -130,17 +179,25 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
               <div class="invalid-feedback">Este campo é obrigatório</div>
             </div>
 
-            <div class="col-12">
+            <!-- <div class="col-12">
               <label class="form-label">Coordenador(a)</label>
               <select class="form-select text-uppercase" name="curs_matricula_prof" id="cad_curs_matricula_prof">
                 <option selected value=""></option>
+              </select>
+              <div class="invalid-feedback">Este campo é obrigatório</div>
+            </div> -->
+
+            <div class="col-12">
+              <label class="form-label">Coordenador(a)</label>
+              <select class="form-select text-uppercase" name="curs_matricula_prof[]" id="cad_curs_matricula_prof" multiple>
+                <option value=""></option>
               </select>
               <div class="invalid-feedback">Este campo é obrigatório</div>
             </div>
 
             <div class="col-12">
               <label class="form-label">E-mail</label>
-              <input type="email" class="form-control text-lowercase" id="cad_curs_email_prof" disabled>
+              <input type="text" class="form-control text-lowercase" id="cad_curs_email_prof" readonly>
             </div>
 
             <div class="col-12">
@@ -192,17 +249,26 @@ unset($_SESSION['form_curs']);
               <div class="invalid-feedback">Este campo é obrigatório</div>
             </div>
 
-            <div class="col-12">
+            <!-- <div class="col-12">
               <label class="form-label">Coordenador(a)</label>
               <select class="form-select text- curs_matricula_prof" name="curs_matricula_prof" id="edit_curs_matricula_prof">
                 <option selected value=""></option>
+              </select>
+              <div class="invalid-feedback">Este campo é obrigatório</div>
+            </div> -->
+
+            <div class="col-12">
+              <label class="form-label">Coordenador(a)</label>
+              <select class="form-select text- curs_matricula_prof" name="curs_matricula_prof[]" id="edit_curs_matricula_prof" multiple>
+                <option value=""></option>
               </select>
               <div class="invalid-feedback">Este campo é obrigatório</div>
             </div>
 
             <div class="col-12">
               <label class="form-label">E-mail</label>
-              <input type="email" class="form-control text-lowercase curs_email" id="edit_curs_email_prof" disabled>
+              <input type="text" class="form-control text-lowercase curs_email" id="edit_curs_email_prof" readonly>
+
             </div>
 
             <div class="col-12">
@@ -226,7 +292,7 @@ unset($_SESSION['form_curs']);
   </div>
 </div>
 
-<script>
+<!-- <script>
   const modal_edit_curso = document.getElementById('modal_edit_curso')
   if (modal_edit_curso) {
     modal_edit_curso.addEventListener('show.bs.modal', event => {
@@ -258,15 +324,75 @@ unset($_SESSION['form_curs']);
       }
     })
   }
-</script>
+</script> -->
+
+<!-- 
+<script>
+  const modal_edit_curso = document.getElementById('modal_edit_curso')
+  if (modal_edit_curso) {
+    modal_edit_curso.addEventListener('show.bs.modal', event => {
+      const button = event.relatedTarget
+      // EXTRAI DADOS DO data-bs-*
+      const curs_id = button.getAttribute('data-bs-curs_id')
+      const curs_curso = button.getAttribute('data-bs-curs_curso')
+      // const curs_nomesocial = button.getAttribute('data-bs-curs_nomesocial') // ESTE NÃO SERÁ MAIS USADO AQUI
+      const curs_status = button.getAttribute('data-bs-curs_status')
+      //
+      const modalTitle = modal_edit_curso.querySelector('.modal-title')
+      const modal_curs_id = modal_edit_curso.querySelector('.curs_id')
+      const modal_curs_curso = modal_edit_curso.querySelector('.curs_curso')
+      // const modal_curs_nomesocial = modal_edit_curso.querySelector('.curs_nomesocial') // NÃO SERÁ USADO MAIS
+      const modal_curs_status = modal_edit_curso.querySelector('.curs_status')
+      //
+      modalTitle.textContent = 'Atualizar Dados'
+      modal_curs_id.value = curs_id
+      modal_curs_curso.value = curs_curso
+
+      // VERIFICA SE O CHECKBOX ESTÁ MARCADO
+      if (curs_status === '1') {
+        modal_curs_status.checked = true;
+      } else {
+        modal_curs_status.checked = false;
+      }
+
+      // NOVO: BUSCA OS COORDENADORES JÁ ASSOCIADOS A ESTE CURSO E PREENCHE O SELECT MULTIPLO
+      $.ajax({
+        url: "controller/get_course_coordinators.php", // Novo script que você vai criar
+        type: "GET",
+        dataType: "json",
+        data: {
+          curs_id: curs_id
+        },
+        success: function(data) {
+          const selectedCoordinators = [];
+          $.each(data, function(index, coordinator) {
+            // O valor da option será "CHAPA - NOMESOCIAL"
+            selectedCoordinators.push(coordinator.CHAPA + ' - ' + coordinator.NOMESOCIAL);
+          });
+          // Define os valores selecionados no select2
+          $('#edit_curs_matricula_prof').val(selectedCoordinators).trigger('change');
+        },
+        error: function(xhr, status, error) {
+          console.error("Erro ao buscar os coordenadores do curso:", error);
+          // Opcional: exiba uma mensagem de erro para o usuário
+        }
+      });
+    })
+  }
+</script> -->
+
 
 
 <!-- ITENS DOS SELECTS -->
-<script src="../assets/js/351.jquery.min.js"></script>
-<script src="includes/select/select_colaboradores.js"></script>
+<!-- <script src="../assets/js/351.jquery.min.js"></script> -->
 <!-- FOOTER -->
 <?php include 'includes/footer.php'; ?>
+
+
 <!-- COMPLETO FORM -->
-<script src="includes/select/completa_form.js"></script>
+<!-- <script src="includes/select/completa_form.js"></script> -->
 <!-- SELECT2 FORM -->
 <script src="includes/select/select2.js"></script>
+<!-- ITENS DOS SELECTS -->
+<script src="includes/select/select_colaboradores.js"></script>
+

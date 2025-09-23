@@ -118,6 +118,7 @@
               <th><span class="me-2">Pavilhão</span></th>
               <th><span class="me-2">Andar</span></th>
               <th><span class="me-2">Campus</span></th>
+              <th><span class="me-2"></span></th>
             </tr>
           </thead>
           <tbody>
@@ -132,7 +133,7 @@
               $params[':user_id'] = $user_id;
 
               // Construção da query SQL em partes
-              $sql = "SELECT res_data, res_hora_inicio, res_hora_fim, curs_curso, cs_semestre, compc_componente, res_componente_atividade, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, esp_nome_local_resumido,pav_pavilhao, and_andar, uni_unidade, res_obs, user_id, user_nome
+              $sql = "SELECT res_id, res_status, res_data, res_hora_inicio, res_hora_fim, curs_curso, cs_semestre, compc_componente, res_componente_atividade, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, esp_nome_local_resumido,pav_pavilhao, and_andar, uni_unidade, res_obs, user_id, user_nome, solicitacao.solic_id
                       FROM reservas
                       INNER JOIN solicitacao ON solicitacao.solic_id = reservas.res_solic_id
                       LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
@@ -145,7 +146,8 @@
                       LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
                       INNER JOIN usuarios ON usuarios.user_id = solicitacao.solic_cad_por
                       WHERE user_id = :user_id 
-                      --WHERE res_data = :data
+                      AND (res_status IS NULL OR res_status NOT IN (8))
+                      -- WHERE res_data = :data
                       ";
 
               // Filtro por data
@@ -171,6 +173,9 @@
               $stmt->execute($params);
               while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
+                $res_id = $row['res_id']; // Variável crucial para o cancelamento
+                $solic_id = $row['solic_id'];
+
                 $res_data                      = $row['res_data'];
                 $res_hora_inicio               = $row['res_hora_inicio'];
                 $res_hora_fim                  = $row['res_hora_fim'];
@@ -195,6 +200,25 @@
                 } else if (!empty($res_nome_atividade)) {
                   $componente = $res_nome_atividade;
                 }
+                // Lógica de validação das 48 horas
+                $res_data_hora = new DateTime($res_data . ' ' . $res_hora_inicio);
+                $data_hora_atual = new DateTime();
+                $intervalo = $data_hora_atual->diff($res_data_hora);
+                $horas_totais = $intervalo->days * 24 + $intervalo->h;
+
+                // Se a reserva já passou, o botão também não deve ser habilitado
+                $reserva_ja_passou = $data_hora_atual > $res_data_hora;
+
+                // Condição para desabilitar o botão
+                $link_disabled = ($horas_totais < 48 || $reserva_ja_passou) ? 'disabled' : '';
+
+
+                // Define a classe CSS e a condição de desabilitado
+                if ($horas_totais < 48 || $reserva_ja_passou) {
+                  $classe_link = 'link_cinza_claro disabled';
+                } else {
+                  $classe_link = 'text-danger';
+                }
 
             ?>
                 <tr>
@@ -210,6 +234,29 @@
                   <td scope="row" nowrap="nowrap" class="text-uppercase"><?= htmlspecialchars($pav_pavilhao) ?></td>
                   <td scope="row" nowrap="nowrap" class="text-uppercase"><?= htmlspecialchars($and_andar) ?></td>
                   <td scope="row" nowrap="nowrap" class="text-uppercase"><?= htmlspecialchars($uni_unidade) ?></td>
+
+                  <td class="text-end">
+                    <div class="dropdown dropdown drop_tabela d-inline-block">
+                      <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ri-more-fill align-middle"></i>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+
+
+
+
+                        <li>
+                          <a href="#" class="dropdown-item <?= $classe_link ?>" data-bs-toggle="modal" data-bs-target="#modal_cancelar_reserva_unica" data-res-id="<?= htmlspecialchars($res_id) ?>">
+                            <i class="fa-solid fa-ban me-2"></i> Cancelar Reserva
+                          </a>
+                        </li>
+
+
+                      </ul>
+                    </div>
+
+                  </td>
+
                 </tr>
             <?php }
             } catch (PDOException $e) {
@@ -226,4 +273,25 @@
 </div>
 </div>
 
+
+
+
+
+
+
 <?php include 'includes/footer.php'; ?>
+
+<!-- MODAL -->
+<?php include 'includes/modal/modal_cancelar_reserva.php'; ?>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var cancelReservaUnicaModal = document.getElementById('modal_cancelar_reserva_unica');
+    cancelReservaUnicaModal.addEventListener('show.bs.modal', function(event) {
+      var button = event.relatedTarget;
+      var resId = button.getAttribute('data-res-id');
+      var modalResIdInput = cancelReservaUnicaModal.querySelector('#res_id_cancelar');
+      modalResIdInput.value = resId;
+    });
+  });
+</script>

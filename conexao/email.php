@@ -1,30 +1,34 @@
 <?php
 
-use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\PHPMailer;
 
-require_once 'conexao.php';
+$mail->SMTPDebug = SMTP::DEBUG_SERVER;
+$mail->CharSet = "UTF-8";
+//$mail->isSMTP();
+$mail->SMTPDebug = false;
+$mail->SMTPAuth = true;
+$mail->SMTPSecure = 'tls';
+$mail->Host = 'smtp-mail.outlook.com';
+$mail->SMTPAuth = true;
+$mail->Username = 'dev-noreply@bahiana.edu.br';
+$mail->Password = 'F#370732640306uz';
+$mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+$mail->Port = 587;
+$mail->setFrom('dev-noreply@bahiana.edu.br', 'RESERVM - Sistema de Reservas de Espaços');
 
-$mail = new PHPMailer(true);
+// ==============================================================LOCALHOST
 
-try {
-    $mail->isSMTP();
-    $mail->Host = $_ENV['MAIL_HOST'];
-    $mail->SMTPAuth = true;
-    $mail->Username = $_ENV['MAIL_USERNAME'];
-    $mail->Password = $_ENV['MAIL_PASSWORD'];
-    $mail->SMTPSecure = $_ENV['MAIL_ENCRYPTION'];
-    $mail->Port = $_ENV['MAIL_PORT'];
-
-    $mail->CharSet = "UTF-8";
-
-    $mail->SMTPDebug = false;
-
-    $mail->setFrom($_ENV['MAIL_FROM_ADDRESS'], $_ENV['MAIL_FROM_NAME']);
-
-} catch (Exception $e) {
-    // error_log("O e-mail não pôde ser enviado. Erro do Mailer: {$mail->ErrorInfo}");
-    echo "O e-mail não pôde ser enviado. Erro do Mailer: {$mail->ErrorInfo}";
-}
-
+// $mail->SMTPDebug = SMTP::DEBUG_SERVER;
+// $mail->CharSet = "UTF-8";
+// //$mail->isSMTP();
+// $mail->SMTPDebug = false;
+// $mail->SMTPAuth = true;
+// $mail->SMTPSecure = 'tls';
+// $mail->Host = 'smtp.gmail.com';
+// $mail->SMTPAuth = true;
+// $mail->Username = 'talitacastrofreitas@gmail.com';
+// $mail->Password = 'vmvottyedfzursuw';
+// $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+// $mail->Port = 587;
+// $mail->setFrom('talitacastrofreitas@gmail.com', 'RESERVM - Sistema de Reservas de Espaços');

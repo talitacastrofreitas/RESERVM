@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $stmt->bindParam(':media_type', $mediaType);
 
                         if ($stmt->execute()) {
-                            $_SESSION['msg'] = 'Publicidade adicionada com sucesso no Reservm e Painel TV!';
+                            $_SESSION['msg'] = 'Publicidade adicionada com sucesso!';
                             error_log("SUCESSO: Dados inseridos no banco de dados pelo Reservm. Caminho BD: " . $caminho_para_bd_compartilhado);
 
                             $ch = curl_init();
@@ -186,37 +186,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             break;
 
         case 'toggle_status_single':
-            error_log("Iniciando 'toggle_status_single' case (Reservm).");
-            if (isset($_POST['id'])) {
+            error_log("Iniciando 'update_publicidade' case (Reservm).");
+            if (isset($_POST['id']) && isset($_POST['titulo'])) {
                 $id = (int) $_POST['id'];
-                $ativo = isset($_POST['ativo']) ? 1 : 0;
+                $newTitulo = trim($_POST['titulo']);
+                $newAtivo = isset($_POST['ativo']) ? (int) $_POST['ativo'] : 0;
+                $caminhoImagemOriginal = $_POST['caminho_imagem_original'] ?? '';
+                $mediaTypeOriginal = $_POST['media_type_original'] ?? '';
+                $caminhoImagemAtualizado = $caminhoImagemOriginal;
+                $mediaTypeAtualizado = $mediaTypeOriginal;
 
+                $fileNameOriginal = basename($caminhoImagemOriginal);
+
+                // VERIFICA SE UM NOVO ARQUIVO FOI ENVIADO
+                if (isset($_FILES['novo_arquivo']) && $_FILES['novo_arquivo']['error'] == UPLOAD_ERR_OK) {
+                    $novoArquivo = $_FILES['novo_arquivo'];
+                    $fileExtension = strtolower(pathinfo($novoArquivo['name'], PATHINFO_EXTENSION));
+                    $mediaTypeAtualizado = in_array($fileExtension, ['jpg', 'jpeg', 'png', 'gif']) ? 'image' : 'video';
+                    $fileName = uniqid() . '_' . str_replace(' ', '', basename($novoArquivo['name']));
+
+                    $targetPath = $uploadDirLocalReservm . $fileName;
+
+                    if (move_uploaded_file($novoArquivo['tmp_name'], $targetPath)) {
+                        $caminhoImagemAtualizado = 'files/banners/' . $fileName;
+
+                        // 1. EXCLUI O ARQUIVO ANTIGO DO RESERVM
+                        if (!empty($caminhoImagemOriginal)) {
+                            $caminhoCompletoAntigo = $uploadDirLocalReservm . basename($caminhoImagemOriginal);
+                            if (file_exists($caminhoCompletoAntigo)) {
+                                unlink($caminhoCompletoAntigo);
+                                error_log("SUCESSO: Arquivo antigo removido do Reservm: " . $caminhoCompletoAntigo);
+                            }
+                        }
+
+                        // 2. NOTIFICA O PAINEL TV PARA EXCLUIR O ARQUIVO ANTIGO
+                        if (!empty($fileNameOriginal)) {
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, PAINEL_TV_API_BASE_URL);
+                            curl_setopt($ch, CURLOPT_POST, true);
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($ch, CURLOPT_POSTFIELDS, [
+                                'operation' => 'delete_file',
+                                'file_name' => $fileNameOriginal,
+                                'api_key' => PAINEL_TV_API_KEY
+                            ]);
+                            $response_painel_tv = curl_exec($ch);
+                            curl_close($ch);
+                            error_log("INFO: Solicitação de exclusão do arquivo antigo enviada ao Painel TV. Resposta: " . $response_painel_tv);
+                        }
+
+                        // 3. NOTIFICA O PAINEL TV PARA ADICIONAR O NOVO ARQUIVO
+                        $ch = curl_init();
+                        curl_setopt($ch, CURLOPT_URL, PAINEL_TV_API_BASE_URL);
+                        curl_setopt($ch, CURLOPT_POST, true);
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, [
+                            'operation' => 'add_or_update_file',
+                            'file' => new CURLFile($targetPath, $novoArquivo['type'], $fileName),
+                            'final_file_name' => $fileName,
+                            'api_key' => PAINEL_TV_API_KEY
+                        ]);
+                        $response_painel_tv = curl_exec($ch);
+                        curl_close($ch);
+                        error_log("INFO: Solicitação de adição do novo arquivo enviada ao Painel TV. Resposta: " . $response_painel_tv);
+
+                    } else {
+                        $_SESSION['erro'] = 'Erro ao fazer upload do novo arquivo.';
+                        error_log($_SESSION['erro']);
+                        header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
+                        exit;
+                    }
+                }
 
                 try {
-                    $stmt = $conn->prepare("UPDATE publicidades SET ativo = :ativo WHERE id = :id");
-                    $stmt->bindParam(':ativo', $ativo, PDO::PARAM_INT);
+                    // 4. Atualiza o banco de dados
+                    $stmt = $conn->prepare("UPDATE publicidades SET titulo = :titulo, ativo = :ativo, caminho_imagem = :caminho_imagem, media_type = :media_type WHERE id = :id");
+                    $stmt->bindParam(':titulo', $newTitulo);
+                    $stmt->bindParam(':ativo', $newAtivo, PDO::PARAM_INT);
+                    $stmt->bindParam(':caminho_imagem', $caminhoImagemAtualizado);
+                    $stmt->bindParam(':media_type', $mediaTypeAtualizado);
                     $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
                     if ($stmt->execute()) {
-                        $_SESSION['msg'] = 'Status da publicidade atualizado com sucesso!';
-                        error_log("SUCESSO: Status atualizado para ID " . $id . " no Reservm.");
-
+                        $_SESSION['msg'] = 'Publicidade atualizada com sucesso!';
+                        error_log("SUCESSO: Publicidade ID " . $id . " atualizada no Reservm.");
                     } else {
                         $pdoErrorInfo = $stmt->errorInfo();
-                        $_SESSION['erro'] = 'Erro ao atualizar status da publicidade no banco de dados. Detalhes: ' . ($pdoErrorInfo[2] ?? 'Erro desconhecido.');
-                        error_log("ERRO PDO (toggle_status_single): " . print_r($pdoErrorInfo, true));
+                        $_SESSION['erro'] = 'Erro ao atualizar publicidade no banco de dados. Detalhes: ' . ($pdoErrorInfo[2] ?? 'Erro desconhecido.');
+                        error_log("ERRO PDO (update_publicidade): " . print_r($pdoErrorInfo, true));
                     }
                 } catch (PDOException $e) {
-                    $_SESSION['erro'] = 'Erro interno do servidor ao alternar status: ' . $e->getMessage();
-                    error_log("ERRO PDO (Exception toggle_status_single): " . $e->getMessage());
+                    $_SESSION['erro'] = 'Erro interno do servidor ao atualizar publicidade: ' . $e->getMessage();
+                    error_log("ERRO PDO (Exception update_publicidade): " . $e->getMessage());
                 }
             } else {
-                $_SESSION['atencao'] = 'Dados incompletos para alterar status (ID ausente).';
-                error_log($_SESSION['atencao'] . " POST: " . print_r($_POST, true));
+                $_SESSION['erro'] = 'Dados incompletos para atualizar publicidade.';
+                error_log($_SESSION['erro'] . " POST: " . print_r($_POST, true));
             }
             header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
             exit;
             break;
+
 
         case 'delete_publicidade_single':
             error_log("Iniciando 'delete_publicidade_single' case (Reservm).");
@@ -425,7 +495,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     }
 
                     $conn->commit();
-                    $message = $deletedCount . ' publicidade(s) excluída(s) com sucesso do Reservm.';
+                    $message = $deletedCount . ' publicidade(s) excluída(s) com sucesso';
                     if (!empty($fileErrors)) {
                         $message .= ' Alguns arquivos ou sincronizações com Painel TV falharam.';
                         $_SESSION['erro'] = $message . ' Detalhes: ' . implode('; ', $fileErrors);

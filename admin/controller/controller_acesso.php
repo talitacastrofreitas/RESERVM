@@ -49,7 +49,7 @@ if (isset($dados['login_admin'])) {
           if ($row_admin['admin_status'] == 1) { // SE O STATUS DO ADMINISTRADOR FOR 'INATIVO', NÃO PODE LOGAR
 
             // A SENHA DO ADMINISTRADOR EXPIRA EM 90 DIAS (3 MESES)
-            $data_hoje  = new DateTime(date('Y-m-d H:i:s')); // RECUPERADA A DATA EM TEMPO REAL
+            $data_hoje = new DateTime(date('Y-m-d H:i:s')); // RECUPERADA A DATA EM TEMPO REAL
             $data_senha = new DateTime($row_admin['admin_data_reset_senha']); // RECUPERA A DATA DA ULTIMA ATUALIZAÇÃO DA SENHA
             $intervalo = $data_hoje->diff($data_senha); // FAZ A DIFERENÇA ENTRE A DATA DE HOJE E A DATA DA ULTIMA ATUALIZAÇÃO DA SENHA
             $diferenca_data = $intervalo->days;
@@ -62,21 +62,21 @@ if (isset($dados['login_admin'])) {
               // SE LOGIN E SENHA ESTIVEREM CORRETOS, ENTRA NO SISTEMA
               if ($admin_matricula == $row_admin['admin_matricula'] && password_verify($dados['senha'], $row_admin['admin_senha'])) {
                 $_SESSION['session_admin_logged_in'] = true;
-                $_SESSION['reservm_admin_id']           = $row_admin['admin_id'];
-                $_SESSION['reservm_admin_nome']         = $row_admin['admin_nome'];
-                $_SESSION['reservm_admin_email']        = $row_admin['admin_email'];
-                $_SESSION['reservm_admin_matricula']    = $row_admin['admin_matricula'];
-                $_SESSION['reservm_admin_perfil']       = $row_admin['admin_perfil'];
-                $_SESSION['reservm_admin_status']       = $row_admin['admin_status'];
+                $_SESSION['reservm_admin_id'] = $row_admin['admin_id'];
+                $_SESSION['reservm_admin_nome'] = $row_admin['admin_nome'];
+                $_SESSION['reservm_admin_email'] = $row_admin['admin_email'];
+                $_SESSION['reservm_admin_matricula'] = $row_admin['admin_matricula'];
+                $_SESSION['reservm_admin_perfil'] = $row_admin['admin_perfil'];
+                $_SESSION['reservm_admin_status'] = $row_admin['admin_status'];
                 $_SESSION['reservm_admin_nivel_acesso'] = $row_admin['nivel_acesso'];
-                header("Location: $url_sistema/admin/solicitacoes.php");
+                header("Location: $url_sistema/admin/solicitacoes_submetidas.php");
 
                 // REGISTRA AÇÃO NO LOG
                 $stmt = $conn->prepare('INSERT INTO log (log_modulo, log_acao, log_acao_id, log_acao_user_id, log_data)
                                         VALUES (:modulo, :acao, :acao_id, :user_id, GETDATE())');
                 $stmt->execute([
-                  ':modulo'  => 'AUTENTICAÇÃO',
-                  ':acao'    => 'ACESSO',
+                  ':modulo' => 'AUTENTICAÇÃO',
+                  ':acao' => 'ACESSO',
                   ':acao_id' => $_SESSION['reservm_admin_id'],
                   ':user_id' => $_SESSION['reservm_admin_id']
                 ]);
@@ -158,7 +158,7 @@ if (isset($_GET['func']) && $_GET['func'] == "reset_pass") {
 
     if ($row) {
       // CADASTRA O TOKEN PARA VALIDAÇÃO DA CONTA
-      $codigo      = str_pad(random_int(1000000, 9999999), 7, '0', STR_PAD_LEFT); // GERA UM CÓDIGO DE 7 DÍGITOS
+      $codigo = str_pad(random_int(1000000, 9999999), 7, '0', STR_PAD_LEFT); // GERA UM CÓDIGO DE 7 DÍGITOS
       $codigo_hash = password_hash($codigo, PASSWORD_DEFAULT); // CRIPTOGRAFA O CÓDIGO
 
       // VERIFICA SE JÁ EXISTE UM TOKEN PARA O ID DO ADMINISTRADOR
@@ -179,10 +179,10 @@ if (isset($_GET['func']) && $_GET['func'] == "reset_pass") {
       $stmt = $conn->prepare('INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data)
                               VALUES (:modulo, :acao, :acao_id, :dados, :user_id, GETDATE())');
       $stmt->execute([
-        ':modulo'  => 'AUTENTICAÇÃO',
-        ':acao'    => 'ESQUECI MINHA SENHA',
+        ':modulo' => 'AUTENTICAÇÃO',
+        ':acao' => 'ESQUECI MINHA SENHA',
         ':acao_id' => $row['admin_id'],
-        ':dados'   => "E-mail: {$admin_email}",
+        ':dados' => "E-mail: {$admin_email}",
         ':user_id' => $row['admin_id']
       ]);
       // -------------------------------
@@ -197,7 +197,7 @@ if (isset($_GET['func']) && $_GET['func'] == "reset_pass") {
 
       // E-MAIL QUE VAI RECEBER A MENSAGEM
       //$mail->addAddress($admin_email, 'RESERVM');
-      $mail->addAddress($email_saap, 'RESERVM');
+      $mail->addAddress($admin_email, 'RESERVM');
 
       // CONTEÚDO
       $mail->isHTML(true);
@@ -228,7 +228,7 @@ if (isset($_GET['func']) && $_GET['func'] == "reset_pass") {
       </tr>";
       include '../includes/email/email_footer.php';
 
-      $mail->Body  = $email_conteudo;
+      $mail->Body = $email_conteudo;
       $mail->send();
 
       // -------------------------------   
@@ -293,7 +293,7 @@ if (isset($dados['ValCod'])) {
     if ((!empty($row_tok)) && ($val_token != 0)) {
 
       // O TOKEN TEM VALIDADE DE 3 DIAS
-      $dataReal    = new DateTime(); // DATA EM TEMPO REAL
+      $dataReal = new DateTime(); // DATA EM TEMPO REAL
       $data_valida = new DateTime($row_tok['tok_data_valida']); // DATA DE VALIDADE DO TOKEN
 
       // SE A DATA DE VALIDADE DO TOKEN FOR MAIOR QUE A DATA REAL, SEGUE A VALIDAÇÃO
@@ -308,10 +308,10 @@ if (isset($dados['ValCod'])) {
           $stmt = $conn->prepare('INSERT INTO log (log_modulo, log_acao, log_acao_id, log_acao_user_id, log_data )
                                   VALUES ( :modulo, :acao, :acao_id, :user_id, GETDATE() )');
           $stmt->execute([
-            ':modulo'     => 'AUTENTICAÇÃO',
-            ':acao'       => 'VALIDA TOKEN',
-            ':acao_id'    => $admin_id,
-            ':user_id'    => $admin_id
+            ':modulo' => 'AUTENTICAÇÃO',
+            ':acao' => 'VALIDA TOKEN',
+            ':acao_id' => $admin_id,
+            ':user_id' => $admin_id
           ]);
           // -------------------------------
 
@@ -361,7 +361,7 @@ if (isset($dados['ValCod'])) {
  *****************************************************************************************/
 if (isset($_GET['func']) && $_GET['func'] == "upd_pass") {
 
-  $admin_id    = $_POST['cod']; // DECOFICIA O ID DO ADMINISTRADOR
+  $admin_id = $_POST['cod']; // DECOFICIA O ID DO ADMINISTRADOR
   $admin_senha = password_hash($_POST['senha'], PASSWORD_DEFAULT); //CODIFICA A NOVA SENHA DIGITADA
 
   try {
@@ -380,10 +380,10 @@ if (isset($_GET['func']) && $_GET['func'] == "upd_pass") {
     $stmt = $conn->prepare('INSERT INTO log (log_modulo, log_acao, log_acao_id, log_acao_user_id, log_data )
                             VALUES ( :modulo, :acao, :acao_id, :user_id, GETDATE())');
     $stmt->execute([
-      ':modulo'     => 'AUTENTICAÇÃO',
-      ':acao'       => 'CRIA NOVA SENHA',
-      ':acao_id'    => $admin_id,
-      ':user_id'    => $admin_id
+      ':modulo' => 'AUTENTICAÇÃO',
+      ':acao' => 'CRIA NOVA SENHA',
+      ':acao_id' => $admin_id,
+      ':user_id' => $admin_id
     ]);
     // -------------------------------
 
@@ -417,9 +417,9 @@ if (isset($_GET['func']) && $_GET['func'] == "upd_pass") {
  *****************************************************************************************/
 if (isset($_GET['func']) && $_GET['func'] == "upd_pass_ex") {
 
-  $admin_id    = base64_decode($_POST['cod']); // DECODIFICA O ID DO ADMINISTRADOR
-  $nova_senha  = $_POST['senha'];
-  $conf_senha  = $_POST['conf_senha'];
+  $admin_id = base64_decode($_POST['cod']); // DECODIFICA O ID DO ADMINISTRADOR
+  $nova_senha = $_POST['senha'];
+  $conf_senha = $_POST['conf_senha'];
   $senha_atual = $_POST['senha_atual'];
 
   // VERIFICA SE AS SENHAS DIGITADAS SÃO IGUAIS ANTES DE HASH
@@ -475,8 +475,8 @@ if (isset($_GET['func']) && $_GET['func'] == "upd_pass_ex") {
     $stmt = $conn->prepare('INSERT INTO log (log_modulo, log_acao, log_acao_id, log_acao_user_id, log_data)
                             VALUES (:modulo, :acao, :acao_id, :user_id, GETDATE())');
     $stmt->execute([
-      ':modulo'  => 'AUTENTICAÇÃO',
-      ':acao'    => 'ALTERA A SENHA EXPIRADA',
+      ':modulo' => 'AUTENTICAÇÃO',
+      ':acao' => 'ALTERA A SENHA EXPIRADA',
       ':acao_id' => $admin_id,
       ':user_id' => $admin_id
     ]);
@@ -502,10 +502,10 @@ if (isset($_GET['func']) && $_GET['func'] == "upd_pass_ex") {
  *****************************************************************************************/
 if (isset($_GET['func']) && $_GET['func'] === "upd_pass_perf") {
 
-  $admin_id    = $_POST['cod']; // ID do administrador
+  $admin_id = $_POST['cod']; // ID do administrador
   $senha_atual = $_POST['senha_atual'];
-  $nova_senha  = $_POST['senha'];
-  $conf_senha  = $_POST['conf_senha'];
+  $nova_senha = $_POST['senha'];
+  $conf_senha = $_POST['conf_senha'];
 
   try {
     // Inicia transação
@@ -543,17 +543,17 @@ if (isset($_GET['func']) && $_GET['func'] === "upd_pass_perf") {
     $stmt = $conn->prepare("UPDATE admin SET admin_senha = :senha, admin_data_reset_senha = GETDATE() WHERE admin_id = :id");
     $stmt->execute([
       ':senha' => $nova_senha_hash,
-      ':id'    => $admin_id
+      ':id' => $admin_id
     ]);
 
     // Registra no log
     $stmt = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_acao_user_id, log_data)
                             VALUES (:modulo, :acao, :acao_id, :user_id, GETDATE())");
     $stmt->execute([
-      ':modulo'   => 'AUTENTICAÇÃO',
-      ':acao'     => 'ALTERA A SENHA PELO PERFIL',
-      ':acao_id'  => $admin_id,
-      ':user_id'  => $admin_id
+      ':modulo' => 'AUTENTICAÇÃO',
+      ':acao' => 'ALTERA A SENHA PELO PERFIL',
+      ':acao_id' => $admin_id,
+      ':user_id' => $admin_id
     ]);
 
     // Confirma a transação

@@ -5,10 +5,15 @@
       <input type="hidden" class="form-control" name="solic_id" value="<?= $_GET['i'] ?>" required>
       <input type="hidden" class="form-control" name="solic_acao" value="atualizar_3" required>
       <input type="hidden" class="form-control" name="solic_etapa" value="3" required>
+      <input type="hidden" name="solic_ap_aula_pratica_hidden" value="<?= $_SESSION['solic_ap_aula_pratica_choice'] ?? '' ?>">
 
       <div class="col-12">
         <label class="form-label">Deseja realizar a solicitação de reserva de espaços para aulas teóricas? <span>*</span></label>
         <div class="label_info label_info_verde">Os espaços de ensino para atividades teóricas são: Salas de Aulas, Laboratórios de Informática e Auditórios.</div>
+
+        <div id="atividades_validation_message" class="label_info label_info_vermelho" style="display: none;">
+          Você ainda não cadastrou nenhum tipo de aula! Cadastre pelo menos uma aula prática e/ou uma aula teórica para continuar.
+        </div>
 
         <div class="check_container">
           <div class="form-check form_solicita">
@@ -22,6 +27,8 @@
             <div class="invalid-feedback">Este campo é obrigatório</div>
           </div>
         </div>
+
+
 
       </div>
 
@@ -111,7 +118,6 @@
             <label class="form-label">Dia(s) da semana <span>*</span></label>
             <div class="label_info label_info_verde">Caso seu componente seja encerrado antes da última semana de finalização das aulas pelo calendário acadêmico, ou haja alguma exceção para alguma data do(s) dia(s) da semana selecionado, favor descrever no campo observação, para que a reserva não seja efetivada.</div>
             <select class="form-select text-uppercase" name="solic_at_dia_reserva[]" multiple id="cad_solic_at_dia_reserva">
-              <!-- <option selected value=""></option> -->
               <?php foreach ($result as $res) : ?>
                 <option value="<?= $res['week_id'] ?>" <?= in_array($res['week_id'], $dias) ? 'selected' : '' ?>><?= $res['week_dias'] ?></option>
               <?php endforeach; ?>
@@ -241,8 +247,8 @@
     </div>
 
   </form>
-</div>
 
+</div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -347,28 +353,98 @@
     });
 
 
-    // <- AQUI adicionamos a chamada da inicialização
-    function inicializarFormularioPreenchido() {
-      const radioAulaSelecionado = document.querySelector('input[name="solic_at_aula_teorica"]:checked');
-      if (radioAulaSelecionado) {
-        radioAulaSelecionado.dispatchEvent(new Event('change'));
+    // VERIFICAÇÃO (NOVO BLOCO)
+
+    const solic_at_aula_teorica_sim = document.getElementById('solic_at_aula_teorica_sim');
+    const solic_at_aula_teorica_nao = document.getElementById('solic_at_aula_teorica_nao');
+    const formStep3 = document.getElementById('ValidaBotaoProgress'); // ID do seu formulário
+    const solic_ap_aula_pratica_hidden = document.querySelector('input[name="solic_ap_aula_pratica_hidden"]');
+    const atividadesValidationMessage = document.getElementById('atividades_validation_message'); // Referência à div de mensagem
+    const concluirButton = formStep3.querySelector('button[type="submit"]'); // NOVO: Referência ao botão "Concluir"
+
+    // Função para validar, mostrar/ocultar a mensagem E habilitar/desabilitar o botão
+    function validateActivitySelection() {
+      if (!solic_ap_aula_pratica_hidden || !solic_at_aula_teorica_nao || !concluirButton) {
+        return; // Garante que os elementos existam
       }
 
-      if (solic_at_campus.value !== "") {
-        solic_at_campus.dispatchEvent(new Event('change'));
-      }
+      const practicalSelectedNo = solic_ap_aula_pratica_hidden.value === '0'; // '0' para Não
+      const theoreticalSelectedNo = solic_at_aula_teorica_nao.checked; // Se o rádio 'Não' para teóricas está marcado
 
-      if (solic_at_quant_sala.value !== "") {
-        solic_at_quant_sala.dispatchEvent(new Event('change'));
-      }
-
-      const radioReservaSelecionado = document.querySelector('input[name="solic_at_tipo_reserva"]:checked');
-      if (radioReservaSelecionado) {
-        radioReservaSelecionado.dispatchEvent(new Event('change'));
+      if (practicalSelectedNo && theoreticalSelectedNo) {
+        atividadesValidationMessage.style.display = 'block'; // Mostra a mensagem
+        concluirButton.disabled = true; // NOVO: Desabilita o botão
+      } else {
+        atividadesValidationMessage.style.display = 'none'; // Oculta a mensagem
+        concluirButton.disabled = false; // NOVO: Habilita o botão
       }
     }
 
-    inicializarFormularioPreenchido();
+    // Chamada da validação ao carregar a página (caso o formulário já venha preenchido)
+    validateActivitySelection();
+
+    // Chamada da validação quando os rádios de Aulas Teóricas mudam
+    solic_at_aula_teorica_sim.addEventListener('change', validateActivitySelection);
+    solic_at_aula_teorica_nao.addEventListener('change', validateActivitySelection);
+
+    if (formStep3) {
+      formStep3.addEventListener('submit', function(event) {
+        validateActivitySelection(); // Valida novamente no submit para garantir
+
+        const practicalSelectedNo = solic_ap_aula_pratica_hidden.value === '0';
+        const theoreticalSelectedNo = solic_at_aula_teorica_nao.checked;
+
+        if (practicalSelectedNo && theoreticalSelectedNo) {
+          event.preventDefault(); // Impede o envio se a validação falhar
+          // A mensagem já será exibida/atualizada e o botão desabilitado pela função validateActivitySelection
+        }
+      });
+    }
+
+    // Chamada da validação ao carregar a página (caso o formulário já venha preenchido)
+    // Isso é importante se o usuário voltar para esta etapa.
+    validateActivitySelection();
+
+    // Chamada da validação quando os rádios de Aulas Teóricas mudam
+    solic_at_aula_teorica_sim.addEventListener('change', validateActivitySelection);
+    solic_at_aula_teorica_nao.addEventListener('change', validateActivitySelection);
+
+    if (formStep3) {
+      formStep3.addEventListener('submit', function(event) {
+        validateActivitySelection(); // Valida novamente no submit para garantir
+
+        const practicalSelectedNo = solic_ap_aula_pratica_hidden.value === '0';
+        const theoreticalSelectedNo = solic_at_aula_teorica_nao.checked;
+
+        if (practicalSelectedNo && theoreticalSelectedNo) {
+          event.preventDefault(); // Impede o envio se a validação falhar
+          // A mensagem já será exibida/atualizada pela função validateActivitySelection
+        }
+      });
+    }
+
+    // Chamada da validação ao carregar a página (caso o formulário já venha preenchido)
+    validateActivitySelection();
+
+    // Chamada da validação quando os rádios de Aulas Teóricas mudam
+    solic_at_aula_teorica_sim.addEventListener('change', validateActivitySelection);
+    solic_at_aula_teorica_nao.addEventListener('change', validateActivitySelection);
+
+    if (formStep3) {
+      formStep3.addEventListener('submit', function(event) {
+        validateActivitySelection(); // Valida novamente no submit para garantir
+
+        const practicalSelectedNo = solic_ap_aula_pratica_hidden.value === '0';
+        const theoreticalSelectedNo = solic_at_aula_teorica_nao.checked;
+
+        if (practicalSelectedNo && theoreticalSelectedNo) {
+          event.preventDefault(); // Impede o envio se a validação falhar
+          // A mensagem já será exibida pela função validateActivitySelection
+        }
+      });
+    }
+
+    inicializarFormularioPreenchido(); // Mantenha esta linha para inicializar os campos
 
   });
 </script>

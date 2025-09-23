@@ -67,7 +67,6 @@
               cadeiras, bancadas e macas.<br>
               • Caso seja necessário, o solicitante pode selecionar mais de um espaço para realizar a prática.</div>
             <select class="form-select text-uppercase" name="solic_ap_espaco_brotas[]" multiple id="cad_reserva_local_brotas_mult">
-              <!-- <option selected value=""></option> -->
               <?php foreach ($result as $res) : ?>
                 <option value="<?= $res['esp_id'] ?>" <?= in_array($res['esp_id'], $espaco_b) ? 'selected' : '' ?>>
                   <?= $res['esp_codigo'] . ' - ' . $res['esp_nome_local'] . ' - ' . $res['and_andar'] . ' - ' . $res['pav_pavilhao'] . ' - CAPACIDADE: ' . $res['esp_quant_maxima'] . ' ALUNOS' ?>
@@ -107,7 +106,6 @@
               cadeiras, bancadas e macas.<br>
               • Caso seja necessário, o solicitante pode selecionar mais de um espaço para realizar a prática.</div>
             <select class="form-select text-uppercase" name="solic_ap_espaco_cabula[]" multiple id="cad_reserva_local_cabula_mult">
-              <!-- <option selected value=""></option> -->
               <?php foreach ($result as $res) : ?>
                 <option value="<?= $res['esp_id'] ?>" <?= in_array($res['esp_id'], $espaco_c) ? 'selected' : '' ?>>
                   <?= $res['esp_codigo'] . ' - ' . $res['esp_nome_local'] . ' - ' . $res['and_andar'] . ' - ' . $res['pav_pavilhao'] . ' - CAPACIDADE: ' . $res['esp_quant_maxima'] . ' ALUNOS' ?>
@@ -193,7 +191,6 @@
             <label class="form-label">Dia(s) da semana <span>*</span></label>
             <div class="label_info label_info_verde">Caso seu componente seja encerrado antes da última semana de finalização das aulas pelo calendário acadêmico, ou haja alguma exceção para alguma data do(s) dia(s) da semana selecionado, favor descrever no campo observação, para que a reserva não seja efetivada.</div>
             <select class="form-select text-uppercase" name="solic_ap_dia_reserva[]" multiple id="cad_solic_ap_dia_reserva">
-              <!-- <option selected value=""></option> -->
               <?php foreach ($result as $res) : ?>
                 <option value="<?= $res['week_id'] ?>" <?= in_array($res['week_id'], $dias) ? 'selected' : '' ?>><?= $res['week_dias'] ?></option>
               <?php endforeach; ?>
@@ -505,6 +502,7 @@
 
   </form>
 </div>
+
 
 
 <script>

@@ -36,6 +36,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
       $log_acao = 'Deferido';
 
+
+      // LÓGICA ADICIONADA: Verificar se já existem reservas para esta solicitação
+      $sql_check_reservas = "SELECT COUNT(*) FROM reservas WHERE res_solic_id = :solic_id";
+      $stmt_check_reservas = $conn->prepare($sql_check_reservas);
+      $stmt_check_reservas->execute([':solic_id' => $solic_id]);
+      $num_reservas = $stmt_check_reservas->fetchColumn();
+
+      if ($num_reservas > 0) {
+        $num_status_defere = 4; // Se já houver reservas, mude para 'Reservado'
+        // Você pode adicionar um log aqui também, se desejar, para registrar essa decisão.
+      } else {
+        $num_status_defere = 5; // Se não houver reservas, o status será 'Aguardando Reserva'
+      }
+
+
       $sql = "INSERT INTO solicitacao_analise_status (
                                                       sta_an_solic_id,
                                                       sta_an_status,
@@ -83,8 +98,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $mail = new PHPMailer(true); // ENVIA E-MAIL
       include '../conexao/email.php';
 
-      //$mail->addAddress($sta_an_user_email, 'RESERVM'); // E-MAIL DO USUÁRIO QUE RECEBERÁ A MENSAGEM
-      $mail->addAddress($email_saap, 'RESERVM'); // E-MAIL DO SAAP
+      $mail->addAddress($sta_an_user_email, 'RESERVM'); // E-MAIL DO USUÁRIO QUE RECEBERÁ A MENSAGEM
+      // $mail->addAddress($$admin_email, 'RESERVM'); // E-MAIL DO SAAP
       $mail->isHTML(true);
       $mail->Subject = 'Solicitação deferida: ' . $sta_an_solic_codigo;
 
@@ -177,8 +192,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $mail = new PHPMailer(true); // ENVIA E-MAIL
       include '../conexao/email.php';
 
-      //$mail->addAddress($sta_an_user_email, 'RESERVM'); // E-MAIL DO USUÁRIO QUE RECEBERÁ A MENSAGEM
-      $mail->addAddress($email_saap, 'RESERVM'); // E-MAIL DO SAAP
+      $mail->addAddress($sta_an_user_email, 'RESERVM'); // E-MAIL DO USUÁRIO QUE RECEBERÁ A MENSAGEM
+      // $mail->addAddress($$admin_email, 'RESERVM'); // E-MAIL DO SAAP
       $mail->isHTML(true);
       $mail->Subject = 'Solicitação indeferida: ' . $sta_an_solic_codigo;
 

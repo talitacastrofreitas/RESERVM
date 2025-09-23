@@ -36,7 +36,7 @@ date_default_timezone_set('America/Sao_Paulo');
 // VARIÁVEIS VINDAS DO .ENV
 // AJUSTE: Usando a variável APP_URL do .env, que é mais seguro e confiável.
 $url_sistema = $_ENV['APP_URL'];
-$email_saap = $_ENV['EMAIL_SAAP'];
+$admin_email = $_ENV['EMAIL_SAAP'];
 $view_alunos = $_ENV['VIEW_ALUNOS'];
 $view_colaboradores = $_ENV['VIEW_COLABORADORES'];
 
@@ -57,7 +57,6 @@ try {
 
     // Define o modo de erro do PDO para exceção (ótima prática)
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
 } catch (PDOException $e) {
     // Grava o erro real em um log para depuração interna (MUITO IMPORTANTE)
     error_log("Erro de conexão com o banco de dados: " . $e->getMessage());

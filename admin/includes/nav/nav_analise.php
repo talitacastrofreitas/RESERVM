@@ -21,7 +21,7 @@
   <div class="flex-shrink-0 d-none">
 
     <?php
-    $sta_solic = array(1, 5, 6);
+    $sta_solic = array(1, 5, 4, 6);
     if (!in_array($solic_sta_status, $sta_solic)) {
     ?>
       <button class="btn botao_w botao botao_vermelho waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3" type="button" data-bs-toggle="modal" data-bs-toggle="button" data-bs-target="#modal_indeferir_solicitacao">Indeferir</button>
@@ -30,7 +30,7 @@
     <?php } ?>
 
     <?php
-    $sta_solic = array(1, 5, 6);
+    $sta_solic = array(1, 5, 4, 6);
     if (!in_array($solic_sta_status, $sta_solic)) {
     ?>
       <button class="btn botao botao_verde ms-2" data-bs-toggle="modal" data-bs-toggle="button" data-bs-target="#modal_deferir_solicitacao">Deferir</button>

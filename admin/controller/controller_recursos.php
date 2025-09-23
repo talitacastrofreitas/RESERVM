@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
       // POST
       $rec_recurso = trim($_POST['rec_recurso']);
-      $rec_status  = $_POST['rec_status'] === '1' ? 1 : 0;
+      $rec_status = $_POST['rec_status'] === '1' ? 1 : 0;
     }
     $rvm_admin_id = $_SESSION['reservm_admin_id'];
 
@@ -55,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $stmt = $conn->prepare($sql);
       $stmt->execute([
         ':rec_recurso' => $rec_recurso,
-        ':rec_status'  => $rec_status,
+        ':rec_status' => $rec_status,
         ':rec_user_id' => $rvm_admin_id
       ]);
 
@@ -99,9 +99,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
       $stmt = $conn->prepare($sql);
       $stmt->execute([
-        ':rec_id'      => $rec_id,
+        ':rec_id' => $rec_id,
         ':rec_recurso' => $rec_recurso,
-        ':rec_status'  => $rec_status,
+        ':rec_status' => $rec_status,
         ':rec_user_id' => $rvm_admin_id
       ]);
 
@@ -113,11 +113,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       // -------------------------------
     } elseif ($_GET['acao'] === 'deletar') {
 
+      echo "Tentando excluir...<br>";
       if (empty($_GET['rec_id'])) {
+        echo "Erro: rec_id está vazio.<br>";
         throw new Exception("ID é obrigatório para exclusão.");
       }
+      echo "ID do Recurso a ser excluído: " . $rec_id . "<br>";
       $rec_id = (int) $_GET['rec_id'];
       $log_acao = 'Exclusão';
+
+      echo "Nenhum registro relacionado encontrado. Prosseguindo com a exclusão.<br>";
 
       // SE DADO ESTIVER SENDO USADO EM ALGUM CADASTRO, NÃO PODE SER EXCLUÍDO
       $sql = $conn->prepare("SELECT COUNT(*) FROM reservas WHERE ',' + REPLACE(res_recursos_add, ' ', '') + ',' LIKE ?");
@@ -155,10 +160,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
               VALUES (:modulo, upper(:acao), :acao_id, :dados, :user_id, GETDATE())";
     $stmtLog = $conn->prepare($sqlLog);
     $stmtLog->execute([
-      ':modulo'  => 'RECURSOS',
-      ':acao'    => $log_acao,
+      ':modulo' => 'RECURSOS',
+      ':acao' => $log_acao,
       ':acao_id' => $rec_id,
-      ':dados'   => json_encode($log_dados, JSON_UNESCAPED_UNICODE),
+      ':dados' => json_encode($log_dados, JSON_UNESCAPED_UNICODE),
       ':user_id' => $rvm_admin_id
     ]);
     // -------------------------------

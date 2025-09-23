@@ -49,15 +49,30 @@
 
             <?php
             try {
-              $stmt = $conn->prepare("SELECT * FROM solicitacao
-                                      LEFT JOIN solicitacao_status ON solicitacao_status.solic_sta_solic_id = solicitacao.solic_id
-                                      LEFT JOIN status_solicitacao ON status_solicitacao.stsolic_id = solicitacao_status.solic_sta_status
-                                      LEFT JOIN componente_curricular ON componente_curricular.compc_id = solicitacao.solic_comp_curric
-                                      LEFT JOIN cursos ON cursos.curs_id = solicitacao.solic_curso
-                                      LEFT JOIN conf_cursos_extensao_curricularizada ON conf_cursos_extensao_curricularizada.cexc_id = solicitacao.solic_nome_curso
-                                      LEFT JOIN conf_semestre ON conf_semestre.cs_id = solicitacao.solic_semestre
-                                      WHERE solic_cad_por = :solic_cad_por");
+              $stmt = $conn->prepare("SELECT
+    solicitacao.*,
+    solicitacao_status.*,
+    status_solicitacao.*,
+    componente_curricular.compc_componente,
+    cursos.curs_curso,
+    sub.data_proxima_reserva
+FROM solicitacao
+LEFT JOIN solicitacao_status ON solicitacao_status.solic_sta_solic_id = solicitacao.solic_id
+LEFT JOIN status_solicitacao ON status_solicitacao.stsolic_id = solicitacao_status.solic_sta_status
+LEFT JOIN componente_curricular ON componente_curricular.compc_id = solicitacao.solic_comp_curric
+LEFT JOIN cursos ON cursos.curs_id = solicitacao.solic_curso
+LEFT JOIN (
+    SELECT
+        res_solic_id,
+        MAX(DATEADD(SECOND, DATEDIFF(SECOND, 0, res_hora_inicio), CAST(res_data AS DATETIME))) AS data_proxima_reserva
+    FROM reservas
+    WHERE res_status NOT IN (7, 8)
+    AND DATEADD(SECOND, DATEDIFF(SECOND, 0, res_hora_inicio), CAST(res_data AS DATETIME)) > GETDATE()
+    GROUP BY res_solic_id
+) AS sub ON sub.res_solic_id = solicitacao.solic_id
+WHERE solicitacao.solic_cad_por = :solic_cad_por");
               $stmt->execute([':solic_cad_por' => $global_user_id]);
+
               while ($row_solic = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 // extract($row);
 
@@ -78,12 +93,41 @@
                   1 => 'bg_info_laranja',
                   2 => 'bg_info_azul',
                   3 => 'bg_info_roxo',
-                  4 => 'bg_info_azul_escuro',
-                  5 => 'bg_info_verde',
+                  4 => 'bg_info_verde',
+                  5 => 'bg_info_azul_escuro',
                   6 => 'bg_info_vermelho',
+                  7 => 'bg_info_laranja',
+                  8 => 'bg_info_vermelho',
                 ];
 
                 $status_color = $status_colors[$solic_sta_status] ?? 'bg_info_padrao';
+
+                // DATE 
+                // --- LÓGICA DE VALIDAÇÃO DE 48 HORAS COM BASE NA NOVA CONSULTA ---
+                $link_disabled = true; // Assume que o botão será desabilitado
+                $classe_link = 'link_cinza_claro disabled';
+
+                // Primeiro, verifique se a solicitação pode ser cancelada (status 4)
+                if ($solic_sta_status == 4) {
+
+                  // Nova consulta para verificar se existe QUALQUER reserva com mais de 48h de antecedência
+                  $sql_reserva_habilita = $conn->prepare("
+            SELECT 1
+            FROM reservas
+            WHERE res_solic_id = :solic_id
+            AND (res_status NOT IN (7, 8) OR res_status IS NULL)
+            AND CAST(res_data AS DATETIME) + CAST(res_hora_inicio AS DATETIME) >= DATEADD(hour, 48, GETDATE())
+          ");
+                  $sql_reserva_habilita->execute([':solic_id' => $solic_id]);
+
+                  $reserva_existe = $sql_reserva_habilita->fetchColumn();
+
+                  // Se a consulta retornou pelo menos uma linha, habilita o botão
+                  if ($reserva_existe) {
+                    $link_disabled = false;
+                    $classe_link = 'link_vermelho';
+                  }
+                }
 
             ?>
                 <tr role="button" data-href='nova_solicitacao.php?st=1&i=<?= htmlspecialchars($solic_id) ?>'>
@@ -106,6 +150,14 @@
                           <li><span class="dropdown-item edit-item-block-btn" title="Duplicar" disabled><i class="fa-regular fa-clone me-2"></i> Duplicar</span></li>
                         <?php } ?>
 
+                        <li>
+                          <?php if ($solic_sta_status == 4) { ?>
+                            <a href="#" class="dropdown-item <?= $classe_link ?>" data-bs-toggle="modal" data-bs-target="#modal_cancelar_solicitacao" data-solic-id="<?= htmlspecialchars($solic_id) ?>" data-action="../router/web.php?r=SolicitarCancelamento">
+                              <i class="fa-solid fa-ban me-2"></i> Solicitar Cancelamento
+                            </a>
+                          <?php } ?>
+                        </li>
+
                         <li><a href="router/web.php?r=Solic&acao=deletar&solic_id=<?= $solic_id ?>&solic_codigo=<?= $solic_codigo ?>" class="dropdown-item remove-item-btn del-btn" title="Excluir"><i class="fa-regular fa-trash-can me-2"></i> Excluir</a></li>
                       </ul>
                     </div>
@@ -114,8 +166,8 @@
                 </tr>
             <?php }
             } catch (PDOException $e) {
-              // echo "Erro: " . $e->getMessage();
-              echo "Erro ao tentar recuperar os dados";
+              echo "Erro: " . $e->getMessage();
+              // echo "Erro ao tentar recuperar os dados";
             } ?>
           </tbody>
         </table>
@@ -187,3 +239,18 @@
 </script>
 
 <?php include 'includes/footer.php'; ?>
+<script src="assets/js/modal_dinamico.js"></script>
+
+<?php include 'includes/modal/modal_cancelar_solicitacao.php'; ?>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var cancelaSolicitacaoModal = document.getElementById('modal_cancelar_solicitacao');
+    cancelaSolicitacaoModal.addEventListener('show.bs.modal', function(event) {
+      var button = event.relatedTarget;
+      var solicId = button.getAttribute('data-solic-id');
+      var modalSolicIdInput = cancelaSolicitacaoModal.querySelector('#solic_id_cancelar');
+      modalSolicIdInput.value = solicId;
+    });
+  });
+</script>

@@ -33,8 +33,8 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
     1  => 'tag_header_laranja',
     2  => 'tag_header_azul',
     3  => 'tag_header_roxo',
-    4  => 'tag_header_azul',
-    5  => 'tag_header_verde',
+    4  => 'tag_header_verde',
+    5  => 'tag_header_azul',
     6  => 'tag_header_vermelho'
   ];
 
@@ -98,7 +98,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
             <nav class="navbar d-flex align-items-center justify-content-sm-end justify-content-center p-0 mt-3 mt-sm-0">
 
               <?php
-              $sta_solic = array(3, 5, 6);
+              $sta_solic = array(3, 4, 5, 6);
               if (!in_array($solic_sta_status, $sta_solic)) {
               ?>
                 <button class="btn botao_w botao botao_vermelho waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3" type="button" data-bs-toggle="modal" data-bs-toggle="button" data-bs-target="#modal_indeferir_solicitacao">Indeferir</button>
@@ -111,7 +111,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               <?php } ?>
 
               <?php
-              $sta_solic = array(3, 5, 6);
+              $sta_solic = array(3, 4, 5, 6);
               if (!in_array($solic_sta_status, $sta_solic)) {
               ?>
                 <button class="btn botao_w botao botao_verde waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3" type="button" data-bs-toggle="modal" data-bs-toggle="button" data-bs-target="#modal_deferir_solicitacao">Aprovar</button>

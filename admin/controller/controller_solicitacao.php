@@ -101,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
     // -------------------------------
     if ($solic_acao === 'cadastrar') {
 
-      $num_status  = 5; // CADASTRO DEFERIDO
+      $num_status  = 5; // AGUARDANDO ANÁLISE (OU QUALQUER QUE SEJA O ID DO SEU STATUS PENDENTE)
       $log_acao = 'Cadastro';
 
       $sql = "INSERT INTO solicitacao (
@@ -182,7 +182,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $solic_id = $_POST['solic_id'];
       $log_acao = 'Atualização';
 
-      // VERIFICA O ADAMENTO DAS ETAPAS DO CADASTRO
+      // VERIFICA O ANDAMENTO DAS ETAPAS DO CADASTRO
       $sqlVerifica = "SELECT solic_id, solic_etapa FROM solicitacao WHERE solic_id = :solic_id";
       $stmtVerifica = $conn->prepare($sqlVerifica);
       $stmtVerifica->execute([':solic_id' => $solic_id]);
@@ -197,7 +197,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
         }
       }
 
-      $sql = "UPDATE solicitacao SET 
+      $sql = "UPDATE solicitacao SET
                                       solic_etapa           = :solic_etapa,
                                       solic_curso           = :solic_curso,
                                       solic_comp_curric     = :solic_comp_curric,
@@ -210,7 +210,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
                                       solic_contato         = :solic_contato,
                                       solic_upd_por         = :solic_upd_por,
                                       solic_data_upd        = GETDATE()
-                                WHERE 
+                                WHERE
                                       solic_id = :solic_id";
       $stmt = $conn->prepare($sql);
       $stmt->bindParam(':solic_id', $solic_id, PDO::PARAM_STR);
@@ -226,11 +226,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $stmt->bindParam(':solic_contato', $solic_contato, PDO::PARAM_STR);
       $stmt->bindParam(':solic_upd_por', $solic_admin_id, PDO::PARAM_STR);
       $stmt->execute();
-
-
-
-
-
 
       // -------------------------------
       // EXCLUIR ARQUIVO
@@ -255,11 +250,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
       $apaga_img = unlink("../uploads/solicitacoes/$sarq_codigo/$sarq_arquivo"); //APAGA O ARQUIVO ANTIGO
       // -------------------------------
-
-
-
-
-
 
       // -------------------------------
       // EXCLUIR SOLICITAÇÃO
@@ -342,24 +332,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       }
       // -------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     } else {
       throw new Exception("Ação inválida!");
     }
@@ -375,11 +347,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       ':user_id' => $solic_admin_id
     ));
     // -------------------------------
-
-
-
-    // $usuario_id = $conn->lastInsertId(); // ÚLTIMO ID CADASTRADO
-    // $log_acao = 'Cadastro';
 
     // Confirmar a transação
     $conn->commit();
@@ -400,12 +367,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       header(sprintf("location: ../painel.php"));
     }
 
-    // Redirecionar de volta para o formulário
-    //$_SESSION["msg"] = "Cadastro realizado com sucesso!";
-    //header(sprintf("location: ../nova_solicitacao.php?st=2&i={$solic_id}"));
     exit();
-    // -------------------------------
-
   } catch (PDOException $e) {
 
     // Reverter a transação em caso de erro
@@ -413,8 +375,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
     $_SESSION["erro"] = $e->getMessage();
     header(sprintf('location: %s', $_SERVER['HTTP_REFERER']));
     exit();
-    // -------------------------------
-
   }
 } else {
   $_SESSION["erro"] = "Requisição inválida.";

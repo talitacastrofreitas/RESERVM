@@ -1,10 +1,12 @@
 <!-- CADASTRAR -->
-<div class="modal fade modal_padrao" id="modal_cad_ocorrencia" tabindex="-1" aria-labelledby="modal_cad_ocorrencia" aria-modal="true">
+<div class="modal fade modal_padrao" id="modal_cad_ocorrencia" tabindex="-1" aria-labelledby="modal_cad_ocorrencia"
+  aria-modal="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header modal_padrao_cinza">
         <h5 class="modal-title" id="modal_cad_ocorrencia">Cadastrar Ocorrência</h5>
-        <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <form method="POST" action="../router/web.php?r=Ocorrenc" class="needs-validation" novalidate>
@@ -29,8 +31,10 @@
               <label class="form-label">Código/Data da Aula <span>*</span></label>
               <select class="form-select res_id" name="res_codigo" id="cad_oco_res_codigo" required>
                 <option selected value=""></option>
-                <?php foreach ($result as $res) : ?>
-                  <option value="<?= $res['res_id'] ?>"><?= $res['res_codigo'] . ': ' .  date('d/m/Y', strtotime($res['res_data'])) . ' (' .  date('H:i', strtotime($res['res_hora_inicio'])) . ' - ' .  date('H:i', strtotime($res['res_hora_fim'])) . ')' ?></option>
+                <?php foreach ($result as $res): ?>
+                  <option value="<?= $res['res_id'] ?>">
+                    <?= $res['res_codigo'] . ': ' . date('d/m/Y', strtotime($res['res_data'])) . ' (' . date('H:i', strtotime($res['res_hora_inicio'])) . ' - ' . date('H:i', strtotime($res['res_hora_fim'])) . ')' ?>
+                  </option>
                 <?php endforeach; ?>
               </select>
               <div class="invalid-feedback">Este campo é obrigatório</div>
@@ -78,15 +82,16 @@
                 echo "Erro ao tentar recuperar o perfil";
               } ?>
               <label class="form-label">Selecione o(s) tipo(s) de ocorrência <span>*</span></label>
-              <select class="form-select text-uppercase" name="oco_tipo_ocorrencia[]" multiple id="cad_tipo_ocorrencia" autocomplete="off" required>
+              <select class="form-select text-uppercase" name="oco_tipo_ocorrencia[]" multiple id="cad_tipo_ocorrencia"
+                autocomplete="off" required>
                 <!-- <option selected value=""></option> -->
-                <?php foreach ($result as $res) : ?>
+                <?php foreach ($result as $res): ?>
                   <option value="<?= $res['cto_id'] ?>"><?= $res['cto_tipo_ocorrencia'] ?></option>
                 <?php endforeach; ?>
               </select>
               <div class="invalid-feedback">Este campo é obrigatório</div>
               <script>
-                $(document).ready(function() {
+                $(document).ready(function () {
                   $('#cad_tipo_ocorrencia').select2({
                     placeholder: "Selecione as opções",
                     tags: false,
@@ -100,7 +105,8 @@
 
             <div class="col-lg-6">
               <label class="form-label">Horário de Início Realizado <span>*</span></label>
-              <input type="time" class="form-control time" name="oco_hora_inicio_realizado" id="cad_oco_hora_inicio_realizado" autocomplete="off" required>
+              <input type="time" class="form-control time" name="oco_hora_inicio_realizado"
+                id="cad_oco_hora_inicio_realizado" autocomplete="off" value="00:00" required>
               <script>
                 flatpickr("#cad_oco_hora_inicio_realizado", {
                   enableTime: true, // ativa o seletor de hora
@@ -115,7 +121,8 @@
 
             <div class="col-lg-6">
               <label class="form-label">Horário de Término Realizado <span>*</span></label>
-              <input type="time" class="form-control time" name="oco_hora_fim_realizado" id="cad_oco_hora_fim_realizado" required>
+              <input type="time" class="form-control time" name="oco_hora_fim_realizado" id="cad_oco_hora_fim_realizado"
+                value="00:00" required>
               <script>
                 flatpickr("#cad_oco_hora_fim_realizado", {
                   enableTime: true, // ativa o seletor de hora
@@ -137,7 +144,8 @@
 
             <div class="col-lg-12">
               <div class="hstack gap-3 align-items-center justify-content-end mt-2">
-                <button type="button" class="btn botao btn-light waves-effect" data-bs-dismiss="modal" data-bs-toggle="button">Cancelar</button>
+                <button type="button" class="btn botao btn-light waves-effect" data-bs-dismiss="modal"
+                  data-bs-toggle="button">Cancelar</button>
                 <button type="submit" class="btn botao botao_verde waves-effect">Cadastrar</button>
               </div>
             </div>
@@ -153,12 +161,14 @@
 
 
 <!-- EDITAR -->
-<div class="modal fade modal_padrao" id="modal_edit_ocorrencia" tabindex="-1" aria-labelledby="modal_edit_ocorrencia" aria-modal="true">
+<div class="modal fade modal_padrao" id="modal_edit_ocorrencia" tabindex="-1" aria-labelledby="modal_edit_ocorrencia"
+  aria-modal="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header modal_padrao_cinza">
         <h5 class="modal-title" id="modal_edit_ocorrencia">Cadastrar Ocorrência</h5>
-        <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <form method="POST" action="../router/web.php?r=Ocorrenc" class="needs-validation" novalidate>
@@ -183,8 +193,10 @@
               <label class="form-label">Código/Data da Aula <span>*</span></label>
               <select class="form-select oco_res_id" name="res_codigo" id="edit_oco_res_codigo" required>
                 <option selected disabled value=""></option>
-                <?php foreach ($result as $res) : ?>
-                  <option value="<?= $res['res_id'] ?>"><?= $res['res_codigo'] . ': ' .  date('d/m/Y', strtotime($res['res_data'])) . ' (' .  date('H:i', strtotime($res['res_hora_inicio'])) . ' - ' .  date('H:i', strtotime($res['res_hora_fim'])) . ')' ?></option>
+                <?php foreach ($result as $res): ?>
+                  <option value="<?= $res['res_id'] ?>">
+                    <?= $res['res_codigo'] . ': ' . date('d/m/Y', strtotime($res['res_data'])) . ' (' . date('H:i', strtotime($res['res_hora_inicio'])) . ' - ' . date('H:i', strtotime($res['res_hora_fim'])) . ')' ?>
+                  </option>
                 <?php endforeach; ?>
               </select>
               <div class="invalid-feedback">Este campo é obrigatório</div>
@@ -232,15 +244,16 @@
                 echo "Erro ao tentar recuperar o perfil";
               } ?>
               <label class="form-label">Selecione o(s) tipo(s) de ocorrência <span>*</span></label>
-              <select class="form-select text-uppercase oco_tipo_ocorrencia" name="oco_tipo_ocorrencia[]" multiple id="edit_tipo_ocorrencia" required>
+              <select class="form-select text-uppercase oco_tipo_ocorrencia" name="oco_tipo_ocorrencia[]" multiple
+                id="edit_tipo_ocorrencia" required>
                 <!-- <option selected value=""></option> -->
-                <?php foreach ($result as $res) : ?>
+                <?php foreach ($result as $res): ?>
                   <option value="<?= $res['cto_id'] ?>"><?= $res['cto_tipo_ocorrencia'] ?></option>
                 <?php endforeach; ?>
               </select>
               <div class="invalid-feedback">Este campo é obrigatório</div>
               <script>
-                $(document).ready(function() {
+                $(document).ready(function () {
                   $('#edit_tipo_ocorrencia').select2({
                     placeholder: "Selecione as opções",
                     tags: false,
@@ -254,7 +267,8 @@
 
             <div class="col-lg-6">
               <label class="form-label">Horário de Início Realizado <span>*</span></label>
-              <input type="time" class="form-control time oco_hora_inicio_realizado" name="oco_hora_inicio_realizado" id="edit_oco_hora_inicio_realizado" autocomplete="off" required>
+              <input type="time" class="form-control time oco_hora_inicio_realizado" name="oco_hora_inicio_realizado"
+                id="edit_oco_hora_inicio_realizado" autocomplete="off" required>
               <script>
                 flatpickr("#edit_oco_hora_inicio_realizado", {
                   enableTime: true, // ativa o seletor de hora
@@ -269,7 +283,8 @@
 
             <div class="col-lg-6">
               <label class="form-label">Horário de Término Realizado <span>*</span></label>
-              <input type="time" class="form-control time oco_hora_fim_realizado" name="oco_hora_fim_realizado" id="edit_oco_hora_fim_realizado" autocomplete="off" required>
+              <input type="time" class="form-control time oco_hora_fim_realizado" name="oco_hora_fim_realizado"
+                id="edit_oco_hora_fim_realizado" autocomplete="off" required>
               <script>
                 flatpickr("#edit_oco_hora_fim_realizado", {
                   enableTime: true, // ativa o seletor de hora
@@ -291,7 +306,8 @@
 
             <div class="col-lg-12">
               <div class="hstack gap-3 align-items-center justify-content-end mt-2">
-                <button type="button" class="btn botao btn-light waves-effect" data-bs-dismiss="modal" data-bs-toggle="button">Cancelar</button>
+                <button type="button" class="btn botao btn-light waves-effect" data-bs-dismiss="modal"
+                  data-bs-toggle="button">Cancelar</button>
                 <button type="submit" class="btn botao botao_verde waves-effect">Atualizar</button>
               </div>
             </div>
