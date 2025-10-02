@@ -64,7 +64,7 @@
                           class="navbar d-flex align-items-center justify-content-sm-end justify-content-center p-0 mt-3 mt-sm-0">
 
                           <?php
-                          $sta_solic = array(1, 3, 4, 6, 8);
+                          $sta_solic = array(1, 2, 3, 4, 5, 6, 8);
                           if (!in_array($solic_sta_status, $sta_solic)) {
                             ?>
                             <button class="btn botao_w botao botao_vermelho waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
@@ -77,18 +77,82 @@
                           <?php } ?>
 
                           <?php
-                          $sta_solic = array(1, 3, 4, 6, 8);
+                          $sta_solic = array(1, 2, 3, 4, 5, 6, 8);
                           if (!in_array($solic_sta_status, $sta_solic)) {
                             ?>
                             <button class="btn botao_w botao botao_verde waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
                               type="button" data-bs-toggle="modal" data-bs-toggle="button"
-                              data-bs-target="#modal_deferir_solicitacao">Iniciar Análise</button>
+                              data-bs-target="#modal_deferir_solicitacao">Deferir</button>
 
                           <?php } else { ?>
                             <button class="btn botao_w botao botao_disabled waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
-                              type="button">Iniciar Análise</button>
+                              type="button">Deferir</button>
                           <?php } ?>
 
+
+                          <?php
+                          // Busca a matrícula do Coordenador (já está no escopo, mas repetindo a busca para segurança)
+                          $sql_coord_matricula = $conn->prepare("SELECT curs_matricula_prof FROM cursos WHERE curs_id = :curs_id");
+                          $sql_coord_matricula->execute([':curs_id' => $solic_curso]);
+                          $coord_matricula = $sql_coord_matricula->fetchColumn();
+
+                          $tem_coordenador = !empty($coord_matricula);
+                          $status_atual = $solic_sta_status; // Status atual da solicitação (2, 3, 5, 7, etc.)
+                          
+                          // Ação de Iniciar Análise (Status 2/5 -> 7) deve ser permitida se:
+// 1. Status é SOLICITADO (2) E NÃO TEM Coordenador (Fila direta do SAAP)
+// 2. Status é APROVADO PELO COORDENADOR (5) (Fila de Reserva do SAAP)
+                          $permitir_iniciar_analise = (
+                            ($status_atual == 2 && !$tem_coordenador) ||
+                            ($status_atual == 5)
+                          );
+
+                          ?>
+                          <form method="POST" action="../router/web.php?r=AprovaAnaliseAdmin" style="display:inline;"
+                            onsubmit="return confirmarAcao('iniciar_analise_saap', 'Deseja iniciar a análise (SAAP) desta solicitação?', this);">
+
+                            <input type="hidden" name="acao" value="iniciar_analise_saap">
+                            <input type="hidden" name="solic_id" value="<?= htmlspecialchars($solic_id) ?>">
+                            <input type="hidden" name="sta_an_solic_codigo"
+                              value="<?= htmlspecialchars($solic_codigo) ?>">
+
+                            <?php
+                            if ($permitir_iniciar_analise) {
+                              ?>
+                              <button class="btn botao_w botao botao_azul_escuro waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
+                                type="submit">
+                                Iniciar Análise
+                              </button>
+
+                            <?php } else { ?>
+                              <button class="btn botao_w botao botao_disabled waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
+                                type="button">
+                                Iniciar Análise
+                              </button>
+                            <?php } ?>
+                          </form>
+
+
+                          <script>
+                            function confirmarAcao(acao, mensagem, form) {
+                              Swal.fire({
+                                text: mensagem,
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonColor: '#0461AD',
+                                cancelButtonColor: '#C4453E',
+                                confirmButtonText: 'Sim, iniciar',
+                                cancelButtonText: 'Cancelar',
+                              }).then((result) => {
+                                if (result.isConfirmed) {
+                                  // Remove a validação do formulário HTML5 e submete diretamente
+                                  form.classList.remove('needs-validation');
+                                  form.submit();
+                                }
+                              });
+                              return false; // Previne o envio padrão do formulário
+                            }
+                          </script>
                         </nav>
                       </div>
 
@@ -872,9 +936,9 @@
                 // 1. Já houver reservas para a solicitação (tabela de reservas).
                 // 2. O status da solicitação for 'Aguardando Reserva' (3) ou 'Reservado' (4),
                 //    mesmo que ainda não haja nenhuma reserva (para permitir o cadastro da primeira reserva).
-                $show_reservas_section = ($has_reservations || in_array($solic_status_current, [4, 5]));
+                $show_reservas_section = ($has_reservations || in_array($solic_status_current, [4, 7]));
                 // O botão de "Cadastrar Reserva" deve estar ativo apenas se o status for 'Aguardando Reserva' (3) ou 'Reservado' (4)
-                $enable_cadastrar_button = in_array($solic_status_current, [3, 4, 5]);
+                $enable_cadastrar_button = in_array($solic_status_current, [4, 7]);
 
                 // Agora, a tabela será exibida se $show_reservas_section FOR VERDADEIRO
                 
@@ -1652,12 +1716,12 @@ ORDER BY reservas.res_data ASC;");
                             $status_colors = [
                               1 => 'bg_info_laranja', // EM ELABORAÇÃO
                               2 => 'bg_info_azul',    // SOLICITADO
-                              3 => 'bg_info_roxo',    // EM ANÁLISE
+                              3 => 'bg_info_roxo',    // EM ANÁLISE PELO SAAP
                               4 => 'bg_info_verde',   // RESERVADO
                               5 => 'bg_info_azul_escuro', // AGUARDANDO RESERVA
                               6 => 'bg_info_vermelho', // INDEFERIDO
-                              7 => 'bg_info_cinza',   // AGUARDANDO CANCELAMENTO
-                              8 => 'bg_info_preto'    // CANCELADA
+                              7 => 'bg_info_roxo',   // EM ANÁLISE PELO COORDENADOR
+                              8 => 'bg_info_vermelho'    // CANCELADA
                             ];
                             $solic_status_color = $status_colors[$stsolic_id] ?? 'bg_info_cinza';
                             $tipo_registro_display = $tipo_registro;

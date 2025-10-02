@@ -30,12 +30,12 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
 
   // CONFIGURAÇÃO DO STATUS
   $status_colors = [
-    1  => 'tag_header_laranja',
-    2  => 'tag_header_azul',
-    3  => 'tag_header_roxo',
-    4  => 'tag_header_verde',
-    5  => 'tag_header_azul',
-    6  => 'tag_header_vermelho'
+    1 => 'tag_header_laranja',
+    2 => 'tag_header_azul',
+    3 => 'tag_header_roxo',
+    4 => 'tag_header_verde',
+    5 => 'tag_header_azul',
+    6 => 'tag_header_vermelho'
   ];
 
   $tag_header_color = $status_colors[$solic_sta_status] ?? ''; // Usa '' como padrão se não existir
@@ -57,9 +57,11 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
       <div>
         <div class="d-flex justify-content-sm-between justify-content-start align-items-start flex-sm-row flex-column">
           <h3 class="text-uppercase mb-1 pe-4" style="color: var(--amarelo);">
-            <div class="d-inline"><strong class="me-2"><?= htmlspecialchars($solic_row['solic_codigo']) ?>: </strong><?= htmlspecialchars($solic_row['compc_componente']) . htmlspecialchars($solic_row['solic_nome_atividade']) . htmlspecialchars($solic_row['solic_nome_comp_ativ']) ?>
+            <div class="d-inline"><strong class="me-2"><?= htmlspecialchars($solic_row['solic_codigo']) ?>:
+              </strong><?= htmlspecialchars($solic_row['compc_componente']) . htmlspecialchars($solic_row['solic_nome_atividade']) . htmlspecialchars($solic_row['solic_nome_comp_ativ']) ?>
           </h3>
-          <div class="botao <?= $tag_header_color ?> mt-md-0 mt-3 text-nowrap"><?= htmlspecialchars($stsolic_status) ?></div>
+          <div class="botao <?= $tag_header_color ?> mt-md-0 mt-3 text-nowrap"><?= htmlspecialchars($stsolic_status) ?>
+          </div>
         </div>
         <div class="row g-3 mt-3">
 
@@ -95,13 +97,16 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
             <h3 class="text-uppercase m-0 fs-16">Identificação</h3>
           </div>
           <div class="col-sm-6">
-            <nav class="navbar d-flex align-items-center justify-content-sm-end justify-content-center p-0 mt-3 mt-sm-0">
+            <nav
+              class="navbar d-flex align-items-center justify-content-sm-end justify-content-center p-0 mt-3 mt-sm-0">
 
               <?php
-              $sta_solic = array(3, 4, 5, 6);
+              $sta_solic = array(1, 2, 4, 5, 6, 7, 8);
               if (!in_array($solic_sta_status, $sta_solic)) {
-              ?>
-                <button class="btn botao_w botao botao_vermelho waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3" type="button" data-bs-toggle="modal" data-bs-toggle="button" data-bs-target="#modal_indeferir_solicitacao">Indeferir</button>
+                ?>
+                <button class="btn botao_w botao botao_vermelho waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3" type="button"
+                  data-bs-toggle="modal" data-bs-toggle="button"
+                  data-bs-target="#modal_indeferir_solicitacao">Indeferir</button>
 
                 <!-- INDEFERIR -->
                 <?php include 'includes/modal/modal_indeferir_solicitacao.php'; ?>
@@ -111,17 +116,63 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               <?php } ?>
 
               <?php
-              $sta_solic = array(3, 4, 5, 6);
+              $sta_solic = array(1, 2, 4, 5, 6, 7, 8);
               if (!in_array($solic_sta_status, $sta_solic)) {
-              ?>
-                <button class="btn botao_w botao botao_verde waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3" type="button" data-bs-toggle="modal" data-bs-toggle="button" data-bs-target="#modal_deferir_solicitacao">Aprovar</button>
+                ?>
+                <button class="btn botao_w botao botao_verde waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3" type="button"
+                  data-bs-toggle="modal" data-bs-toggle="button"
+                  data-bs-target="#modal_deferir_solicitacao">Aprovar</button>
 
                 <!-- DEFERIR -->
                 <?php include 'includes/modal/modal_deferir_solicitacao.php'; ?>
 
               <?php } else { ?>
-                <button class="btn botao_w botao botao_disabled waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3" type="button">Aprovar</button>
+                <button class="btn botao_w botao botao_disabled waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
+                  type="button">Aprovar</button>
               <?php } ?>
+
+
+              <form method="POST" action="router/web.php?r=AprovaAnalise" style="display:inline;"
+                onsubmit="return confirmarAcao('iniciar_analise', 'Deseja iniciar a análise desta solicitação?', this);">
+                <input type="hidden" name="acao" value="iniciar_analise">
+                <input type="hidden" name="solic_id" value="<?= htmlspecialchars($solic_id) ?>">
+                <input type="hidden" name="sta_an_solic_codigo" value="<?= htmlspecialchars($solic_codigo) ?>">
+
+                <?php
+                $sta_solic = array(1, 3, 4, 5, 6, 7, 8);
+                if (!in_array($solic_sta_status, $sta_solic)) {
+                  ?>
+                  <button class="btn botao_w botao botao_azul_escuro waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
+                    type="submit">
+                    Iniciar Análise
+                  </button>
+
+                <?php } else { ?>
+                  <button class="btn botao_w botao botao_disabled waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3" type="button">
+                    Iniciar Análise
+                  </button>
+                <?php } ?>
+              </form>
+
+              <script>
+                // Função para confirmar a ação (você precisa garantir que esta função SweetAlert existe no seu header/footer)
+                function confirmarAcao(acao, mensagem, form) {
+                  Swal.fire({
+                    text: mensagem,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0461AD',
+                    cancelButtonColor: '#C4453E',
+                    confirmButtonText: 'Sim, continuar',
+                    cancelButtonText: 'Cancelar',
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      form.submit();
+                    }
+                  });
+                  return false; // Previne o envio padrão do formulário
+                }
+              </script>
 
             </nav>
           </div>
@@ -144,14 +195,15 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               } ?>
               <label class="form-label">Curso <span>*</span></label>
               <select class="form-select text-uppercase" id="cad_solic_curso" disabled>
-                <option selected value="<?= htmlspecialchars($solic_curso) ?>"><?= htmlspecialchars($curs_curso) ?></option>
+                <option selected value="<?= htmlspecialchars($solic_curso) ?>"><?= htmlspecialchars($curs_curso) ?>
+                </option>
               </select>
             </div>
             <script>
               const cad_solic_tipo_ativ = document.getElementById("cad_solic_tipo_ativ");
               const camp_solic_curso = document.getElementById("camp_solic_curso");
 
-              cad_solic_tipo_ativ.addEventListener("change", function() {
+              cad_solic_tipo_ativ.addEventListener("change", function () {
                 if (cad_solic_tipo_ativ.value === "1") {
                   camp_solic_curso.style.display = "block";
                   document.getElementById("cad_solic_curso").required = true;
@@ -171,12 +223,13 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
           <div class="col-12" id="camp_solic_comp_curric" style="display: none;">
             <div class="form_margem">
               <label class="form-label">Componente Curricular <span>*</span></label>
-              <select class="form-select text-uppercase" id="cad_solic_comp_curric" data-valor="<?= htmlspecialchars($compc_id) ?>" disabled>
+              <select class="form-select text-uppercase" id="cad_solic_comp_curric"
+                data-valor="<?= htmlspecialchars($compc_id) ?>" disabled>
                 <option value="<?= htmlspecialchars($compc_id) ?>"><?= htmlspecialchars($compc_componente) ?></option>
               </select>
             </div>
             <script>
-              $(document).ready(function() {
+              $(document).ready(function () {
                 // Inicializa o select2
                 $('#cad_solic_curso').select2();
 
@@ -193,7 +246,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                 verificarSelecao();
 
                 // Adiciona o evento de mudança
-                $('#cad_solic_curso').on('change', function() {
+                $('#cad_solic_curso').on('change', function () {
                   verificarSelecao();
                 });
               });
@@ -211,7 +264,8 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               } ?>
               <label class="form-label">Nome do Curso <span>*</span></label>
               <select class="form-select text-uppercase" id="cad_solic_nome_curso" disabled>
-                <option selected value="<?= htmlspecialchars($cexc_id)  ?>"><?= htmlspecialchars($cexc_curso) ?></option>
+                <option selected value="<?= htmlspecialchars($cexc_id) ?>"><?= htmlspecialchars($cexc_curso) ?>
+                </option>
               </select>
             </div>
           </div>
@@ -219,21 +273,24 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
           <div class="col-12" id="camp_solic_nome_curso_text" style="display: none;">
             <div class="form_margem">
               <label class="form-label">Nome do Curso <span>*</span></label>
-              <input type="text" class="form-control text-uppercase" id="cad_solic_nome_curso_text" value="<?= htmlspecialchars($solic_nome_curso_text) ?>" disabled>
+              <input type="text" class="form-control text-uppercase" id="cad_solic_nome_curso_text"
+                value="<?= htmlspecialchars($solic_nome_curso_text) ?>" disabled>
             </div>
           </div>
 
           <div class="col-12" id="camp_solic_nome_atividade" style="display: none;">
             <div class="form_margem">
               <label class="form-label">Nome da Atividade <span>*</span></label>
-              <input type="text" class="form-control text-uppercase" id="cad_solic_nome_atividade" value="<?= htmlspecialchars($solic_nome_atividade) ?>" disabled>
+              <input type="text" class="form-control text-uppercase" id="cad_solic_nome_atividade"
+                value="<?= htmlspecialchars($solic_nome_atividade) ?>" disabled>
             </div>
           </div>
 
           <div class="col-12" id="camp_solic_nome_comp_ativ" style="display: none;">
             <div class="form_margem">
               <label class="form-label">Nome do Componente/Atividade <span>*</span></label>
-              <input type="text" class="form-control text-uppercase" id="cad_solic_nome_comp_ativ" value="<?= htmlspecialchars($solic_nome_comp_ativ) ?>" disabled>
+              <input type="text" class="form-control text-uppercase" id="cad_solic_nome_comp_ativ"
+                value="<?= htmlspecialchars($solic_nome_comp_ativ) ?>" disabled>
               <div class="invalid-feedback">Este campo é obrigatório</div>
             </div>
           </div>
@@ -250,7 +307,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               } ?>
               <label class="form-label">Semestre <span>*</span></label>
               <select class="form-select text-uppercase" id="cad_solic_semestre" disabled>
-                <option selected value="<?= htmlspecialchars($cs_id)  ?>"><?= htmlspecialchars($cs_semestre) ?></option>
+                <option selected value="<?= htmlspecialchars($cs_id) ?>"><?= htmlspecialchars($cs_semestre) ?></option>
               </select>
             </div>
           </div>
@@ -258,20 +315,22 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
           <div class="col-md-6" id="camp_solic_nome_prof_resp" style="display: none;">
             <div class="form_margem">
               <label class="form-label">Nome do Professor/Responsável <span>*</span></label>
-              <input type="text" class="form-control text-uppercase" id="cad_solic_nome_prof_resp" value="<?= htmlspecialchars($solic_nome_prof_resp) ?>" disabled>
+              <input type="text" class="form-control text-uppercase" id="cad_solic_nome_prof_resp"
+                value="<?= htmlspecialchars($solic_nome_prof_resp) ?>" disabled>
             </div>
           </div>
 
           <div class="col-md-6" id="camp_solic_contato" style="display: none;">
             <div class="form_margem">
               <label class="form-label">Telefone para contato <span>*</span></label>
-              <input type="text" class="form-control cel_tel" id="cad_solic_contato" value="<?= htmlspecialchars($solic_contato) ?>" disabled>
+              <input type="text" class="form-control cel_tel" id="cad_solic_contato"
+                value="<?= htmlspecialchars($solic_contato) ?>" disabled>
             </div>
           </div>
 
         </div>
         <script>
-          $(document).ready(function() {
+          $(document).ready(function () {
             function toggleFields() {
               var tipoAtiv = $('#cad_solic_tipo_ativ').val();
               var curso = $('#cad_solic_curso').val();
@@ -333,7 +392,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               }
             }
 
-            $('#cad_solic_tipo_ativ, #cad_solic_curso, #cad_solic_comp_curric, #cad_solic_nome_curso, #camp_solic_nome_curso_text').change(function() {
+            $('#cad_solic_tipo_ativ, #cad_solic_curso, #cad_solic_comp_curric, #cad_solic_nome_curso, #camp_solic_nome_curso_text').change(function () {
               $('[id^="camp_"]').hide().find('input, select').prop('required', false);
               toggleFields();
             });
@@ -343,7 +402,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
         </script>
 
         <script>
-          $(document).ready(function() {
+          $(document).ready(function () {
             function carregarComponentes(cursoId, componenteSelecionado) {
               if (cursoId !== "") {
                 $.ajax({
@@ -352,7 +411,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                   data: {
                     curso_id: cursoId
                   },
-                  success: function(data) {
+                  success: function (data) {
                     $('#cad_solic_comp_curric').html(data);
 
                     // Se houver um componente já selecionado, definir ele no select
@@ -367,7 +426,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
             }
 
             // Evento quando o curso for alterado manualmente pelo usuário
-            $('#cad_solic_curso').change(function() {
+            $('#cad_solic_curso').change(function () {
               var cursoId = $(this).val();
               carregarComponentes(cursoId, null);
             });
@@ -389,7 +448,10 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
       <div class="card-header" style="background: var(--azul_alpha);">
         <div class="row align-items-center">
           <div class="col-12 tit_nova_solicitacao">
-            <h3 class="text-uppercase m-0 fs-16" style="color: var(--preto);">Informações da Reserva <span class="fs-12 ms-2" style="background: var(--azul); color: #fff; padding: 3px 10px; border-radius: 3px; font-weight: 500;">Aulas Práticas</span></h3>
+            <h3 class="text-uppercase m-0 fs-16" style="color: var(--preto);">Informações da Reserva <span
+                class="fs-12 ms-2"
+                style="background: var(--azul); color: #fff; padding: 3px 10px; border-radius: 3px; font-weight: 500;">Aulas
+                Práticas</span></h3>
           </div>
         </div>
       </div>
@@ -399,15 +461,18 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
         <div class="row grid gx-3">
 
           <div class="col-12">
-            <label class="form-label">Deseja realizar a solicitação de reserva de espaços para aulas práticas? <span>*</span></label>
+            <label class="form-label">Deseja realizar a solicitação de reserva de espaços para aulas práticas?
+              <span>*</span></label>
             <div class="check_container">
               <div class="form-check form_solicita">
-                <input class="form-check-input form_solicita" type="radio" name="solic_ap_aula_pratica" id="solic_ap_aula_pratica_sim" value="1" <?= isset($solic_ap_aula_pratica) && $solic_ap_aula_pratica == 1 ? 'checked' : ''; ?> disabled>
+                <input class="form-check-input form_solicita" type="radio" name="solic_ap_aula_pratica"
+                  id="solic_ap_aula_pratica_sim" value="1" <?= isset($solic_ap_aula_pratica) && $solic_ap_aula_pratica == 1 ? 'checked' : ''; ?> disabled>
                 <label class="form-check-label" for="solic_ap_aula_pratica_sim">Sim</label>
               </div>
 
               <div class="form-check form_solicita">
-                <input class="form-check-input form_solicita" type="radio" name="solic_ap_aula_pratica" id="solic_ap_aula_pratica_nao" value="0" <?= isset($solic_ap_aula_pratica) && $solic_ap_aula_pratica == 0 ? 'checked' : ''; ?> disabled>
+                <input class="form-check-input form_solicita" type="radio" name="solic_ap_aula_pratica"
+                  id="solic_ap_aula_pratica_nao" value="0" <?= isset($solic_ap_aula_pratica) && $solic_ap_aula_pratica == 0 ? 'checked' : ''; ?> disabled>
                 <label class="form-check-label" for="solic_ap_aula_pratica_nao">Não</label>
                 <div class="invalid-feedback">Este campo é obrigatório</div>
               </div>
@@ -426,7 +491,9 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                 } ?>
                 <label class="form-label">Campus <span>*</span></label>
                 <select class="form-select text-uppercase" id="solic_ap_campus" disabled>
-                  <option selected value="<?= htmlspecialchars($campus_pratico_id)  ?>"><?= htmlspecialchars($campus_pratico_nome) ?></option>
+                  <option selected value="<?= htmlspecialchars($campus_pratico_id) ?>">
+                    <?= htmlspecialchars($campus_pratico_nome) ?>
+                  </option>
                 </select>
               </div>
             </div>
@@ -448,15 +515,16 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                   echo "Erro ao tentar recuperar o perfil";
                 } ?>
                 <label class="form-label">Espaço sugerido <span>*</span></label>
-                <select class="form-select text-uppercase" name="solic_ap_espaco_brotas[]" multiple id="cad_reserva_local_brotas_mult" disabled>
-                  <?php foreach ($result as $res) : ?>
+                <select class="form-select text-uppercase" name="solic_ap_espaco_brotas[]" multiple
+                  id="cad_reserva_local_brotas_mult" disabled>
+                  <?php foreach ($result as $res): ?>
                     <option value="<?= $res['esp_id'] ?>" <?= in_array($res['esp_id'], $espaco_b) ? 'selected' : '' ?>>
                       <?= htmlspecialchars($res['esp_codigo']) . ' - ' . htmlspecialchars($res['esp_nome_local']) . ' - ' . htmlspecialchars($res['and_andar']) . ' - ' . htmlspecialchars($res['pav_pavilhao']) . ' - CAPACIDADE: ' . htmlspecialchars($res['esp_quant_maxima']) . ' ALUNOS' ?>
                     </option>
                   <?php endforeach; ?>
                 </select>
                 <script>
-                  $(document).ready(function() {
+                  $(document).ready(function () {
                     $('#cad_reserva_local_brotas_mult').select2({
                       placeholder: "Selecione as opções",
                       tags: false,
@@ -482,15 +550,16 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                   echo "Erro ao tentar recuperar o perfil";
                 } ?>
                 <label class="form-label">Espaço sugerido <span>*</span></label>
-                <select class="form-select text-uppercase" name="solic_ap_espaco_cabula[]" multiple id="cad_reserva_local_cabula_mult" disabled>
-                  <?php foreach ($result as $res) : ?>
+                <select class="form-select text-uppercase" name="solic_ap_espaco_cabula[]" multiple
+                  id="cad_reserva_local_cabula_mult" disabled>
+                  <?php foreach ($result as $res): ?>
                     <option value="<?= $res['esp_id'] ?>" <?= in_array($res['esp_id'], $espaco_c) ? 'selected' : '' ?>>
                       <?= htmlspecialchars($res['esp_codigo']) . ' - ' . htmlspecialchars($res['esp_nome_local']) . ' - ' . htmlspecialchars($res['and_andar']) . ' - ' . htmlspecialchars($res['pav_pavilhao']) . ' - CAPACIDADE: ' . htmlspecialchars($res['esp_quant_maxima']) . ' ALUNOS' ?>
                     </option>
                   <?php endforeach; ?>
                 </select>
                 <script>
-                  $(document).ready(function() {
+                  $(document).ready(function () {
                     $('#cad_reserva_local_cabula_mult').select2({
                       placeholder: "Selecione as opções",
                       tags: false,
@@ -514,7 +583,8 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                   } ?>
                   <label class="form-label">Quantidade de turmas <span>*</span></label>
                   <select class="form-select text-uppercase" id="solic_ap_quant_turma" disabled>
-                    <option selected value="<?= htmlspecialchars($ctp_id)  ?>"><?= htmlspecialchars($ctp_turma) ?></option>
+                    <option selected value="<?= htmlspecialchars($ctp_id) ?>"><?= htmlspecialchars($ctp_turma) ?>
+                    </option>
                   </select>
                 </div>
               </div>
@@ -526,7 +596,8 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               <div class="col-12">
                 <div class="form_margem">
                   <label class="form-label">Número estimado de participantes <span>*</span></label>
-                  <input type="text" class="form-control text-uppercase" name="solic_ap_quant_particip" id="solic_ap_quant_particip" value="<?= htmlspecialchars($solic_ap_quant_particip) ?>" disabled>
+                  <input type="text" class="form-control text-uppercase" name="solic_ap_quant_particip"
+                    id="solic_ap_quant_particip" value="<?= htmlspecialchars($solic_ap_quant_particip) ?>" disabled>
                   <div class="invalid-feedback">Este campo é obrigatório</div>
                 </div>
               </div>
@@ -536,12 +607,19 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
 
                 <div class="check_container">
                   <div class="form-check form_solicita">
-                    <input type="radio" class="form-check-input form_solicita" id="solic_ap_tipo_reserva1" name="solic_ap_tipo_reserva" value="1" <?php echo ($solic_ap_tipo_reserva == 1) ? 'checked' : ''; ?> disabled>
-                    <label class="form-check-label" for="solic_ap_tipo_reserva1">Esporádica - Reserva em data(s) específica(s).</label>
+                    <input type="radio" class="form-check-input form_solicita" id="solic_ap_tipo_reserva1"
+                      name="solic_ap_tipo_reserva" value="1" <?php echo ($solic_ap_tipo_reserva == 1) ? 'checked' : ''; ?>
+                      disabled>
+                    <label class="form-check-label" for="solic_ap_tipo_reserva1">Esporádica - Reserva em data(s)
+                      específica(s).</label>
                   </div>
                   <div class="form-check form_solicita">
-                    <input type="radio" class="form-check-input form_solicita" id="solic_ap_tipo_reserva2" name="solic_ap_tipo_reserva" value="2" <?php echo ($solic_ap_tipo_reserva == 2) ? 'checked' : ''; ?> disabled>
-                    <label class="form-check-label" for="solic_ap_tipo_reserva2">Fixa - Reserva permanente em determinado(s) dia(s) da semana, durante todo o semestre de acordo com o calendário acadêmico.</label>
+                    <input type="radio" class="form-check-input form_solicita" id="solic_ap_tipo_reserva2"
+                      name="solic_ap_tipo_reserva" value="2" <?php echo ($solic_ap_tipo_reserva == 2) ? 'checked' : ''; ?>
+                      disabled>
+                    <label class="form-check-label" for="solic_ap_tipo_reserva2">Fixa - Reserva permanente em
+                      determinado(s) dia(s) da semana, durante todo o semestre de acordo com o calendário
+                      acadêmico.</label>
                   </div>
                 </div>
               </div>
@@ -560,13 +638,16 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                   echo "Erro ao tentar recuperar o perfil";
                 } ?>
                 <label class="form-label">Dia(s) da semana <span>*</span></label>
-                <select class="form-select text-uppercase" name="solic_ap_dia_reserva[]" multiple id="cad_solic_ap_dia_reserva" disabled>
-                  <?php foreach ($result as $res) : ?>
-                    <option value="<?= $res['week_id'] ?>" <?= in_array($res['week_id'], $dias) ? 'selected' : '' ?>><?= htmlspecialchars($res['week_dias']) ?></option>
+                <select class="form-select text-uppercase" name="solic_ap_dia_reserva[]" multiple
+                  id="cad_solic_ap_dia_reserva" disabled>
+                  <?php foreach ($result as $res): ?>
+                    <option value="<?= $res['week_id'] ?>" <?= in_array($res['week_id'], $dias) ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($res['week_dias']) ?>
+                    </option>
                   <?php endforeach; ?>
                 </select>
                 <script>
-                  $(document).ready(function() {
+                  $(document).ready(function () {
                     $('#cad_solic_ap_dia_reserva').select2({
                       placeholder: "Selecione as opções",
                       tags: false,
@@ -581,7 +662,8 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               <div class="col-12" id="campo_info_pratic_datas" style="display: none;">
                 <div class="form_margem">
                   <label class="form-label">Data(s) da reserva <span>*</span></label>
-                  <textarea class="form-control" id="solic_ap_data_reserva" rows="5" disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_ap_data_reserva)) ?></textarea>
+                  <textarea class="form-control" id="solic_ap_data_reserva" rows="5"
+                    disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_ap_data_reserva)) ?></textarea>
                 </div>
               </div>
 
@@ -589,7 +671,9 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                 <div class="col-md-6">
                   <div class="form_margem">
                     <label class="form-label">Horário inicial <span>*</span></label>
-                    <input type="time" class="form-control hora" id="solic_ap_hora_inicio" value="<?= $solic_ap_hora_inicio ? htmlspecialchars(date("H:i", strtotime($solic_ap_hora_inicio))) : ''; ?>" disabled>
+                    <input type="time" class="form-control hora" id="solic_ap_hora_inicio"
+                      value="<?= $solic_ap_hora_inicio ? htmlspecialchars(date("H:i", strtotime($solic_ap_hora_inicio))) : ''; ?>"
+                      disabled>
                   </div>
                   <script>
                     flatpickr("#solic_ap_hora_inicio", {
@@ -605,7 +689,9 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                 <div class="col-md-6">
                   <div class="form_margem">
                     <label class="form-label">Horário final <span>*</span></label>
-                    <input type="time" class="form-control hora" id="solic_ap_hora_fim" value="<?= $solic_ap_hora_fim ? htmlspecialchars(date("H:i", strtotime($solic_ap_hora_fim))) : ''; ?>" disabled>
+                    <input type="time" class="form-control hora" id="solic_ap_hora_fim"
+                      value="<?= $solic_ap_hora_fim ? htmlspecialchars(date("H:i", strtotime($solic_ap_hora_fim))) : ''; ?>"
+                      disabled>
                   </div>
                   <script>
                     flatpickr("#solic_ap_hora_fim", {
@@ -618,7 +704,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                   </script>
                 </div>
                 <script>
-                  document.addEventListener('DOMContentLoaded', function() {
+                  document.addEventListener('DOMContentLoaded', function () {
                     const horaInicio = document.getElementById('solic_ap_hora_inicio');
                     const horaFim = document.getElementById('solic_ap_hora_fim');
 
@@ -650,20 +736,27 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               </div>
 
               <div class="col-12">
-                <label class="form-label">Selecione como deseja informar quais serão os materiais, equipamentos e insumos necessários para a realização da aula nos espaços de prática <span>*</span></label>
+                <label class="form-label">Selecione como deseja informar quais serão os materiais, equipamentos e
+                  insumos necessários para a realização da aula nos espaços de prática <span>*</span></label>
 
                 <div class="check_container">
                   <div class="form-check form_solicita">
-                    <input type="radio" class="form-check-input form_solicita" id="validationFormCheck2" name="solic_ap_tipo_material" value="1" <?php echo ($solic_ap_tipo_material == 1) ? 'checked' : ''; ?> disabled>
-                    <label class="form-check-label" for="validationFormCheck2">Anexar o formulário de planejamento de atividades de práticas nos laboratórios de ensino.</label>
+                    <input type="radio" class="form-check-input form_solicita" id="validationFormCheck2"
+                      name="solic_ap_tipo_material" value="1" <?php echo ($solic_ap_tipo_material == 1) ? 'checked' : ''; ?> disabled>
+                    <label class="form-check-label" for="validationFormCheck2">Anexar o formulário de planejamento de
+                      atividades de práticas nos laboratórios de ensino.</label>
                   </div>
                   <div class="form-check form_solicita">
-                    <input type="radio" class="form-check-input form_solicita" id="validationFormCheck3" name="solic_ap_tipo_material" value="2" <?php echo ($solic_ap_tipo_material == 2) ? 'checked' : ''; ?> disabled>
-                    <label class="form-check-label" for="validationFormCheck3">Informar o título da aula (caso o formulário já esteja no banco de dados do laboratório de ensino).</label>
+                    <input type="radio" class="form-check-input form_solicita" id="validationFormCheck3"
+                      name="solic_ap_tipo_material" value="2" <?php echo ($solic_ap_tipo_material == 2) ? 'checked' : ''; ?> disabled>
+                    <label class="form-check-label" for="validationFormCheck3">Informar o título da aula (caso o
+                      formulário já esteja no banco de dados do laboratório de ensino).</label>
                   </div>
                   <div class="form-check form_solicita">
-                    <input type="radio" class="form-check-input form_solicita" id="validationFormCheck4" name="solic_ap_tipo_material" value="3" <?php echo ($solic_ap_tipo_material == 3) ? 'checked' : ''; ?> disabled>
-                    <label class="form-check-label" for="validationFormCheck4">Descrevê-los com as respectivas quantidades.</label>
+                    <input type="radio" class="form-check-input form_solicita" id="validationFormCheck4"
+                      name="solic_ap_tipo_material" value="3" <?php echo ($solic_ap_tipo_material == 3) ? 'checked' : ''; ?> disabled>
+                    <label class="form-check-label" for="validationFormCheck4">Descrevê-los com as respectivas
+                      quantidades.</label>
                     <div class="invalid-feedback">Este campo é obrigatório</div>
                   </div>
                 </div>
@@ -674,10 +767,12 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
 
               <div class="col-12" id="file_ancora">
                 <div class="form_margem">
-                  <label class="form-label m-0">Formulário de planejamento de atividades de práticas nos laboratórios de ensino <span>*</span></label>
+                  <label class="form-label m-0">Formulário de planejamento de atividades de práticas nos laboratórios de
+                    ensino <span>*</span></label>
 
                   <div class="input-group">
-                    <input type="file" class="form-control input_arquivo" name="arquivos[]" id="cad_info_pratic_arquivo" disabled>
+                    <input type="file" class="form-control input_arquivo" name="arquivos[]" id="cad_info_pratic_arquivo"
+                      disabled>
                     <div class="invalid-feedback">Este campo é obrigatório</div>
                   </div>
                   <div class="mt-0 mb-2">
@@ -685,23 +780,26 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                     <?php $sql = $conn->prepare("SELECT * FROM solicitacao_arq WHERE sarq_solic_id = :sarq_solic_id");
                     $sql->execute(['sarq_solic_id' => $solic_id]);
                     while ($arq = $sql->fetch(PDO::FETCH_ASSOC)) {
-                      $sarq_id        = $arq['sarq_id'];
-                      $sarq_solic_id  = $arq['sarq_solic_id'];
+                      $sarq_id = $arq['sarq_id'];
+                      $sarq_solic_id = $arq['sarq_solic_id'];
                       $sarq_categoria = $arq['sarq_categoria'];
-                      $sarq_arquivo   = $arq['sarq_arquivo'];
-                    ?>
+                      $sarq_arquivo = $arq['sarq_arquivo'];
+                      ?>
 
                       <div class="result_file">
-                        <div class="result_file_name"><a href="uploads/solicitacoes/<?= $solic_codigo . '/' . $sarq_arquivo ?>" target="_blank"><?= $sarq_arquivo ?></a></div>
+                        <div class="result_file_name"><a
+                            href="uploads/solicitacoes/<?= $solic_codigo . '/' . $sarq_arquivo ?>"
+                            target="_blank"><?= $sarq_arquivo ?></a></div>
 
                         <?php
                         $sta_solic = array(3, 5, 6);
                         if (in_array($solic_sta_status, $sta_solic)) {
-                        ?>
+                          ?>
                           <span class="item_bt_row"></span>
                         <?php } else { ?>
                           <span class="item_bt_row">
-                            <a href="controller/controller_propostas.php?funcao=exc_arq&ident=<?= $sarq_id ?>&p=3&c=<?= $solic_codigo ?>&f=<?= $sarq_arquivo ?>" class="bt_table del-btn" title="Excluir"><i class="fa-regular fa-trash-can"></i></a>
+                            <a href="controller/controller_propostas.php?funcao=exc_arq&ident=<?= $sarq_id ?>&p=3&c=<?= $solic_codigo ?>&f=<?= $sarq_arquivo ?>"
+                              class="bt_table del-btn" title="Excluir"><i class="fa-regular fa-trash-can"></i></a>
                           </span>
                         <?php } ?>
 
@@ -719,7 +817,8 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               <div class="col-12">
                 <div class="form_margem">
                   <label class="form-label">Informe o título da(s) aula(s) <span>*</span></label>
-                  <textarea class="form-control" id="solic_ap_tit_aulas" rows="5" disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_ap_tit_aulas)) ?></textarea>
+                  <textarea class="form-control" id="solic_ap_tit_aulas" rows="5"
+                    disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_ap_tit_aulas)) ?></textarea>
                   <div class="invalid-feedback">Este campo é obrigatório</div>
                 </div>
               </div>
@@ -729,8 +828,11 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
 
               <div class="col-12">
                 <div class="form_margem">
-                  <label class="form-label">Descreva os materiais, insumos e equipamentos, com suas respectivas quantidades, que serão necessários para a realização da aula no espaço de prática <span>*</span></label>
-                  <textarea class="form-control" id="solic_ap_quant_material" rows="5" disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_ap_quant_material)) ?></textarea>
+                  <label class="form-label">Descreva os materiais, insumos e equipamentos, com suas respectivas
+                    quantidades, que serão necessários para a realização da aula no espaço de prática
+                    <span>*</span></label>
+                  <textarea class="form-control" id="solic_ap_quant_material" rows="5"
+                    disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_ap_quant_material)) ?></textarea>
                   <div class="invalid-feedback">Este campo é obrigatório</div>
                 </div>
               </div>
@@ -740,14 +842,15 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               <div class="col-12">
                 <div class="form_margem">
                   <label class="form-label">Observações</label>
-                  <textarea class="form-control" rows="5" disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_ap_obs)) ?></textarea>
+                  <textarea class="form-control" rows="5"
+                    disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_ap_obs)) ?></textarea>
                 </div>
               </div>
             </div>
           </div>
         </div>
         <script>
-          document.addEventListener('DOMContentLoaded', function() {
+          document.addEventListener('DOMContentLoaded', function () {
 
             const cad_ap_aula_pratica = document.querySelectorAll('input[name="solic_ap_aula_pratica"]');
             const campo_info_pratic_campus = document.getElementById('campo_info_pratic_campus');
@@ -953,7 +1056,10 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
       <div class="card-header" style="background: var(--roxo_alpha);">
         <div class="row align-items-center">
           <div class="col-12 tit_nova_solicitacao">
-            <h3 class="text-uppercase m-0 fs-16" style="color: var(--preto);">Informações da Reserva <span class="fs-12 ms-2" style="background: var(--roxo); color: #fff; padding: 3px 10px; border-radius: 3px; font-weight: 500;">Aulas Teóricas</span></h3>
+            <h3 class="text-uppercase m-0 fs-16" style="color: var(--preto);">Informações da Reserva <span
+                class="fs-12 ms-2"
+                style="background: var(--roxo); color: #fff; padding: 3px 10px; border-radius: 3px; font-weight: 500;">Aulas
+                Teóricas</span></h3>
           </div>
         </div>
       </div>
@@ -963,16 +1069,19 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
         <div class="row grid gx-3">
 
           <div class="col-12">
-            <label class="form-label">Deseja realizar a solicitação de reserva de espaços para aulas teóricas? <span>*</span></label>
+            <label class="form-label">Deseja realizar a solicitação de reserva de espaços para aulas teóricas?
+              <span>*</span></label>
 
             <div class="check_container">
               <div class="form-check form_solicita">
-                <input class="form-check-input form_solicita" type="radio" name="solic_at_aula_teorica" id="solic_at_aula_teorica_sim" value="1" <?= isset($solic_at_aula_teorica) && $solic_at_aula_teorica == 1 ? 'checked' : ''; ?> disabled>
+                <input class="form-check-input form_solicita" type="radio" name="solic_at_aula_teorica"
+                  id="solic_at_aula_teorica_sim" value="1" <?= isset($solic_at_aula_teorica) && $solic_at_aula_teorica == 1 ? 'checked' : ''; ?> disabled>
                 <label class="form-check-label" for="solic_at_aula_teorica_sim">Sim</label>
               </div>
 
               <div class="form-check form_solicita">
-                <input class="form-check-input form_solicita" type="radio" name="solic_at_aula_teorica" id="solic_at_aula_teorica_nao" value="0" <?= isset($solic_at_aula_teorica) && $solic_at_aula_teorica == 0 ? 'checked' : ''; ?> disabled>
+                <input class="form-check-input form_solicita" type="radio" name="solic_at_aula_teorica"
+                  id="solic_at_aula_teorica_nao" value="0" <?= isset($solic_at_aula_teorica) && $solic_at_aula_teorica == 0 ? 'checked' : ''; ?> disabled>
                 <label class="form-check-label" for="solic_at_aula_teorica_nao">Não</label>
               </div>
             </div>
@@ -991,7 +1100,9 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                 } ?>
                 <label class="form-label">Campus <span>*</span></label>
                 <select class="form-select text-uppercase" id="solic_at_campus" disabled>
-                  <option selected value="<?= htmlspecialchars($campus_teorico_id)  ?>"><?= htmlspecialchars($campus_teorico_nome) ?></option>v
+                  <option selected value="<?= htmlspecialchars($campus_teorico_id) ?>">
+                    <?= htmlspecialchars($campus_teorico_nome) ?>
+                  </option>v
                 </select>
               </div>
             </div>
@@ -1009,7 +1120,8 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                   } ?>
                   <label class="form-label">Quantidade de sala(s) / laboratório(s) de informática <span>*</span></label>
                   <select class="form-select text-uppercase" id="solic_at_quant_sala" disabled>
-                    <option selected value="<?= htmlspecialchars($cst_id)  ?>"><?= htmlspecialchars($cst_sala) ?></option>
+                    <option selected value="<?= htmlspecialchars($cst_id) ?>"><?= htmlspecialchars($cst_sala) ?>
+                    </option>
                   </select>
                 </div>
               </div>
@@ -1020,7 +1132,8 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               <div class="col-12">
                 <div class="form_margem">
                   <label class="form-label">Número estimado de participantes <span>*</span></label>
-                  <input type="text" class="form-control text-uppercase" id="solic_at_quant_particip" value="<?= htmlspecialchars($solic_at_quant_particip) ?>" disabled>
+                  <input type="text" class="form-control text-uppercase" id="solic_at_quant_particip"
+                    value="<?= htmlspecialchars($solic_at_quant_particip) ?>" disabled>
                 </div>
               </div>
 
@@ -1029,12 +1142,17 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
 
                 <div class="check_container">
                   <div class="form-check form_solicita">
-                    <input type="radio" class="form-check-input form_solicita" id="solic_at_tipo_reserva1" name="solic_at_tipo_reserva" value="1" <?= isset($solic_at_tipo_reserva) && $solic_at_tipo_reserva == 1 ? 'checked' : ''; ?> disabled>
-                    <label class="form-check-label" for="solic_at_tipo_reserva1">Esporádica - Reserva em data(s) específica(s).</label>
+                    <input type="radio" class="form-check-input form_solicita" id="solic_at_tipo_reserva1"
+                      name="solic_at_tipo_reserva" value="1" <?= isset($solic_at_tipo_reserva) && $solic_at_tipo_reserva == 1 ? 'checked' : ''; ?> disabled>
+                    <label class="form-check-label" for="solic_at_tipo_reserva1">Esporádica - Reserva em data(s)
+                      específica(s).</label>
                   </div>
                   <div class="form-check form_solicita">
-                    <input type="radio" class="form-check-input form_solicita" id="solic_at_tipo_reserva2" name="solic_at_tipo_reserva" value="2" <?= isset($solic_at_tipo_reserva) && $solic_at_tipo_reserva == 2 ? 'checked' : ''; ?> disabled>
-                    <label class="form-check-label" for="solic_at_tipo_reserva2">Fixa - Reserva permanente em determinado(s) dia(s) da semana, durante todo o semestre de acordo com o calendário acadêmico.</label>
+                    <input type="radio" class="form-check-input form_solicita" id="solic_at_tipo_reserva2"
+                      name="solic_at_tipo_reserva" value="2" <?= isset($solic_at_tipo_reserva) && $solic_at_tipo_reserva == 2 ? 'checked' : ''; ?> disabled>
+                    <label class="form-check-label" for="solic_at_tipo_reserva2">Fixa - Reserva permanente em
+                      determinado(s) dia(s) da semana, durante todo o semestre de acordo com o calendário
+                      acadêmico.</label>
                     <div class="invalid-feedback">Este campo é obrigatório</div>
                   </div>
                 </div>
@@ -1054,13 +1172,16 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                   echo "Erro ao tentar recuperar o perfil";
                 } ?>
                 <label class="form-label">Dia(s) da semana <span>*</span></label>
-                <select class="form-select text-uppercase" name="solic_at_dia_reserva[]" multiple id="cad_solic_at_dia_reserva" disabled>
-                  <?php foreach ($result as $res) : ?>
-                    <option value="<?= $res['week_id'] ?>" <?= in_array($res['week_id'], $dias) ? 'selected' : '' ?>><?= htmlspecialchars($res['week_dias']) ?></option>
+                <select class="form-select text-uppercase" name="solic_at_dia_reserva[]" multiple
+                  id="cad_solic_at_dia_reserva" disabled>
+                  <?php foreach ($result as $res): ?>
+                    <option value="<?= $res['week_id'] ?>" <?= in_array($res['week_id'], $dias) ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($res['week_dias']) ?>
+                    </option>
                   <?php endforeach; ?>
                 </select>
                 <script>
-                  $(document).ready(function() {
+                  $(document).ready(function () {
                     $('#cad_solic_at_dia_reserva').select2({
                       placeholder: "Selecione as opções",
                       tags: false,
@@ -1075,7 +1196,8 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               <div class="col-12" id="campo_solic_at_data_reserva" style="display: none;">
                 <div class="form_margem">
                   <label class="form-label">Data(s) da reserva <span>*</span></label>
-                  <textarea class="form-control" id="solic_at_data_reserva" rows="5" disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_at_data_reserva)) ?></textarea>
+                  <textarea class="form-control" id="solic_at_data_reserva" rows="5"
+                    disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_at_data_reserva)) ?></textarea>
                 </div>
               </div>
 
@@ -1083,7 +1205,9 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                 <div class="col-md-6">
                   <div class="form_margem">
                     <label class="form-label">Horário inicial <span>*</span></label>
-                    <input type="time" class="form-control hora" id="solic_at_hora_inicio" value="<?= $solic_at_hora_inicio ? htmlspecialchars(date("H:i", strtotime($solic_at_hora_inicio))) : ''; ?>" disabled>
+                    <input type="time" class="form-control hora" id="solic_at_hora_inicio"
+                      value="<?= $solic_at_hora_inicio ? htmlspecialchars(date("H:i", strtotime($solic_at_hora_inicio))) : ''; ?>"
+                      disabled>
                   </div>
                   <script>
                     flatpickr("#solic_at_hora_inicio", {
@@ -1099,7 +1223,9 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                 <div class="col-md-6">
                   <div class="form_margem">
                     <label class="form-label">Horário final <span>*</span></label>
-                    <input type="time" class="form-control hora" id="solic_at_hora_fim" value="<?= $solic_at_hora_fim ? htmlspecialchars(date("H:i", strtotime($solic_at_hora_fim))) : ''; ?>" disabled>
+                    <input type="time" class="form-control hora" id="solic_at_hora_fim"
+                      value="<?= $solic_at_hora_fim ? htmlspecialchars(date("H:i", strtotime($solic_at_hora_fim))) : ''; ?>"
+                      disabled>
                   </div>
                   <script>
                     flatpickr("#solic_at_hora_fim", {
@@ -1113,7 +1239,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                 </div>
 
                 <script>
-                  document.addEventListener('DOMContentLoaded', function() {
+                  document.addEventListener('DOMContentLoaded', function () {
                     const horaInicio = document.getElementById('solic_at_hora_inicio');
                     const horaFim = document.getElementById('solic_at_hora_fim');
 
@@ -1146,14 +1272,16 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                 <div class="col-12">
                   <div class="form_margem">
                     <label class="form-label">Recursos audiovisuais adicionais</label>
-                    <textarea class="form-control" name="solic_at_recursos" rows="5" disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_at_recursos)) ?></textarea>
+                    <textarea class="form-control" name="solic_at_recursos" rows="5"
+                      disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_at_recursos)) ?></textarea>
                   </div>
                 </div>
 
                 <div class="col-12">
                   <div class="form_margem">
                     <label class="form-label">Observações</label>
-                    <textarea class="form-control" name="solic_at_obs" rows="5" disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_at_obs)) ?></textarea>
+                    <textarea class="form-control" name="solic_at_obs" rows="5"
+                      disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_at_obs)) ?></textarea>
                   </div>
                 </div>
 
@@ -1162,7 +1290,7 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
           </div>
         </div>
         <script>
-          document.addEventListener('DOMContentLoaded', function() {
+          document.addEventListener('DOMContentLoaded', function () {
 
             const cad_at_aula_teorica = document.querySelectorAll('input[name="solic_at_aula_teorica"]');
             const campo_solic_at_campus = document.getElementById('campo_solic_at_campus');

@@ -419,17 +419,24 @@
             <?php
             try {
               $stmt = $conn->prepare("SELECT * FROM solicitacao
-                                      LEFT JOIN solicitacao_status ON solicitacao_status.solic_sta_solic_id = solicitacao.solic_id
-                                      LEFT JOIN status_solicitacao ON status_solicitacao.stsolic_id = solicitacao_status.solic_sta_status
-                                      --INNER JOIN conf_tipo_atividade ON conf_tipo_atividade.cta_id = solicitacao.solic_tipo_ativ
-                                      LEFT JOIN componente_curricular ON componente_curricular.compc_id = solicitacao.solic_comp_curric
-                                      LEFT JOIN cursos ON cursos.curs_id = solicitacao.solic_curso
-                                      LEFT JOIN conf_cursos_extensao_curricularizada ON conf_cursos_extensao_curricularizada.cexc_id = solicitacao.solic_nome_curso
-                                      LEFT JOIN conf_semestre ON conf_semestre.cs_id = solicitacao.solic_semestre
-                                      LEFT JOIN usuarios ON usuarios.user_id = solicitacao.solic_cad_por
-                                      LEFT JOIN admin ON admin.admin_id = solicitacao.solic_cad_por
-                                      WHERE solicitacao_status.solic_sta_status = 2
-                                      ");
+    LEFT JOIN solicitacao_status ON solicitacao_status.solic_sta_solic_id = solicitacao.solic_id
+    LEFT JOIN status_solicitacao ON status_solicitacao.stsolic_id = solicitacao_status.solic_sta_status
+    --INNER JOIN conf_tipo_atividade ON conf_tipo_atividade.cta_id = solicitacao.solic_tipo_ativ
+    LEFT JOIN componente_curricular ON componente_curricular.compc_id = solicitacao.solic_comp_curric
+    LEFT JOIN cursos ON cursos.curs_id = solicitacao.solic_curso
+    LEFT JOIN conf_cursos_extensao_curricularizada ON conf_cursos_extensao_curricularizada.cexc_id = solicitacao.solic_nome_curso
+    LEFT JOIN conf_semestre ON conf_semestre.cs_id = solicitacao.solic_semestre
+    LEFT JOIN usuarios ON usuarios.user_id = solicitacao.solic_cad_por
+    LEFT JOIN admin ON admin.admin_id = solicitacao.solic_cad_por
+    WHERE 
+        (
+            -- FILA 1: Solicitado (2) E sem Coordenador (Nova pendência SAAP)
+            (solicitacao_status.solic_sta_status = 2 AND cursos.curs_matricula_prof IS NULL)
+            OR
+            -- FILA 2: Aprovado pelo Coordenador (5) (Pendência de Reserva SAAP)
+            solicitacao_status.solic_sta_status IN (5, 7)
+        )
+");
               $stmt->execute();
               while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 extract($row);
@@ -452,6 +459,9 @@
                 }
                 if ($solic_sta_status == 6) {
                   $status_color = 'bg_info_vermelho';
+                }
+                if ($solic_sta_status == 7) {
+                  $status_color = 'bg_info_roxo';
                 }
 
 

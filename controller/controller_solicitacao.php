@@ -65,8 +65,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
       // =========================================================================
       // CÓDIGO ESSENCIAL: GARANTE QUE $solic_curso SEMPRE TENHA O ID DO CURSO
-      // Ele virá do $_POST apenas para 'cadastrar_1' ou 'atualizar_1' (se o campo for reenviado)
-      // Para 'atualizar_2' e 'atualizar_3', ele DEVE ser buscado do banco de dados.
       // =========================================================================
       $solic_curso = null; // Inicializa como nulo
 
@@ -76,7 +74,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       }
       // Para as etapas 2 e 3 (e também 1, se não veio no POST, ou se a solicitação já existe)
       // Buscamos o solic_curso do banco de dados, que é a fonte definitiva.
-      // Isso é mais seguro para todas as ações de atualização.
       if (!empty($solic_id)) { // Se a solicitação já tem um ID
         $stmt_get_solic_curso = $conn->prepare("SELECT solic_curso FROM solicitacao WHERE solic_id = :solic_id");
         $stmt_get_solic_curso->execute([':solic_id' => $solic_id]);
@@ -85,6 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
           $solic_curso = $result_solic_curso_db['solic_curso'];
         }
       }
+
       // =========================================================================
 
 
@@ -396,10 +394,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $solic_id = $_POST['solic_id'];
       $log_acao = 'Atualização';
 
-      $sqlVerifica = "SELECT solic_id, solic_etapa FROM solicitacao WHERE solic_id = :solic_id";
+      $sqlVerifica = "SELECT solic_id, solic_etapa, solic_curso FROM solicitacao WHERE solic_id = :solic_id";
       $stmtVerifica = $conn->prepare($sqlVerifica);
       $stmtVerifica->execute([':solic_id' => $solic_id]);
       $result_etapa = $stmtVerifica->fetch(PDO::FETCH_ASSOC);
+
+      // Garante que $solic_curso é a FK do curso (essencial para a busca do coordenador)
+      $solic_curso = $result_etapa['solic_curso'] ?? $solic_curso;
+
       if ($result_etapa) {
         if ($result_etapa['solic_etapa'] == 3) {
           $solic_etapa = 3;
@@ -467,7 +469,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $stmt->execute();
 
       if ($result_etapa['solic_etapa'] != 3) {
-        $num_status = 2; // 2 = CONCLUÍDO
+        $num_status = 2; // 2 = SOLICITADO (Status de entrada)
+
+        // 1. Busca a matrícula do coordenador para o curso desta solicitação
+        $sql_coord = "SELECT c.curs_matricula_prof, c.curs_curso
+                              FROM solicitacao s
+                              JOIN cursos c ON c.curs_id = s.solic_curso
+                              WHERE s.solic_id = :solic_id";
+        $stmt_coord = $conn->prepare($sql_coord);
+        $stmt_coord->execute([':solic_id' => $solic_id]);
+        $course_info = $stmt_coord->fetch(PDO::FETCH_ASSOC);
+
+        $matricula_coordenador = $course_info['curs_matricula_prof'] ?? null;
+        $course_name = $course_info['curs_curso'] ?? 'Curso Desconhecido';
+
+        // 2. Define o destinatario do email de notificação 
+        if (!empty($matricula_coordenador)) {
+          $email_subject = 'PENDÊNCIA: Análise de Solicitação - ' . htmlspecialchars($course_name);
+          $is_pendente_coordenador = true;
+          $pendencia_para = 'Coordenador do Curso de <strong>' . htmlspecialchars($course_name) . '</strong>';
+          $link_destino = $url_sistema . "/admin/solicitacoes_emAnalise.php"; // Link para a fila do coordenador
+        } else {
+          $email_subject = 'PENDÊNCIA: Nova Solicitação para Análise (SAAP)';
+          $is_pendente_coordenador = false;
+          $pendencia_para = 'a Central de Análise (SAAP)';
+          $link_destino = $url_sistema . "/admin/solicitacoes_submetidas.php"; // Link para a fila do SAAP
+        }
+
+        // 3. Atualiza o Status para 2 (SOLICITADO)
         $sql = "INSERT INTO solicitacao_analise_status (sta_an_solic_id, sta_an_status, sta_an_user_id, sta_an_data_cad, sta_an_data_upd) VALUES (:sta_an_solic_id, :sta_an_status, :sta_an_user_id, GETDATE(), GETDATE())";
         $stmt = $conn->prepare($sql);
         $stmt->execute([':sta_an_solic_id' => $solic_id, ':sta_an_status' => $num_status, ':sta_an_user_id' => $solic_user_id]);
@@ -476,43 +505,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
         $stmt = $conn->prepare($sql);
         $stmt->execute([':solic_sta_solic_id' => $solic_id, ':solic_sta_status' => $num_status, ':solic_sta_user_id' => $solic_user_id]);
 
-        // DISPARA E-MAIL PARA OS COORDENADORES DO CURSO
-        $course_name = '';
-        $stmt_course_name = $conn->prepare("SELECT curs_curso FROM cursos WHERE curs_id = :curs_id");
-        $stmt_course_name->execute([':curs_id' => $solic_curso]);
-        $course_result = $stmt_course_name->fetch(PDO::FETCH_ASSOC);
-        if ($course_result) {
-          $course_name = $course_result['curs_curso'];
-        }
+        // 4. Dispara E-mail com a notificação
 
-        if (!empty($solic_curso) && !empty($course_name)) { // Se o curso está selecionado e o nome foi encontrado
-          $email_subject = 'Nova solicitação de espaço para o curso: ' . htmlspecialchars($course_name);
+        $email_conteudo = '';
+        include '../includes/email/email_header.php';
+        $email_conteudo .= "
+                <tr style='background-color: #ffffff; text-align: center; color: #515050; display: flex; justify-content: center; padding:10px 50px 0 50px; line-height: 23px;'>
+                    <td align='center' width='800' style='padding: 2em 2rem; display: inline-block;'>
+                        <p style='font-size: 1rem; font-weight: 400; margin: 0px 0px 20px 0px;'>
+                        Uma nova solicitação de espaço (Código: <strong>" . htmlspecialchars($solic_codigo) . "</strong>) foi cadastrada e está aguardando análise do " . $pendencia_para . ".
+                        </p>
+                        <p style='font-size: 1rem; font-weight: 400; margin: 0px 0px 20px 0px;'>
+                        Acesse o sistema através do botão abaixo para revisar e deferir/indeferir a solicitação.
+                        </p>
+                        <a style='cursor: pointer;' href='" . $link_destino . "'><button style='background: #38BE80; display: inline-block; text-decoration: none; border-radius: 4px; color: #fff; border: none; cursor: pointer; padding: 10px 15px; margin-top: 20px;' target='_blank'>Acesse o sistema.</button></a>
+                    </td>
+                </tr>";
+        include '../includes/email/email_footer.php';
 
-          $email_conteudo = ''; // INICIALIZE A VARIÁVEL AQUI
-          include '../includes/email/email_header.php'; // Isso preenche $email_conteudo
-          $email_conteudo .= "
-        <tr style='background-color: #ffffff; text-align: center; color: #515050; display: flex; justify-content: center; padding:10px 50px 0 50px; line-height: 23px;'>
-            <td align='center' width='800' style='padding: 2em 2rem; display: inline-block;'>
-                <p style='font-size: 1rem; font-weight: 400; margin: 0px 0px 20px 0px;'>
-                Prezados Coordenadores do Curso " . htmlspecialchars($course_name) . ",
-                </p>
-                <p style='font-size: 1rem; font-weight: 400; margin: 0px 0px 20px 0px;'>
-                Uma nova solicitação de espaço (Código: <strong>" . htmlspecialchars($solic_codigo) . "</strong>) foi cadastrada por <strong>" . htmlspecialchars($user_nome) . "</strong> e está aguardando sua análise.</p>
-                </p>
-                <p style='font-size: 1rem; font-weight: 400; margin: 0px 0px 20px 0px;'>
-                Acesse o sistema através do botão abaixo para revisar e deferir/indeferir a solicitação.
-                </p>
-                <a style='cursor: pointer;' href='" . $url_sistema . "/nova_solicitacao.php?i=" . htmlspecialchars($solic_id) . "&st=3'><button style='background: #38BE80; display: inline-block; text-decoration: none; border-radius: 4px; color: #fff; border: none; cursor: pointer; padding: 10px 15px; margin-top: 20px;' target='_blank'>Visualizar Solicitação.</button></a>
-            </td>
-        </tr>";
-          include '../includes/email/email_footer.php'; // Isso concatena a $email_conteudo
-
-          // AQUI VOCÊ SÓ CHAMA A FUNÇÃO sendCourseNotificationEmail
-          // Ela vai receber $email_conteudo como $message e setar no $mail->Body LÁ DENTRO.
-          sendCourseNotificationEmail($conn, $solic_curso, $email_subject, $email_conteudo, $view_colaboradores); // Use $email_conteudo aqui
-        } else {
-          error_log("Email para coordenadores não enviado: solic_curso vazio ou nome do curso não encontrado. Solicitação ID: " . $solic_id);
-        }
+        // A função sendCourseNotificationEmail DEVE receber a flag de roteamento
+        sendCourseNotificationEmail($conn, $solic_curso, $email_subject, $email_conteudo, $is_pendente_coordenador);
       }
     } elseif ($_GET['acao'] === 'deletar_arq') {
       if (empty($_GET['sarq_id']) || empty($_GET['sarq_codigo']) || empty($_GET['sarq_arquivo'])) {

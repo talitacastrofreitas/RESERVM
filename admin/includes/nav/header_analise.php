@@ -28,12 +28,13 @@ if (isset($_GET['i'])) {
 
     // CONFIGURAÇÃO DO STATUS
     $status_colors = [
-      1  => 'tag_header_laranja',
-      2  => 'tag_header_azul',
-      3  => 'tag_header_roxo',
-      4  => 'tag_header_verde ',
-      5  => 'tag_header_azul',
-      6  => 'tag_header_vermelho'
+      1 => 'tag_header_laranja',
+      2 => 'tag_header_azul',
+      3 => 'tag_header_roxo',
+      4 => 'tag_header_verde ',
+      5 => 'tag_header_azul',
+      6 => 'tag_header_vermelho',
+      7 => 'tag_header_roxo'
     ];
 
     $tag_header_color = $status_colors[$solic_sta_status] ?? ''; // Usa '' como padrão se não existir
@@ -53,9 +54,11 @@ if (isset($_GET['i'])) {
 
     <div class="col-lg-12">
       <div>
-        <div class="d-flex justify-content-sm-between justify-content-start align-items-start align-items-sm-center flex-sm-row flex-column">
+        <div
+          class="d-flex justify-content-sm-between justify-content-start align-items-start align-items-sm-center flex-sm-row flex-column">
           <h3 class="text-uppercase mb-1" style="color: var(--amarelo);">
-            <div class="d-inline"><strong class="me-2"><?= $solic_row['solic_codigo'] ?>: </strong><?= $solic_row['compc_componente'] . $solic_row['solic_nome_atividade'] . $solic_row['solic_nome_comp_ativ'] ?>
+            <div class="d-inline"><strong class="me-2"><?= $solic_row['solic_codigo'] ?>:
+              </strong><?= $solic_row['compc_componente'] . $solic_row['solic_nome_atividade'] . $solic_row['solic_nome_comp_ativ'] ?>
           </h3>
           <div class="botao <?= $tag_header_color ?> my-md-0 my-3"><?= $stsolic_status ?></div>
         </div>

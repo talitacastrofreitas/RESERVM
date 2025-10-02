@@ -56,37 +56,42 @@
               $stmt->execute([':solic_cad_por' => $_SESSION['reservm_user_id']]);
               while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
-                $solic_id             = $row['solic_id'];
-                $solic_codigo         = $row['solic_codigo'];
-                $compc_componente     = $row['compc_componente'];
+                $solic_id = $row['solic_id'];
+                $solic_codigo = $row['solic_codigo'];
+                $compc_componente = $row['compc_componente'];
                 $solic_nome_atividade = $row['solic_nome_atividade'];
                 $solic_nome_comp_ativ = $row['solic_nome_comp_ativ'];
                 $solic_nome_prof_resp = $row['solic_nome_prof_resp'];
-                $solic_data_cad       = $row['solic_data_cad'];
-                $stsolic_status       = $row['stsolic_status'];
-                $solic_sta_status     = $row['solic_sta_status'];
+                $solic_data_cad = $row['solic_data_cad'];
+                $stsolic_status = $row['stsolic_status'];
+                $solic_sta_status = $row['solic_sta_status'];
 
                 // CONFIGURAÇÃO DO STATUS
                 $status_classes = [
                   1 => 'bg_info_laranja', // EM ELABORAÇÃO
                   2 => 'bg_info_azul', // SOLICITADO
-                  3 => 'bg_info_roxo', // EM ANÁLISE
+                  3 => 'bg_info_roxo', // EM ANÁLISE PELO COORDENADOR
                   4 => 'bg_info_verde', //RESERVADO
-                  5 => 'bg_info_azul_escuro', // AGUARDANDO RESERVA
+                  5 => 'bg_info_azul_escuro', // APROVADO PELO COORDENADOR
                   6 => 'bg_info_vermelho', // INDEFERIDO
-                  7 => 'bg_info_laranja', // AGUARDANDO CANCELAMENTO
+                  7 => 'bg_info_roxo', // EM ANÁLISE PELO SAAP
                   8 => 'bg_info_vermelho' // CANCELADO
                 ];
                 $status_color = $status_classes[$solic_sta_status] ?? '';
-            ?>
+                ?>
                 <tr role="button" data-href='aprovacoes_single.php?i=<?= htmlspecialchars($solic_id) ?>'>
                   <th scope="row"><?= htmlspecialchars($solic_codigo) ?></th>
-                  <td scope="row"><?= htmlspecialchars($compc_componente) . htmlspecialchars($solic_nome_atividade) . htmlspecialchars($solic_nome_comp_ativ) ?></td>
+                  <td scope="row">
+                    <?= htmlspecialchars($compc_componente) . htmlspecialchars($solic_nome_atividade) . htmlspecialchars($solic_nome_comp_ativ) ?>
+                  </td>
                   <td scope="row"><?= htmlspecialchars($solic_nome_prof_resp) ?></td>
-                  <td scope="row" nowrap="nowrap"><span class="hide_data"><?= date('Ymd', strtotime($solic_data_cad)) ?></span><?= htmlspecialchars(date('d/m/Y H:i', strtotime($solic_data_cad))) ?></td>
-                  <td scope="row"><span class="badge <?= $status_color ?>"><?= htmlspecialchars($stsolic_status) ?></span></td>
+                  <td scope="row" nowrap="nowrap"><span
+                      class="hide_data"><?= date('Ymd', strtotime($solic_data_cad)) ?></span><?= htmlspecialchars(date('d/m/Y H:i', strtotime($solic_data_cad))) ?>
+                  </td>
+                  <td scope="row"><span class="badge <?= $status_color ?>"><?= htmlspecialchars($stsolic_status) ?></span>
+                  </td>
                 </tr>
-            <?php }
+              <?php }
             } catch (PDOException $e) {
               // echo "Erro: " . $e->getMessage();
               echo "Erro ao tentar recuperar os dados";
@@ -100,9 +105,9 @@
 
 
 <script>
-  $(document).ready(function() {
+  $(document).ready(function () {
     // Clique na linha da tabela, com exceções
-    $('table').on('click', 'tr', function(e) {
+    $('table').on('click', 'tr', function (e) {
       // Ignora cliques em dropdowns ou controles de expansão
       if (
         $(e.target).closest('.dropdown').length > 0 ||
@@ -119,7 +124,7 @@
     });
 
     // Apenas por segurança, evita propagação em elementos específicos
-    $(document).on('click', '.dropdown, td.dtr-control', function(e) {
+    $(document).on('click', '.dropdown, td.dtr-control', function (e) {
       e.stopPropagation();
     });
   });

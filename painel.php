@@ -28,7 +28,8 @@
             <h5 class="card-title mb-0">Lista de Solicitações</h5>
           </div>
           <div class="col-sm-6 d-flex align-items-center d-flex justify-content-sm-end justify-content-center">
-            <a href="nova_solicitacao.php" class="btn botao botao_amarelo waves-effect mt-3 mt-sm-0">+ Nova Solicitação</a>
+            <a href="nova_solicitacao.php" class="btn botao botao_amarelo waves-effect mt-3 mt-sm-0">+ Nova
+              Solicitação</a>
           </div>
         </div>
       </div>
@@ -75,18 +76,18 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
 
               while ($row_solic = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 // extract($row);
-
-                $solic_id             = $row_solic['solic_id'];
-                $solic_codigo         = $row_solic['solic_codigo'];
+            
+                $solic_id = $row_solic['solic_id'];
+                $solic_codigo = $row_solic['solic_codigo'];
                 $solic_nome_comp_ativ = $row_solic['solic_nome_comp_ativ'];
                 $solic_nome_atividade = $row_solic['solic_nome_atividade'];
                 $solic_nome_prof_resp = $row_solic['solic_nome_prof_resp'];
-                $solic_data_cad       = $row_solic['solic_data_cad'];
-                $solic_sta_status     = $row_solic['solic_sta_status'];
-                $solic_etapa          = $row_solic['solic_etapa'];
-                $curs_curso           = $row_solic['curs_curso'];
-                $compc_componente     = $row_solic['compc_componente'];
-                $stsolic_status       = $row_solic['stsolic_status'];
+                $solic_data_cad = $row_solic['solic_data_cad'];
+                $solic_sta_status = $row_solic['solic_sta_status'];
+                $solic_etapa = $row_solic['solic_etapa'];
+                $curs_curso = $row_solic['curs_curso'];
+                $compc_componente = $row_solic['compc_componente'];
+                $stsolic_status = $row_solic['stsolic_status_simples'];
 
                 // CONFIGURAÇÃO DO STATUS
                 $status_colors = [
@@ -94,9 +95,9 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
                   2 => 'bg_info_azul',
                   3 => 'bg_info_roxo',
                   4 => 'bg_info_verde',
-                  5 => 'bg_info_azul_escuro',
+                  5 => 'bg_info_roxo',
                   6 => 'bg_info_vermelho',
-                  7 => 'bg_info_laranja',
+                  7 => 'bg_info_roxo',
                   8 => 'bg_info_vermelho',
                 ];
 
@@ -129,42 +130,57 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
                   }
                 }
 
-            ?>
+                ?>
                 <tr role="button" data-href='nova_solicitacao.php?st=1&i=<?= htmlspecialchars($solic_id) ?>'>
 
                   <th scope="row"><?= htmlspecialchars($solic_codigo) ?></th>
                   <td scope="row"><?= htmlspecialchars($curs_curso) ?></td>
-                  <td scope="row"><?= htmlspecialchars($compc_componente) ?><?= htmlspecialchars($solic_nome_atividade) ?><?= htmlspecialchars($solic_nome_comp_ativ) ?></td>
+                  <td scope="row">
+                    <?= htmlspecialchars($compc_componente) ?>     <?= htmlspecialchars($solic_nome_atividade) ?>
+                    <?= htmlspecialchars($solic_nome_comp_ativ) ?>
+                  </td>
                   <td scope="row"><?= htmlspecialchars($solic_nome_prof_resp) ?></td>
-                  <td scope="row" nowrap="nowrap"><span class="hide_data"><?= htmlspecialchars(date('Ymd', strtotime($solic_data_cad))) ?></span><?= htmlspecialchars(date('d/m/Y H:i', strtotime($solic_data_cad))) ?></td>
-                  <td scope="row"><span class="badge <?= $status_color ?>"><?= htmlspecialchars($stsolic_status) ?></span></td>
+                  <td scope="row" nowrap="nowrap"><span
+                      class="hide_data"><?= htmlspecialchars(date('Ymd', strtotime($solic_data_cad))) ?></span><?= htmlspecialchars(date('d/m/Y H:i', strtotime($solic_data_cad))) ?>
+                  </td>
+                  <td scope="row"><span class="badge <?= $status_color ?>"><?= htmlspecialchars($stsolic_status) ?></span>
+                  </td>
                   <td class="text-end">
                     <div class="dropdown dropdown drop_tabela d-inline-block">
-                      <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
                         <i class="ri-more-fill align-middle"></i>
                       </button>
                       <ul class="dropdown-menu dropdown-menu-end">
                         <?php if ($solic_etapa == 3) { ?>
-                          <li><a href="router/web.php?r=SolicDuplic&i=<?= $solic_id ?>" class="dropdown-item edit-item-btn clone-btn" title="Duplicar" disabled><i class="fa-regular fa-clone me-2"></i> Duplicar</a></li>
+                          <li><a href="router/web.php?r=SolicDuplic&i=<?= $solic_id ?>"
+                              class="dropdown-item edit-item-btn clone-btn" title="Duplicar" disabled><i
+                                class="fa-regular fa-clone me-2"></i> Duplicar</a></li>
                         <?php } else { ?>
-                          <li><span class="dropdown-item edit-item-block-btn" title="Duplicar" disabled><i class="fa-regular fa-clone me-2"></i> Duplicar</span></li>
+                          <li><span class="dropdown-item edit-item-block-btn" title="Duplicar" disabled><i
+                                class="fa-regular fa-clone me-2"></i> Duplicar</span></li>
                         <?php } ?>
 
                         <li>
                           <?php if ($solic_sta_status == 4) { ?>
-                            <a href="#" class="dropdown-item <?= $classe_link ?>" data-bs-toggle="modal" data-bs-target="#modal_cancelar_solicitacao" data-solic-id="<?= htmlspecialchars($solic_id) ?>" data-action="../router/web.php?r=SolicitarCancelamento">
+                            <a href="#" class="dropdown-item <?= $classe_link ?>" data-bs-toggle="modal"
+                              data-bs-target="#modal_cancelar_solicitacao" data-solic-id="<?= htmlspecialchars($solic_id) ?>"
+                              data-action="../router/web.php?r=SolicitarCancelamento">
                               <i class="fa-solid fa-ban me-2"></i> Solicitar Cancelamento
                             </a>
                           <?php } ?>
                         </li>
 
-                        <li><a href="router/web.php?r=Solic&acao=deletar&solic_id=<?= $solic_id ?>&solic_codigo=<?= $solic_codigo ?>" class="dropdown-item remove-item-btn del-btn" title="Excluir"><i class="fa-regular fa-trash-can me-2"></i> Excluir</a></li>
+                        <li><a
+                            href="router/web.php?r=Solic&acao=deletar&solic_id=<?= $solic_id ?>&solic_codigo=<?= $solic_codigo ?>"
+                            class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
+                              class="fa-regular fa-trash-can me-2"></i> Excluir</a></li>
                       </ul>
                     </div>
                   </td>
 
                 </tr>
-            <?php }
+              <?php }
             } catch (PDOException $e) {
               echo "Erro: " . $e->getMessage();
               // echo "Erro ao tentar recuperar os dados";
@@ -177,9 +193,9 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
 </div>
 
 <script>
-  $(document).ready(function() {
+  $(document).ready(function () {
     // Clique na linha da tabela, com exceções
-    $('table').on('click', 'tr', function(e) {
+    $('table').on('click', 'tr', function (e) {
       // Ignora cliques em dropdowns ou controles de expansão
       if (
         $(e.target).closest('.dropdown').length > 0 ||
@@ -196,7 +212,7 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
     });
 
     // Apenas por segurança, evita propagação em elementos específicos
-    $(document).on('click', '.dropdown, td.dtr-control', function(e) {
+    $(document).on('click', '.dropdown, td.dtr-control', function (e) {
       e.stopPropagation();
     });
   });
@@ -205,7 +221,7 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
 <script>
   // DUPLICA PROPOSTA
   var $ = jQuery.noConflict();
-  $('.clone-btn').on('click', function(e) {
+  $('.clone-btn').on('click', function (e) {
     e.preventDefault();
     const href = $(this).attr('href')
     Swal.fire({
@@ -229,7 +245,7 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
           document.getElementById("preloader_delay").style.display = "none";
         }
         mostrarPreloader();
-        setTimeout(function() {
+        setTimeout(function () {
           ocultarPreloader();
         }, 100000);
         ///////////////////////////////////////
@@ -244,9 +260,9 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
 <?php include 'includes/modal/modal_cancelar_solicitacao.php'; ?>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     var cancelaSolicitacaoModal = document.getElementById('modal_cancelar_solicitacao');
-    cancelaSolicitacaoModal.addEventListener('show.bs.modal', function(event) {
+    cancelaSolicitacaoModal.addEventListener('show.bs.modal', function (event) {
       var button = event.relatedTarget;
       var solicId = button.getAttribute('data-solic-id');
       var modalSolicIdInput = cancelaSolicitacaoModal.querySelector('#solic_id_cancelar');

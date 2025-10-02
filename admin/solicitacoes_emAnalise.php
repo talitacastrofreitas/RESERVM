@@ -1,4 +1,18 @@
-<?php include 'includes/header.php'; ?>
+<?php include 'includes/header.php';
+
+// $is_admin = (isset($_SESSION['global_admin_perfil']) && !empty($_SESSION['global_admin_perfil'])) == 1;
+// $user_id_logado = $_SESSION['global_user_id'];
+// $perfil_visualizacao = $is_admin ? 'ADMIN' : 'COMUM';
+
+// $status_campo_sql = ($is_admin) ? 'stsolic_status' : 'stsolic_status_simples';
+
+// if (!$is_admin) {
+//   // Redireciona usuários não administradores para outra página
+//   header('Location: painel.php');
+//   exit();
+// }
+
+?>
 
 <div class="profile-foreground position-relative mx-n4 mt-n4">
   <div class="profile-wid-bg">
@@ -421,14 +435,23 @@
               $stmt = $conn->prepare("SELECT * FROM solicitacao
                                       LEFT JOIN solicitacao_status ON solicitacao_status.solic_sta_solic_id = solicitacao.solic_id
                                       LEFT JOIN status_solicitacao ON status_solicitacao.stsolic_id = solicitacao_status.solic_sta_status
-                                      --INNER JOIN conf_tipo_atividade ON conf_tipo_atividade.cta_id = solicitacao.solic_tipo_ativ
                                       LEFT JOIN componente_curricular ON componente_curricular.compc_id = solicitacao.solic_comp_curric
                                       LEFT JOIN cursos ON cursos.curs_id = solicitacao.solic_curso
                                       LEFT JOIN conf_cursos_extensao_curricularizada ON conf_cursos_extensao_curricularizada.cexc_id = solicitacao.solic_nome_curso
                                       LEFT JOIN conf_semestre ON conf_semestre.cs_id = solicitacao.solic_semestre
                                       LEFT JOIN usuarios ON usuarios.user_id = solicitacao.solic_cad_por
                                       LEFT JOIN admin ON admin.admin_id = solicitacao.solic_cad_por
-                                      WHERE solicitacao_status.solic_sta_status = 3
+                                      WHERE 
+                                          -- FILA 1: Solicitações que JÁ estão em 'EM ANÁLISE PELO COORDENADOR' (Status 3)
+                                          solicitacao_status.solic_sta_status = 3
+                                      OR
+                                          (
+                                              -- FILA 2: Solicitações que estão 'SOLICITADO' (Status 2)
+                                              solicitacao_status.solic_sta_status = 2
+                                              AND
+                                              -- E que POSSUEM um Coordenador para pré-analisar (não nulo)
+                                              cursos.curs_matricula_prof IS NOT NULL
+                                          )
                                       ");
               $stmt->execute();
               while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {

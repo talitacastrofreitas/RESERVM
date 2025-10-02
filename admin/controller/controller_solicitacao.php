@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
     if ($solic_acao === 'cadastrar' || $solic_acao === 'atualizar') {
 
-      $solic_id    = bin2hex(random_bytes(16)); // GERA UM ID ÚNICO SEGURO
+      $solic_id = bin2hex(random_bytes(16)); // GERA UM ID ÚNICO SEGURO
 
       // FUNÇÃO PARA VERIFICAR SE O CÓDIGO JÁ EXISTE
       function verificarCodigoNoBanco($solic_codigo, $conn)
@@ -70,28 +70,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       // 28	NIDD
       // 31	RESERVAS ADMINISTRATIVAS
       if (in_array($solic_curso, [7, 10, 19, 28, 31])) {
-        $solic_nome_atividade  = isset($_POST['solic_nome_atividade']) ? trim($_POST['solic_nome_atividade']) : null;
+        $solic_nome_atividade = isset($_POST['solic_nome_atividade']) ? trim($_POST['solic_nome_atividade']) : null;
       }
 
       // 8	EXTENSÃO CURRICULARIZADA
       if (in_array($solic_curso, [8])) {
-        $solic_nome_curso      = isset($_POST['solic_nome_curso']) ? trim($_POST['solic_nome_curso']) : null;
-        $solic_nome_atividade  = isset($_POST['solic_nome_atividade']) ? trim($_POST['solic_nome_atividade']) : null;
-        $solic_semestre        = isset($_POST['solic_semestre']) ? trim($_POST['solic_semestre']) : null;
+        $solic_nome_curso = isset($_POST['solic_nome_curso']) ? trim($_POST['solic_nome_curso']) : null;
+        $solic_nome_atividade = isset($_POST['solic_nome_atividade']) ? trim($_POST['solic_nome_atividade']) : null;
+        $solic_semestre = isset($_POST['solic_semestre']) ? trim($_POST['solic_semestre']) : null;
       }
 
       // 11	LATO SENSU
       // 22	STRICTO SENSU
       if (in_array($solic_curso, [11, 22])) {
         $solic_nome_curso_text = isset($_POST['solic_nome_curso_text']) ? trim($_POST['solic_nome_curso_text']) : null;
-        $solic_nome_comp_ativ  = isset($_POST['solic_nome_comp_ativ']) ? trim($_POST['solic_nome_comp_ativ']) : null;
-        $solic_semestre        = isset($_POST['solic_semestre']) ? trim($_POST['solic_semestre']) : null;
+        $solic_nome_comp_ativ = isset($_POST['solic_nome_comp_ativ']) ? trim($_POST['solic_nome_comp_ativ']) : null;
+        $solic_semestre = isset($_POST['solic_semestre']) ? trim($_POST['solic_semestre']) : null;
       }
 
 
       // NOME PROFESSOR E CONTATO
-      $solic_nome_prof_resp  = isset($_POST['solic_nome_prof_resp']) ? trim($_POST['solic_nome_prof_resp']) : null;
-      $solic_contato         = isset($_POST['solic_contato']) ? trim($_POST['solic_contato']) : null;
+      $solic_nome_prof_resp = isset($_POST['solic_nome_prof_resp']) ? trim($_POST['solic_nome_prof_resp']) : null;
+      $solic_contato = isset($_POST['solic_contato']) ? trim($_POST['solic_contato']) : null;
     }
 
     $solic_admin_id = $_SESSION['reservm_admin_id'];
@@ -101,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
     // -------------------------------
     if ($solic_acao === 'cadastrar') {
 
-      $num_status  = 5; // AGUARDANDO ANÁLISE (OU QUALQUER QUE SEJA O ID DO SEU STATUS PENDENTE)
+      $num_status = 7; // AGUARDANDO ANÁLISE (OU QUALQUER QUE SEJA O ID DO SEU STATUS PENDENTE)
       $log_acao = 'Cadastro';
 
       $sql = "INSERT INTO solicitacao (
@@ -163,12 +163,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       // CADASTRA O STATUS DA SOLICITAÇÃO
       $sql = "INSERT INTO solicitacao_status (solic_sta_solic_id,solic_sta_status, solic_sta_user_id, solic_sta_data_cad) VALUES (:solic_sta_solic_id, :solic_sta_status, :solic_sta_user_id, GETDATE())";
       $stmt = $conn->prepare($sql);
-      $stmt->execute([':solic_sta_solic_id' => $solic_id, ':solic_sta_status'  => $num_status, ':solic_sta_user_id' => $solic_admin_id]);
+      $stmt->execute([':solic_sta_solic_id' => $solic_id, ':solic_sta_status' => $num_status, ':solic_sta_user_id' => $solic_admin_id]);
 
       // CADASTRA O STATUS DA ANÁLISE
       $sql = "INSERT INTO solicitacao_analise_status (sta_an_solic_id, sta_an_status, sta_an_user_id, sta_an_data_cad, sta_an_data_upd) VALUES (:sta_an_solic_id, :sta_an_status, :sta_an_user_id, GETDATE(), GETDATE())";
       $stmt = $conn->prepare($sql);
-      $stmt->execute([':sta_an_solic_id' => $solic_id, ':sta_an_status'  => $num_status, ':sta_an_user_id' => $solic_admin_id]);
+      $stmt->execute([':sta_an_solic_id' => $solic_id, ':sta_an_status' => $num_status, ':sta_an_user_id' => $solic_admin_id]);
 
 
       // -------------------------------
@@ -236,11 +236,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
         throw new Exception("ID é obrigatório para exclusão.");
       }
 
-      $sarq_id      = $_GET['sarq_id'];
+      $sarq_id = $_GET['sarq_id'];
       $sarq_codigo = $_GET['sarq_codigo'];
       $sarq_arquivo = $_GET['sarq_arquivo'];
-      $log_acao     = 'Exclusão Arquivo';
-      $solic_id     = $sarq_id; // PARA O LOG
+      $log_acao = 'Exclusão Arquivo';
+      $solic_id = $sarq_id; // PARA O LOG
 
       // EXCLUIR A PROPOSTA PRINCIPAL
       $sql = "DELETE FROM solicitacao_arq WHERE sarq_id = :sarq_id";
@@ -259,17 +259,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       if (empty($_GET['solic_id'])) {
         throw new Exception("ID é obrigatório para exclusão.");
       }
-      $solic_id     = $_GET['solic_id'];
+      $solic_id = $_GET['solic_id'];
       $solic_codigo = $_GET['solic_codigo'];
       $log_acao = 'Exclusão';
 
       // LISTAR TODAS AS TABELAS DEPENDENTES
       $tabelas = [
-        'reservas'                   => 'res_solic_id',
+        'reservas' => 'res_solic_id',
         'solicitacao_analise_status' => 'sta_an_solic_id',
-        'solicitacao_arq'            => 'sarq_solic_id',
-        'solicitacao_status'         => 'solic_sta_solic_id',
-        'ocorrencias'                => 'oco_solic_id'
+        'solicitacao_arq' => 'sarq_solic_id',
+        'solicitacao_status' => 'solic_sta_solic_id',
+        'ocorrencias' => 'oco_solic_id'
       ];
 
       // EXCLUIR REGISTROS DE TABELAS RELACIONADAS
@@ -340,10 +340,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
     $stmt = $conn->prepare('INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data )
                             VALUES ( :modulo, :acao, :acao_id, :dados, :user_id, GETDATE())');
     $stmt->execute(array(
-      ':modulo'  => 'SOLICITAÇÃO ADMIN',
-      ':acao'    => $log_acao,
+      ':modulo' => 'SOLICITAÇÃO ADMIN',
+      ':acao' => $log_acao,
       ':acao_id' => $solic_id,
-      ':dados'   => json_encode($_POST),
+      ':dados' => json_encode($_POST),
       ':user_id' => $solic_admin_id
     ));
     // -------------------------------

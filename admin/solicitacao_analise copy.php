@@ -64,7 +64,7 @@
                           class="navbar d-flex align-items-center justify-content-sm-end justify-content-center p-0 mt-3 mt-sm-0">
 
                           <?php
-                          $sta_solic = array(1, 4, 5, 6);
+                          $sta_solic = array(1, 3, 4, 6, 8);
                           if (!in_array($solic_sta_status, $sta_solic)) {
                             ?>
                             <button class="btn botao_w botao botao_vermelho waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
@@ -77,16 +77,16 @@
                           <?php } ?>
 
                           <?php
-                          $sta_solic = array(1, 4, 5, 6);
+                          $sta_solic = array(1, 3, 4, 6, 8);
                           if (!in_array($solic_sta_status, $sta_solic)) {
                             ?>
                             <button class="btn botao_w botao botao_verde waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
                               type="button" data-bs-toggle="modal" data-bs-toggle="button"
-                              data-bs-target="#modal_deferir_solicitacao">Deferir</button>
+                              data-bs-target="#modal_deferir_solicitacao">Iniciar Análise</button>
 
                           <?php } else { ?>
                             <button class="btn botao_w botao botao_disabled waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
-                              type="button">Deferir</button>
+                              type="button">Iniciar Análise</button>
                           <?php } ?>
 
                         </nav>
@@ -525,49 +525,49 @@
 
                 <?php if (!empty($solic_ap_espaco)) { ?>
 
-                                      <div class="card">
-                                          <div class="card-header">
-                                              <div class="row align-items-center">
-                                                  <div class="col-sm-12 text-sm-start text-center">
-                                                      <h5 class="card-title mb-0">Espaço Sugerido</h5>
-                                                  </div>
-                                              </div>
-                                          </div>
+                  <div class="card">
+                    <div class="card-header">
+                      <div class="row align-items-center">
+                        <div class="col-sm-12 text-sm-start text-center">
+                          <h5 class="card-title mb-0">Espaço Sugerido</h5>
+                        </div>
+                      </div>
+                    </div>
 
-                                          <div class="card-body p-0">
-                                              <div class="table-responsive">
-                                                  <table id="res_esp_sugerido"
-                                                      class="table dt-responsive nowrap align-middle mb-0" style="width:100%">
-                                                      <thead>
-                                                          <tr>
-                                                              <th><span class="me-3">ID Local</span></th>
-                                                              <th><span class="me-3">Local Reservado</span></th>
-                                                              <th><span class="me-3">Tipo de Espaço</span></th>
-                                                              <th><span class="me-3">Campus</span></th>
-                                                              <th><span class="me-3">Pavilhão</span></th>
-                                                              <th><span class="me-3">Andar</span></th>
-                                                              <th><span class="me-3">Cap. Máx.</span></th>
-                                                              <th><span class="me-3">Cap. Méd.</span></th>
-                                                              <th><span class="me-3">Cap. Mín.</span></th>
-                                                          </tr>
-                                                      </thead>
-                                                      <tbody>
+                    <div class="card-body p-0">
+                      <div class="table-responsive">
+                        <table id="res_esp_sugerido" class="table dt-responsive nowrap align-middle mb-0"
+                          style="width:100%">
+                          <thead>
+                            <tr>
+                              <th><span class="me-3">ID Local</span></th>
+                              <th><span class="me-3">Local Reservado</span></th>
+                              <th><span class="me-3">Tipo de Espaço</span></th>
+                              <th><span class="me-3">Campus</span></th>
+                              <th><span class="me-3">Pavilhão</span></th>
+                              <th><span class="me-3">Andar</span></th>
+                              <th><span class="me-3">Cap. Máx.</span></th>
+                              <th><span class="me-3">Cap. Méd.</span></th>
+                              <th><span class="me-3">Cap. Mín.</span></th>
+                            </tr>
+                          </thead>
+                          <tbody>
 
-                                                          <?php
-                                                          $stmt = $conn->prepare("SELECT * FROM solicitacao WHERE solic_id = ?");
-                                                          $stmt->execute([$_GET['i']]);
-                                                          $solicitacao = $stmt->fetch(PDO::FETCH_ASSOC);
+                            <?php
+                            $stmt = $conn->prepare("SELECT * FROM solicitacao WHERE solic_id = ?");
+                            $stmt->execute([$_GET['i']]);
+                            $solicitacao = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                                                          if ($solicitacao && !empty($solicitacao['solic_ap_espaco'])) {
+                            if ($solicitacao && !empty($solicitacao['solic_ap_espaco'])) {
 
-                                                            // SEPARA OS IDs DOS ESPAÇOS
-                                                            $espaco_ids = explode(', ', $solicitacao['solic_ap_espaco']);
+                              // SEPARA OS IDs DOS ESPAÇOS
+                              $espaco_ids = explode(', ', $solicitacao['solic_ap_espaco']);
 
-                                                            // PREPARA PLACEHOLDERS PARA IN
-                                                            $placeholders = implode(', ', array_fill(0, count($espaco_ids), '?'));
+                              // PREPARA PLACEHOLDERS PARA IN
+                              $placeholders = implode(', ', array_fill(0, count($espaco_ids), '?'));
 
-                                                            // BUSCA OS DADOS DOS ESPAÇOS
-                                                            $sql = "SELECT esp_codigo, esp_nome_local, UPPER(tipesp_tipo_espaco) AS tipesp_tipo_espaco, UPPER(uni_unidade) AS uni_unidade, UPPER(pav_pavilhao) AS pav_pavilhao, UPPER(and_andar) AS and_andar, esp_quant_maxima, esp_quant_media, esp_quant_minima
+                              // BUSCA OS DADOS DOS ESPAÇOS
+                              $sql = "SELECT esp_codigo, esp_nome_local, UPPER(tipesp_tipo_espaco) AS tipesp_tipo_espaco, UPPER(uni_unidade) AS uni_unidade, UPPER(pav_pavilhao) AS pav_pavilhao, UPPER(and_andar) AS and_andar, esp_quant_maxima, esp_quant_media, esp_quant_minima
                                                                         FROM espaco
                                                                         INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
                                                                         INNER JOIN unidades ON unidades.uni_id = espaco.esp_unidade
@@ -575,260 +575,258 @@
                                                                         INNER JOIN andares ON andares.and_id = espaco.esp_andar
                                                                         INNER JOIN status ON status.st_id = espaco.esp_status
                                                                         WHERE esp_id IN ($placeholders)";
-                                                            $stmt = $conn->prepare($sql);
-                                                            $stmt->execute($espaco_ids);
-                                                            $espacos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                              $stmt = $conn->prepare($sql);
+                              $stmt->execute($espaco_ids);
+                              $espacos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                                                            foreach ($espacos as $espaco) { ?>
-                                                                      <tr>
-                                                                          <th><?= htmlspecialchars($espaco['esp_codigo']) ?></th>
-                                                                          <td><?= htmlspecialchars($espaco['esp_nome_local']) ?></td>
-                                                                          <td><?= htmlspecialchars($espaco['tipesp_tipo_espaco']) ?></td>
-                                                                          <td><?= htmlspecialchars($espaco['uni_unidade']) ?></td>
-                                                                          <td><?= htmlspecialchars($espaco['pav_pavilhao']) ?></td>
-                                                                          <td><?= htmlspecialchars($espaco['and_andar']) ?></td>
-                                                                          <td><?= htmlspecialchars($espaco['esp_quant_maxima']) ?></td>
-                                                                          <td><?= htmlspecialchars($espaco['esp_quant_media']) ?></td>
-                                                                          <td><?= htmlspecialchars($espaco['esp_quant_minima']) ?></td>
-                                                                      </tr>
-                                                                <?php }
-                                                          } ?>
+                              foreach ($espacos as $espaco) { ?>
+                                <tr>
+                                  <th><?= htmlspecialchars($espaco['esp_codigo']) ?></th>
+                                  <td><?= htmlspecialchars($espaco['esp_nome_local']) ?></td>
+                                  <td><?= htmlspecialchars($espaco['tipesp_tipo_espaco']) ?></td>
+                                  <td><?= htmlspecialchars($espaco['uni_unidade']) ?></td>
+                                  <td><?= htmlspecialchars($espaco['pav_pavilhao']) ?></td>
+                                  <td><?= htmlspecialchars($espaco['and_andar']) ?></td>
+                                  <td><?= htmlspecialchars($espaco['esp_quant_maxima']) ?></td>
+                                  <td><?= htmlspecialchars($espaco['esp_quant_media']) ?></td>
+                                  <td><?= htmlspecialchars($espaco['esp_quant_minima']) ?></td>
+                                </tr>
+                              <?php }
+                            } ?>
 
-                                                      </tbody>
-                                                  </table>
-                                              </div>
-                                          </div>
-                                      </div>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
 
-                                <?php } ?>
+                <?php } ?>
 
-                                <?php if ($solic_ap_aula_pratica == 1) { ?>
+                <?php if ($solic_ap_aula_pratica == 1) { ?>
 
-                                      <div class="card card_dados_info">
-
-
-                                          <div class="card-header" style="background: var(--azul_alpha);">
-                                              <div class="row align-items-center">
-                                                  <div class="col-12 tit_nova_solicitacao">
-                                                      <h3 class="m-0 fs-16" style="color: var(--preto);">Informações da
-                                                          Reserva <span class="fs-12 ms-2"
-                                                              style="background: var(--azul); color: #fff; padding: 3px 10px; border-radius: 3px; font-weight: 500;">Aulas
-                                                              Práticas</span></h3>
-                                                  </div>
-                                              </div>
-                                          </div>
-
-                                          <div class="card-body p-4">
-                                              <div class="row grid gx-3">
-
-                                                  <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                      <label>Campus</label>
-                                                      <p><?= $campus_pratico_nome ?></p>
-                                                      <hr>
-                                                  </div>
-
-                                                  <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                      <label>Quantidade de turma</label>
-                                                      <p><?= $ctp_turma ?></p>
-                                                      <hr>
-                                                  </div>
-
-                                                  <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                      <label>Nº estimado de participantes</label>
-                                                      <p><?= $solic_ap_quant_particip ?></p>
-                                                      <hr>
-                                                  </div>
-
-                                                  <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                      <label>Tipo da reserva</label>
-                                                      <p><?= $ctr_tipo_reserva ?></p>
-                                                      <hr>
-                                                  </div>
-
-                                                  <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                      <label>Horário inicial</label>
-                                                      <p><?= date("H:i", strtotime($solic_ap_hora_inicio)) ?></p>
-                                                      <hr>
-                                                  </div>
-
-                                                  <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                      <label>Horário final</label>
-                                                      <p><?= date("H:i", strtotime($solic_ap_hora_fim)) ?></p>
-                                                      <hr>
-                                                  </div>
-
-                                                  <div
-                                                      class="col-xl-12 col-xxl-6 <?= empty($solic_ap_dia_reserva) ? 'd-none' : '' ?>">
-                                                      <div class="mb-4">
-                                                          <div class="check_item_container hstack gap-2 flex-wrap mt-2">
-                                                              <?php $dias = explode(", ", $solic_ap_dia_reserva);
-                                                              $sql = $conn->prepare("SELECT week_id, week_dias FROM conf_dias_semana");
-                                                              $sql->execute();
-                                                              while ($result = $sql->fetch(PDO::FETCH_ASSOC)) { ?>
-                                                                    <input type="checkbox" class="btn-check check_formulario_check"
-                                                                        id="dias_semana<?= $result['week_id'] ?>"
-                                                                        value="<?= $result['week_id'] ?>"
-                                                                        <?= $solic_ap_dia_reserva_checked = in_array($result['week_id'], $dias) ? "checked" : ""; ?> disabled>
-                                                                    <label class="check_item check_formulario"
-                                                                        for="dias_semana<?= $result['week_id'] ?>"><?= $result['week_dias'] ?></label>
-                                                              <?php } ?>
-                                                          </div>
-                                                      </div>
-                                                  </div>
-
-                                                  <div class="col-12 <?= empty($solic_ap_data_reserva) ? 'd-none' : '' ?>">
-                                                      <label>Data(s) da reserva</label>
-                                                      <p class="campo_textarea"><?= $solic_ap_data_reserva ?></p>
-                                                      <hr>
-                                                  </div>
-
-                                                  <?php try {
-                                                    $sql = $conn->prepare("SELECT * FROM solicitacao_arq WHERE sarq_solic_id = :sarq_solic_id");
-                                                    $sql->execute(['sarq_solic_id' => $solic_id]);
-                                                    $result_arq_ap = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                                  } catch (PDOException $e) {
-                                                    // echo "Erro: " . $e->getMessage();
-                                                    echo "Erro ao tentar recuperar os dados";
-                                                  } ?>
-
-                                                  <div class="col-12 mb-4 <?= empty($result_arq_ap) ? 'd-none' : '' ?>">
-                                                      <label>Formulário de planejamento de atividades de práticas nos
-                                                          laboratórios de ensino</label>
-
-                                                      <?php foreach ($result_arq_ap as $res_arq_ap): ?>
-                                                            <div class="result_file">
-                                                                <div class="result_file_name py-1"><a
-                                                                        href="../uploads/solicitacoes/<?= $solic_codigo . '/' . $res_arq_ap['sarq_arquivo'] ?>"
-                                                                        target="_blank"><?= $res_arq_ap['sarq_arquivo'] ?></a></div>
-                                                            </div>
-                                                      <?php endforeach; ?>
-
-                                                  </div>
-
-                                                  <div class="col-12 <?= empty($solic_ap_tit_aulas) ? 'd-none' : '' ?>">
-                                                      <label>Informe o título da(s) aula(s)</label>
-                                                      <p class="campo_textarea"><?= $solic_ap_tit_aulas ?></p>
-                                                      <hr class="<?= empty($solic_ap_obs) ? 'd-none' : '' ?>">
-                                                  </div>
-
-                                                  <div class="col-12 <?= empty($solic_ap_quant_material) ? 'd-none' : '' ?>">
-                                                      <label>Descreva os materiais, insumos e equipamentos, com suas
-                                                          respectivas quantidades, que
-                                                          serão necessários para a realização da aula no espaço de
-                                                          prática</label>
-                                                      <p class="campo_textarea"><?= $solic_ap_quant_material ?></p>
-                                                      <hr class="<?= empty($solic_ap_obs) ? 'd-none' : '' ?>">
-                                                  </div>
-
-                                                  <div class="col-12 <?= empty($solic_ap_obs) ? 'd-none' : '' ?>">
-                                                      <label>Observações</label>
-                                                      <p class="campo_textarea"><?= $solic_ap_obs ?></p>
-                                                  </div>
-
-                                              </div>
-
-                                          </div>
-                                      </div>
-
-                                <?php } ?>
+                  <div class="card card_dados_info">
 
 
-                                <?php if ($solic_at_aula_teorica == 1) { ?>
+                    <div class="card-header" style="background: var(--azul_alpha);">
+                      <div class="row align-items-center">
+                        <div class="col-12 tit_nova_solicitacao">
+                          <h3 class="m-0 fs-16" style="color: var(--preto);">Informações da
+                            Reserva <span class="fs-12 ms-2"
+                              style="background: var(--azul); color: #fff; padding: 3px 10px; border-radius: 3px; font-weight: 500;">Aulas
+                              Práticas</span></h3>
+                        </div>
+                      </div>
+                    </div>
 
-                                      <div class="card card_dados_info">
+                    <div class="card-body p-4">
+                      <div class="row grid gx-3">
 
-                                          <div class="card-header" style="background: var(--roxo_alpha);">
-                                              <div class="row align-items-center">
-                                                  <div class="col-12 tit_nova_solicitacao">
-                                                      <h3 class="m-0 fs-16" style="color: var(--preto);">Informações da
-                                                          Reserva <span class="fs-12 ms-2"
-                                                              style="background: var(--roxo); color: #fff; padding: 3px 10px; border-radius: 3px; font-weight: 500;">Aulas
-                                                              Teóricas</span></h3>
-                                                  </div>
-                                              </div>
-                                          </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                          <label>Campus</label>
+                          <p><?= $campus_pratico_nome ?></p>
+                          <hr>
+                        </div>
 
-                                          <div class="card-body p-4">
-                                              <div class="row grid gx-3">
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                          <label>Quantidade de turma</label>
+                          <p><?= $ctp_turma ?></p>
+                          <hr>
+                        </div>
 
-                                                  <div class="col-md-6 col-xl-4 col-xxl-3">
-                                                      <label>Campus</label>
-                                                      <p><?= $campus_teorico_nome ?></p>
-                                                      <hr>
-                                                  </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                          <label>Nº estimado de participantes</label>
+                          <p><?= $solic_ap_quant_particip ?></p>
+                          <hr>
+                        </div>
 
-                                                  <div class="col-md-6 col-xl-4 col-xxl-3">
-                                                      <label>Quantidade de sala(s) / Laboratório(s) de informática</label>
-                                                      <p><?= $cst_sala ?></p>
-                                                      <hr>
-                                                  </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                          <label>Tipo da reserva</label>
+                          <p><?= $ctr_tipo_reserva ?></p>
+                          <hr>
+                        </div>
 
-                                                  <div class="col-md-6 col-xl-4 col-xxl-3">
-                                                      <label>Nº estimado de participantes</label>
-                                                      <p><?= $solic_at_quant_particip ?></p>
-                                                      <hr>
-                                                  </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                          <label>Horário inicial</label>
+                          <p><?= date("H:i", strtotime($solic_ap_hora_inicio)) ?></p>
+                          <hr>
+                        </div>
 
-                                                  <div class="col-md-6 col-xl-4 col-xxl-3">
-                                                      <label>Tipo da reserva</label>
-                                                      <p><?= $ctr_tipo_reserva ?></p>
-                                                      <hr>
-                                                  </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                          <label>Horário final</label>
+                          <p><?= date("H:i", strtotime($solic_ap_hora_fim)) ?></p>
+                          <hr>
+                        </div>
 
-                                                  <div class="col-md-6 col-xl-4 col-xxl-3">
-                                                      <label>Horário inicial</label>
-                                                      <p><?= date("H:i", strtotime($solic_at_hora_inicio)) ?></p>
-                                                      <hr>
-                                                  </div>
+                        <div class="col-xl-12 col-xxl-6 <?= empty($solic_ap_dia_reserva) ? 'd-none' : '' ?>">
+                          <div class="mb-4">
+                            <div class="check_item_container hstack gap-2 flex-wrap mt-2">
+                              <?php $dias = explode(", ", $solic_ap_dia_reserva);
+                              $sql = $conn->prepare("SELECT week_id, week_dias FROM conf_dias_semana");
+                              $sql->execute();
+                              while ($result = $sql->fetch(PDO::FETCH_ASSOC)) { ?>
+                                <input type="checkbox" class="btn-check check_formulario_check"
+                                  id="dias_semana<?= $result['week_id'] ?>" value="<?= $result['week_id'] ?>"
+                                  <?= $solic_ap_dia_reserva_checked = in_array($result['week_id'], $dias) ? "checked" : ""; ?>
+                                  disabled>
+                                <label class="check_item check_formulario"
+                                  for="dias_semana<?= $result['week_id'] ?>"><?= $result['week_dias'] ?></label>
+                              <?php } ?>
+                            </div>
+                          </div>
+                        </div>
 
-                                                  <div class="col-md-6 col-xl-4 col-xxl-3">
-                                                      <label>Horário final</label>
-                                                      <p><?= date("H:i", strtotime($solic_at_hora_fim)) ?></p>
-                                                      <hr>
-                                                  </div>
+                        <div class="col-12 <?= empty($solic_ap_data_reserva) ? 'd-none' : '' ?>">
+                          <label>Data(s) da reserva</label>
+                          <p class="campo_textarea"><?= $solic_ap_data_reserva ?></p>
+                          <hr>
+                        </div>
 
-                                                  <div
-                                                      class="col-xl-12 col-xxl-6 <?= empty($solic_at_dia_reserva) ? 'd-none' : '' ?>">
-                                                      <div class="mb-4">
-                                                          <div class="check_item_container hstack gap-2 flex-wrap mt-2">
-                                                              <?php $dias = explode(", ", $solic_at_dia_reserva);
-                                                              $sql = $conn->prepare("SELECT week_id, week_dias FROM conf_dias_semana");
-                                                              $sql->execute();
-                                                              while ($result = $sql->fetch(PDO::FETCH_ASSOC)) { ?>
-                                                                    <input type="checkbox" class="btn-check check_formulario_check"
-                                                                        id="dias_semana<?= $result['week_id'] ?>"
-                                                                        value="<?= $result['week_id'] ?>"
-                                                                        <?= $solic_at_dia_reserva_checked = in_array($result['week_id'], $dias) ? "checked" : ""; ?> disabled>
-                                                                    <label class="check_item check_formulario"
-                                                                        for="dias_semana<?= $result['week_id'] ?>"><?= $result['week_dias'] ?></label>
-                                                              <?php } ?>
-                                                          </div>
-                                                      </div>
-                                                  </div>
+                        <?php try {
+                          $sql = $conn->prepare("SELECT * FROM solicitacao_arq WHERE sarq_solic_id = :sarq_solic_id");
+                          $sql->execute(['sarq_solic_id' => $solic_id]);
+                          $result_arq_ap = $sql->fetchAll(PDO::FETCH_ASSOC);
+                        } catch (PDOException $e) {
+                          // echo "Erro: " . $e->getMessage();
+                          echo "Erro ao tentar recuperar os dados";
+                        } ?>
 
-                                                  <div class="col-12 <?= empty($solic_at_data_reserva) ? 'd-none' : '' ?>">
-                                                      <label>Data(s) da reserva</label>
-                                                      <p class="campo_textarea"><?= $solic_at_data_reserva ?></p>
-                                                      <hr>
-                                                  </div>
+                        <div class="col-12 mb-4 <?= empty($result_arq_ap) ? 'd-none' : '' ?>">
+                          <label>Formulário de planejamento de atividades de práticas nos
+                            laboratórios de ensino</label>
 
-                                                  <div class="col-12 <?= empty($solic_at_recursos) ? 'd-none' : '' ?>">
-                                                      <label>Recursos audiovisuais adicionais</label>
-                                                      <p class="campo_textarea"><?= $solic_at_recursos ?></p>
-                                                      <hr class="<?= empty($solic_at_obs) ? 'd-none' : '' ?>">
-                                                  </div>
+                          <?php foreach ($result_arq_ap as $res_arq_ap): ?>
+                            <div class="result_file">
+                              <div class="result_file_name py-1"><a
+                                  href="../uploads/solicitacoes/<?= $solic_codigo . '/' . $res_arq_ap['sarq_arquivo'] ?>"
+                                  target="_blank"><?= $res_arq_ap['sarq_arquivo'] ?></a></div>
+                            </div>
+                          <?php endforeach; ?>
 
-                                                  <div class="col-12 <?= empty($solic_at_obs) ? 'd-none' : '' ?>">
-                                                      <label>Observações</label>
-                                                      <p class="campo_textarea"><?= $solic_at_obs ?></p>
-                                                  </div>
+                        </div>
 
-                                              </div>
+                        <div class="col-12 <?= empty($solic_ap_tit_aulas) ? 'd-none' : '' ?>">
+                          <label>Informe o título da(s) aula(s)</label>
+                          <p class="campo_textarea"><?= $solic_ap_tit_aulas ?></p>
+                          <hr class="<?= empty($solic_ap_obs) ? 'd-none' : '' ?>">
+                        </div>
 
-                                          </div>
-                                      </div>
+                        <div class="col-12 <?= empty($solic_ap_quant_material) ? 'd-none' : '' ?>">
+                          <label>Descreva os materiais, insumos e equipamentos, com suas
+                            respectivas quantidades, que
+                            serão necessários para a realização da aula no espaço de
+                            prática</label>
+                          <p class="campo_textarea"><?= $solic_ap_quant_material ?></p>
+                          <hr class="<?= empty($solic_ap_obs) ? 'd-none' : '' ?>">
+                        </div>
 
-                                <?php } ?>
+                        <div class="col-12 <?= empty($solic_ap_obs) ? 'd-none' : '' ?>">
+                          <label>Observações</label>
+                          <p class="campo_textarea"><?= $solic_ap_obs ?></p>
+                        </div>
+
+                      </div>
+
+                    </div>
+                  </div>
+
+                <?php } ?>
+
+
+                <?php if ($solic_at_aula_teorica == 1) { ?>
+
+                  <div class="card card_dados_info">
+
+                    <div class="card-header" style="background: var(--roxo_alpha);">
+                      <div class="row align-items-center">
+                        <div class="col-12 tit_nova_solicitacao">
+                          <h3 class="m-0 fs-16" style="color: var(--preto);">Informações da
+                            Reserva <span class="fs-12 ms-2"
+                              style="background: var(--roxo); color: #fff; padding: 3px 10px; border-radius: 3px; font-weight: 500;">Aulas
+                              Teóricas</span></h3>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card-body p-4">
+                      <div class="row grid gx-3">
+
+                        <div class="col-md-6 col-xl-4 col-xxl-3">
+                          <label>Campus</label>
+                          <p><?= $campus_teorico_nome ?></p>
+                          <hr>
+                        </div>
+
+                        <div class="col-md-6 col-xl-4 col-xxl-3">
+                          <label>Quantidade de sala(s) / Laboratório(s) de informática</label>
+                          <p><?= $cst_sala ?></p>
+                          <hr>
+                        </div>
+
+                        <div class="col-md-6 col-xl-4 col-xxl-3">
+                          <label>Nº estimado de participantes</label>
+                          <p><?= $solic_at_quant_particip ?></p>
+                          <hr>
+                        </div>
+
+                        <div class="col-md-6 col-xl-4 col-xxl-3">
+                          <label>Tipo da reserva</label>
+                          <p><?= $ctr_tipo_reserva ?></p>
+                          <hr>
+                        </div>
+
+                        <div class="col-md-6 col-xl-4 col-xxl-3">
+                          <label>Horário inicial</label>
+                          <p><?= date("H:i", strtotime($solic_at_hora_inicio)) ?></p>
+                          <hr>
+                        </div>
+
+                        <div class="col-md-6 col-xl-4 col-xxl-3">
+                          <label>Horário final</label>
+                          <p><?= date("H:i", strtotime($solic_at_hora_fim)) ?></p>
+                          <hr>
+                        </div>
+
+                        <div class="col-xl-12 col-xxl-6 <?= empty($solic_at_dia_reserva) ? 'd-none' : '' ?>">
+                          <div class="mb-4">
+                            <div class="check_item_container hstack gap-2 flex-wrap mt-2">
+                              <?php $dias = explode(", ", $solic_at_dia_reserva);
+                              $sql = $conn->prepare("SELECT week_id, week_dias FROM conf_dias_semana");
+                              $sql->execute();
+                              while ($result = $sql->fetch(PDO::FETCH_ASSOC)) { ?>
+                                <input type="checkbox" class="btn-check check_formulario_check"
+                                  id="dias_semana<?= $result['week_id'] ?>" value="<?= $result['week_id'] ?>"
+                                  <?= $solic_at_dia_reserva_checked = in_array($result['week_id'], $dias) ? "checked" : ""; ?>
+                                  disabled>
+                                <label class="check_item check_formulario"
+                                  for="dias_semana<?= $result['week_id'] ?>"><?= $result['week_dias'] ?></label>
+                              <?php } ?>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="col-12 <?= empty($solic_at_data_reserva) ? 'd-none' : '' ?>">
+                          <label>Data(s) da reserva</label>
+                          <p class="campo_textarea"><?= $solic_at_data_reserva ?></p>
+                          <hr>
+                        </div>
+
+                        <div class="col-12 <?= empty($solic_at_recursos) ? 'd-none' : '' ?>">
+                          <label>Recursos audiovisuais adicionais</label>
+                          <p class="campo_textarea"><?= $solic_at_recursos ?></p>
+                          <hr class="<?= empty($solic_at_obs) ? 'd-none' : '' ?>">
+                        </div>
+
+                        <div class="col-12 <?= empty($solic_at_obs) ? 'd-none' : '' ?>">
+                          <label>Observações</label>
+                          <p class="campo_textarea"><?= $solic_at_obs ?></p>
+                        </div>
+
+                      </div>
+
+                    </div>
+                  </div>
+
+                <?php } ?>
 
                 <?php
                 // Lógica para pré-selecionar o campus com base na solicitação
@@ -883,172 +881,172 @@
                 ?>
                 <?php if ($show_reservas_section) { ?>
 
-                    <form id="formExcluirSelecionados" method="POST" action="../router/web.php?r=Reserv">
-                      <input type="hidden" name="acao" value="deletar_selecao">
+                  <form id="formExcluirSelecionados" method="POST" action="../router/web.php?r=Reserv">
+                    <input type="hidden" name="acao" value="deletar_selecao">
 
-                      <div class="card" id="ancora_reservas_confirmadas">
-                        <div class="card-header" style="background: #0B3132;">
-                          <div class="row align-items-center">
-                            <div class="col-md-4 text-md-start text-center">
-                              <h5 class="card-title mb-0" style="color: #fff !important">Reservas
-                                Confirmadas</h5>
+                    <div class="card" id="ancora_reservas_confirmadas">
+                      <div class="card-header" style="background: #0B3132;">
+                        <div class="row align-items-center">
+                          <div class="col-md-4 text-md-start text-center">
+                            <h5 class="card-title mb-0" style="color: #fff !important">Reservas
+                              Confirmadas</h5>
+                          </div>
+                          <div
+                            class="col-md-8 d-flex align-items-center d-flex justify-content-md-end justify-content-center <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
+
+                            <div class="d-none d-sm-block">
+                              <button type="submit" id="btnExcluirSelecionados"
+                                class="btn botao_excluir_selecao botao_vermelho waves-effect mt-3 mt-md-0 me-md-3 me-2"
+                                style="display: none;">
+                                <i class="fa-regular fa-trash-can me-2"></i>Excluir
+                                selecionados
+                              </button>
+                              <button type="button" id="btnEditarSelecionados"
+                                class="btn botao_editar_selecao botao_azul waves-effect mt-3 mt-md-0 me-md-3 me-2"
+                                style="display: none;">
+                                <i class="fa-regular fa-pen-to-square me-2"></i> Editar
+                                selecionados
+                              </button>
                             </div>
-                            <div
-                              class="col-md-8 d-flex align-items-center d-flex justify-content-md-end justify-content-center <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
-
-                              <div class="d-none d-sm-block">
-                                <button type="submit" id="btnExcluirSelecionados"
-                                  class="btn botao_excluir_selecao botao_vermelho waves-effect mt-3 mt-md-0 me-md-3 me-2"
-                                  style="display: none;">
-                                  <i class="fa-regular fa-trash-can me-2"></i>Excluir
-                                  selecionados
-                                </button>
-                                <button type="button" id="btnEditarSelecionados"
-                                  class="btn botao_editar_selecao botao_azul waves-effect mt-3 mt-md-0 me-md-3 me-2"
-                                  style="display: none;">
-                                  <i class="fa-regular fa-pen-to-square me-2"></i> Editar
-                                  selecionados
-                                </button>
-                              </div>
 
 
-                              <!-- <button type="button" class="btn botao botao_amarelo waves-effect mt-3 mt-md-0"
+                            <!-- <button type="button" class="btn botao botao_amarelo waves-effect mt-3 mt-md-0"
                               data-bs-solic_id="<?= htmlspecialchars($solic_id) ?>" id="modal_cad_espaco_button">+
                               Cadastrar Reserva</button> -->
 
-                              <button type="button" class="btn botao botao_amarelo waves-effect mt-3 mt-md-0"
-                                data-bs-solic_id="<?= htmlspecialchars($solic_id) ?>" id="btn_cadastrar_reserva">+ Cadastrar
-                                Reserva</button>
+                            <button type="button" class="btn botao botao_amarelo waves-effect mt-3 mt-md-0"
+                              data-bs-solic_id="<?= htmlspecialchars($solic_id) ?>" id="btn_cadastrar_reserva">+ Cadastrar
+                              Reserva</button>
 
-                            </div>
                           </div>
                         </div>
+                      </div>
 
-                        <div class="card-body p-0">
+                      <div class="card-body p-0">
 
-                          <div class="table-responsive">
-                            <table id="tab_reserva_confirm_single" class="table align-middle" style="width:100%">
-                              <thead>
-                                <tr>
-                                  <th width="20px" class="rounded-start sorting_disabled" rowspan="1" colspan="1"
-                                    aria-label=""><input type="checkbox" class="form-check-input" id="marcarTodos"></th>
-                                  <th nowrap="nowrap"><span class="me-3">Data</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Dia</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Mês</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Ano</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Início</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Fim</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Turno</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">ID da Reserva</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">Tipo de Aula</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">Curso</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Semestre</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Componente
-                                      Curricular/Atividade</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Módulo</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Professor</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Título Aula</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">Recursos</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Recursos Audiovisuais
-                                      Add</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Obs</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Nº Pessoas</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">Tipo Reserva</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">ID Local</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Local
-                                      Reservado</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Andar</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Pavilhão</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Campus</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Tipo de Sala</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">Capacidade</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">Confirmado por</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">Data
-                                      Solicitação</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Data Reserva</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">ID Solicitação</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">CH Programada</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">ID Ocorrência</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">Início
-                                      Realizado</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Fim Realizado</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">CH Realizada</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">CH Faltante</span>
-                                  </th>
-                                  <th nowrap="nowrap"><span class="me-3">CH Mais</span></th>
-                                  <th nowrap="nowrap"><span class="me-3">Conflito</span></th>
-                                  <th width="20px"></th>
-                                </tr>
+                        <div class="table-responsive">
+                          <table id="tab_reserva_confirm_single" class="table align-middle" style="width:100%">
+                            <thead>
+                              <tr>
+                                <th width="20px" class="rounded-start sorting_disabled" rowspan="1" colspan="1"
+                                  aria-label=""><input type="checkbox" class="form-check-input" id="marcarTodos"></th>
+                                <th nowrap="nowrap"><span class="me-3">Data</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Dia</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Mês</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Ano</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Início</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Fim</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Turno</span></th>
+                                <th nowrap="nowrap"><span class="me-3">ID da Reserva</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">Tipo de Aula</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">Curso</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Semestre</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Componente
+                                    Curricular/Atividade</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Módulo</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Professor</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Título Aula</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">Recursos</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Recursos Audiovisuais
+                                    Add</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Obs</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Nº Pessoas</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">Tipo Reserva</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">ID Local</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Local
+                                    Reservado</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Andar</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Pavilhão</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Campus</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Tipo de Sala</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">Capacidade</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">Confirmado por</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">Data
+                                    Solicitação</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Data Reserva</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">ID Solicitação</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">CH Programada</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">ID Ocorrência</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">Início
+                                    Realizado</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Fim Realizado</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">CH Realizada</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">CH Faltante</span>
+                                </th>
+                                <th nowrap="nowrap"><span class="me-3">CH Mais</span></th>
+                                <th nowrap="nowrap"><span class="me-3">Conflito</span></th>
+                                <th width="20px"></th>
+                              </tr>
 
-                              </thead>
-                              <tbody>
+                            </thead>
+                            <tbody>
 
-                                <?php
-                                try {
-                                  // PARA VERIFICAR CONFLITOS ANTERIORES
-                                  $reservas_analisadas = [];
-                                  $reservas = [];
+                              <?php
+                              try {
+                                // PARA VERIFICAR CONFLITOS ANTERIORES
+                                $reservas_analisadas = [];
+                                $reservas = [];
 
-                                  // CALCULO DAS CARGAS HORÁRIAS
-                                  function calcularDiferencaHoras($inicio, $fim)
-                                  {
-                                    if (!$inicio || !$fim)
-                                      return null;
-                                    $inicio = DateTime::createFromFormat('H:i:s.u', substr($inicio, 0, 15));
-                                    $fim = DateTime::createFromFormat('H:i:s.u', substr($fim, 0, 15));
-                                    if ($inicio && $fim && $fim > $inicio) {
-                                      $diff = $fim->diff($inicio);
-                                      return $diff->format('%H:%I');
-                                    }
-                                    return '00:00';
+                                // CALCULO DAS CARGAS HORÁRIAS
+                                function calcularDiferencaHoras($inicio, $fim)
+                                {
+                                  if (!$inicio || !$fim)
+                                    return null;
+                                  $inicio = DateTime::createFromFormat('H:i:s.u', substr($inicio, 0, 15));
+                                  $fim = DateTime::createFromFormat('H:i:s.u', substr($fim, 0, 15));
+                                  if ($inicio && $fim && $fim > $inicio) {
+                                    $diff = $fim->diff($inicio);
+                                    return $diff->format('%H:%I');
                                   }
+                                  return '00:00';
+                                }
 
-                                  function paraMinutos($hora)
-                                  {
-                                    list($h, $m) = explode(':', $hora);
-                                    return ($h * 60) + $m;
-                                  }
+                                function paraMinutos($hora)
+                                {
+                                  list($h, $m) = explode(':', $hora);
+                                  return ($h * 60) + $m;
+                                }
 
-                                  function paraHoraMin($minutos)
-                                  {
-                                    $h = floor($minutos / 60);
-                                    $m = $minutos % 60;
-                                    return sprintf('%02d:%02d', $h, $m);
-                                  }
-                                  // $stmt = $conn->prepare("SELECT * FROM reservas
-                                  //                                                          INNER JOIN solicitacao ON solicitacao.solic_id = reservas.res_solic_id
-                                  //                                                          INNER JOIN conf_dias_semana ON conf_dias_semana.week_id = reservas.res_dia_semana
-                                  //                                                          LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
-                                  //                                                          LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
-                                  //                                                          LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
-                                  //                                                          INNER JOIN conf_tipo_reserva ON conf_tipo_reserva.ctr_id = reservas.res_tipo_reserva
-                                  //                                                          INNER JOIN conf_tipo_aula ON conf_tipo_aula.cta_id = reservas.res_tipo_aula
-                                  //                                                          INNER JOIN espaco ON espaco.esp_id = reservas.res_espaco_id
-                                  //                                                          INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
-                                  //                                                          LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
-                                  //                                                          LEFT JOIN andares ON andares.and_id = espaco.esp_andar
-                                  //                                                          LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
-                                  //                                                          LEFT JOIN recursos ON ',' + ISNULL(reservas.res_recursos_add, '') + ',' LIKE '%,' + CAST(recursos.rec_id AS VARCHAR) + ',%'
-                                  //                                                          INNER JOIN admin ON admin.admin_id = reservas.res_user_id
-                                  //                                                          LEFT JOIN ocorrencias ON ocorrencias.oco_res_id = reservas.res_id
-                                  //                                                          WHERE solic_id = :solic_id");
-                              
+                                function paraHoraMin($minutos)
+                                {
+                                  $h = floor($minutos / 60);
+                                  $m = $minutos % 60;
+                                  return sprintf('%02d:%02d', $h, $m);
+                                }
+                                // $stmt = $conn->prepare("SELECT * FROM reservas
+                                //                                                          INNER JOIN solicitacao ON solicitacao.solic_id = reservas.res_solic_id
+                                //                                                          INNER JOIN conf_dias_semana ON conf_dias_semana.week_id = reservas.res_dia_semana
+                                //                                                          LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
+                                //                                                          LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
+                                //                                                          LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
+                                //                                                          INNER JOIN conf_tipo_reserva ON conf_tipo_reserva.ctr_id = reservas.res_tipo_reserva
+                                //                                                          INNER JOIN conf_tipo_aula ON conf_tipo_aula.cta_id = reservas.res_tipo_aula
+                                //                                                          INNER JOIN espaco ON espaco.esp_id = reservas.res_espaco_id
+                                //                                                          INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
+                                //                                                          LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
+                                //                                                          LEFT JOIN andares ON andares.and_id = espaco.esp_andar
+                                //                                                          LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
+                                //                                                          LEFT JOIN recursos ON ',' + ISNULL(reservas.res_recursos_add, '') + ',' LIKE '%,' + CAST(recursos.rec_id AS VARCHAR) + ',%'
+                                //                                                          INNER JOIN admin ON admin.admin_id = reservas.res_user_id
+                                //                                                          LEFT JOIN ocorrencias ON ocorrencias.oco_res_id = reservas.res_id
+                                //                                                          WHERE solic_id = :solic_id");
+                            
 
-                                  $stmt = $conn->prepare("SELECT
+                                $stmt = $conn->prepare("SELECT
     reservas.*,
     solicitacao.solic_codigo,
     solicitacao.solic_data_cad,
@@ -1102,441 +1100,441 @@ ORDER BY reservas.res_data ASC;");
 
 
 
-                                  $stmt->execute([':solic_id' => $_GET['i']]);
-                                  while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                                $stmt->execute([':solic_id' => $_GET['i']]);
+                                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
-                                    ////////////////////////////////////////////
-                                    // TRATA OS DADOS DOS RECURSOS ADICIONAIS //
-                                    ////////////////////////////////////////////
-                              
-                                    // Pegue o campo res_recursos_add e limpe para o formato certo
-                                    $res_recursos_ids = trim($row['res_recursos_add'] ?? '');
-                                    $res_recursos_ids = rtrim($res_recursos_ids, ','); // Remove vírgula final, se existir
-                              
-                                    if (empty($res_recursos_ids)) {
-                                      // Sem recursos adicionados
+                                  ////////////////////////////////////////////
+                                  // TRATA OS DADOS DOS RECURSOS ADICIONAIS //
+                                  ////////////////////////////////////////////
+                            
+                                  // Pegue o campo res_recursos_add e limpe para o formato certo
+                                  $res_recursos_ids = trim($row['res_recursos_add'] ?? '');
+                                  $res_recursos_ids = rtrim($res_recursos_ids, ','); // Remove vírgula final, se existir
+                            
+                                  if (empty($res_recursos_ids)) {
+                                    // Sem recursos adicionados
+                                    $row['recursos_formatados'] = '';
+                                  } else {
+                                    // Explode e filtra só ids numéricos
+                                    $ids_array = array_filter(array_map('trim', explode(',', $res_recursos_ids)), 'ctype_digit');
+
+                                    if (count($ids_array) === 0) {
                                       $row['recursos_formatados'] = '';
                                     } else {
-                                      // Explode e filtra só ids numéricos
-                                      $ids_array = array_filter(array_map('trim', explode(',', $res_recursos_ids)), 'ctype_digit');
+                                      $res_recursos_ids_sql = implode(',', $ids_array);
 
-                                      if (count($ids_array) === 0) {
-                                        $row['recursos_formatados'] = '';
-                                      } else {
-                                        $res_recursos_ids_sql = implode(',', $ids_array);
+                                      // Busca nomes dos recursos para esses IDs
+                                      $sql_recursos = "SELECT rec_recurso FROM recursos WHERE rec_id IN ($res_recursos_ids_sql)";
+                                      $stmt_rec = $conn->prepare($sql_recursos);
+                                      $stmt_rec->execute();
+                                      $recursos = $stmt_rec->fetchAll(PDO::FETCH_COLUMN);
 
-                                        // Busca nomes dos recursos para esses IDs
-                                        $sql_recursos = "SELECT rec_recurso FROM recursos WHERE rec_id IN ($res_recursos_ids_sql)";
-                                        $stmt_rec = $conn->prepare($sql_recursos);
-                                        $stmt_rec->execute();
-                                        $recursos = $stmt_rec->fetchAll(PDO::FETCH_COLUMN);
-
-                                        // Monta string separada por ' / '
-                                        $row['recursos_formatados'] = implode(' / ', $recursos);
-                                      }
+                                      // Monta string separada por ' / '
+                                      $row['recursos_formatados'] = implode(' / ', $recursos);
                                     }
+                                  }
 
-                                    ///////////////////////
-                                    // FIM DO TRATAMENTO //
-                                    ///////////////////////
-                              
-                                    $hora_inicio = new DateTime($row['res_hora_inicio']);
-                                    $hora_fim = new DateTime($row['res_hora_fim']);
+                                  ///////////////////////
+                                  // FIM DO TRATAMENTO //
+                                  ///////////////////////
+                            
+                                  $hora_inicio = new DateTime($row['res_hora_inicio']);
+                                  $hora_fim = new DateTime($row['res_hora_fim']);
 
-                                    // Verificação de conflito
-                                    $conflito = false;
-                                    foreach ($reservas_analisadas as $r) {
-                                      if (
-                                        $r['data'] === $row['res_data'] &&
-                                        $r['espaco_id'] === $row['res_espaco_id'] &&
-                                        $r['esp_codigo'] === $row['esp_codigo'] &&
-                                        (
-                                          ($hora_inicio < $r['fim'] && $hora_fim > $r['inicio']) ||  // sobreposição geral
-                                          ($hora_inicio == $r['inicio'] || $hora_fim == $r['fim'])    // mesmo horário exato
-                                        )
-                                      ) {
-                                        $conflito = true;
-                                        break;
-                                      }
+                                  // Verificação de conflito
+                                  $conflito = false;
+                                  foreach ($reservas_analisadas as $r) {
+                                    if (
+                                      $r['data'] === $row['res_data'] &&
+                                      $r['espaco_id'] === $row['res_espaco_id'] &&
+                                      $r['esp_codigo'] === $row['esp_codigo'] &&
+                                      (
+                                        ($hora_inicio < $r['fim'] && $hora_fim > $r['inicio']) ||  // sobreposição geral
+                                        ($hora_inicio == $r['inicio'] || $hora_fim == $r['fim'])    // mesmo horário exato
+                                      )
+                                    ) {
+                                      $conflito = true;
+                                      break;
                                     }
+                                  }
 
-                                    // Armazena a reserva para futuras comparações
-                                    $reservas_analisadas[] = [
-                                      'data' => $row['res_data'],
-                                      'espaco_id' => $row['res_espaco_id'],
-                                      'esp_codigo' => $row['esp_codigo'],
-                                      'inicio' => $hora_inicio,
-                                      'fim' => $hora_fim,
-                                    ];
+                                  // Armazena a reserva para futuras comparações
+                                  $reservas_analisadas[] = [
+                                    'data' => $row['res_data'],
+                                    'espaco_id' => $row['res_espaco_id'],
+                                    'esp_codigo' => $row['esp_codigo'],
+                                    'inicio' => $hora_inicio,
+                                    'fim' => $hora_fim,
+                                  ];
 
-                                    // Aplique a classe de conflito, se necessário
-                                    $conflito_class = $conflito ? 'conflict-cell' : '';
+                                  // Aplique a classe de conflito, se necessário
+                                  $conflito_class = $conflito ? 'conflict-cell' : '';
 
-                                    extract($row);
+                                  extract($row);
 
-                                    $recursos_formatados = $row['recursos_formatados'];
+                                  $recursos_formatados = $row['recursos_formatados'];
 
-                                    // STATUS TIPO AULA
-                                    $tipo_aula_color = $res_tipo_aula == 1 ? 'bg_info_laranja' : 'bg_info_azul';
+                                  // STATUS TIPO AULA
+                                  $tipo_aula_color = $res_tipo_aula == 1 ? 'bg_info_laranja' : 'bg_info_azul';
 
-                                    // STATUS TIPO RESERVA
-                                    $tipo_reserva_color = $res_tipo_reserva == 1 ? 'bg_info_roxo' : 'bg_info_azul_escuro';
+                                  // STATUS TIPO RESERVA
+                                  $tipo_reserva_color = $res_tipo_reserva == 1 ? 'bg_info_roxo' : 'bg_info_azul_escuro';
 
-                                    // STATUS RECURSOS
-                                    $recursos_color = $res_recursos == 'SIM' ? 'bg_info_verde' : 'bg_info_vermelho';
+                                  // STATUS RECURSOS
+                                  $recursos_color = $res_recursos == 'SIM' ? 'bg_info_verde' : 'bg_info_vermelho';
 
-                                    // CARGA HORÁRIA PROGRAMADA
-                                    $ch_programada = calcularDiferencaHoras($res_hora_inicio, $res_hora_fim);
+                                  // CARGA HORÁRIA PROGRAMADA
+                                  $ch_programada = calcularDiferencaHoras($res_hora_inicio, $res_hora_fim);
 
-                                    // INÍCIO e FIM REALIZADO (preferencialmente os da tabela ocorrencias)
-                                    $inicio_real = $oco_hora_inicio_realizado ?: $res_hora_inicio;
-                                    $fim_real = $oco_hora_fim_realizado ?: $res_hora_fim;
-                                    //
-                                    $borda_inicio_realizado = $oco_hora_inicio_realizado ? 'borda_dado' : '';
-                                    $borda_fim_realizado = $oco_hora_fim_realizado ? 'borda_dado' : '';
+                                  // INÍCIO e FIM REALIZADO (preferencialmente os da tabela ocorrencias)
+                                  $inicio_real = $oco_hora_inicio_realizado ?: $res_hora_inicio;
+                                  $fim_real = $oco_hora_fim_realizado ?: $res_hora_fim;
+                                  //
+                                  $borda_inicio_realizado = $oco_hora_inicio_realizado ? 'borda_dado' : '';
+                                  $borda_fim_realizado = $oco_hora_fim_realizado ? 'borda_dado' : '';
 
-                                    // CARGA HORÁRIA REALIZADA
-                                    $realizada = calcularDiferencaHoras($inicio_real, $fim_real);
+                                  // CARGA HORÁRIA REALIZADA
+                                  $realizada = calcularDiferencaHoras($inicio_real, $fim_real);
 
-                                    // Convertendo para minutos
-                                    $prog_min = paraMinutos($ch_programada);
-                                    $real_min = paraMinutos($realizada);
+                                  // Convertendo para minutos
+                                  $prog_min = paraMinutos($ch_programada);
+                                  $real_min = paraMinutos($realizada);
 
-                                    // CARGA HORÁRIA FALTANTE
-                                    $faltante = $real_min < $prog_min ? paraHoraMin($prog_min - $real_min) : '00:00';
+                                  // CARGA HORÁRIA FALTANTE
+                                  $faltante = $real_min < $prog_min ? paraHoraMin($prog_min - $real_min) : '00:00';
 
-                                    // CARGA HORÁRIA A MAIS
-                                    $a_mais = $real_min > $prog_min ? paraHoraMin($real_min - $prog_min) : '00:00';
+                                  // CARGA HORÁRIA A MAIS
+                                  $a_mais = $real_min > $prog_min ? paraHoraMin($real_min - $prog_min) : '00:00';
 
-                                    //
-                                    if (!empty($res_componente_atividade)) {
-                                      $componente = $compc_componente;
-                                    } else if (!empty($res_componente_atividade_nome)) {
-                                      $componente = $res_componente_atividade_nome;
-                                    } else if (!empty($res_nome_atividade)) {
-                                      $componente = $res_nome_atividade;
-                                    }
+                                  //
+                                  if (!empty($res_componente_atividade)) {
+                                    $componente = $compc_componente;
+                                  } else if (!empty($res_componente_atividade_nome)) {
+                                    $componente = $res_componente_atividade_nome;
+                                  } else if (!empty($res_nome_atividade)) {
+                                    $componente = $res_nome_atividade;
+                                  }
 
-                                    //CONFIGURAÇÃO DO PERFIL
-                                    // if ($res_tipo_aula == 1) {
-                                    //    $tipo_aula_color = 'bg_info_azul_escuro';
-                                    // } else {
-                                    //    $tipo_aula_color = 'bg_info_laranja';
-                                    // }
-                              
-                                    ?>
-                                        <tr>
-                                          <td><input type="checkbox" class="form-check-input checkbox" name="exc_selecionados[]"
-                                              value="<?= $res_id ?>">
-                                          </td>
-                                          <th scope="row" nowrap="nowrap"
-                                            class="bg_table_fix_vermelho <?= $conflito_class ? 'bg_table_fix_vermelho_escuro' : '' ?>">
-                                            <span
-                                              class="hide_data"><?= date('Ymd', strtotime($res_data)) ?></span><?= htmlspecialchars(date('d/m/Y', strtotime($res_data))) ?>
-                                          </th>
+                                  //CONFIGURAÇÃO DO PERFIL
+                                  // if ($res_tipo_aula == 1) {
+                                  //    $tipo_aula_color = 'bg_info_azul_escuro';
+                                  // } else {
+                                  //    $tipo_aula_color = 'bg_info_laranja';
+                                  // }
+                            
+                                  ?>
+                                  <tr>
+                                    <td><input type="checkbox" class="form-check-input checkbox" name="exc_selecionados[]"
+                                        value="<?= $res_id ?>">
+                                    </td>
+                                    <th scope="row" nowrap="nowrap"
+                                      class="bg_table_fix_vermelho <?= $conflito_class ? 'bg_table_fix_vermelho_escuro' : '' ?>">
+                                      <span
+                                        class="hide_data"><?= date('Ymd', strtotime($res_data)) ?></span><?= htmlspecialchars(date('d/m/Y', strtotime($res_data))) ?>
+                                    </th>
 
-                                          <td scope="row" nowrap="nowrap"
-                                            class="bg_table_fix_laranja <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_laranja_escuro' : '' ?>">
-                                            <?= htmlspecialchars(substr($row['week_dias'], 0, 3)) ?>
-                                          </td>
+                                    <td scope="row" nowrap="nowrap"
+                                      class="bg_table_fix_laranja <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_laranja_escuro' : '' ?>">
+                                      <?= htmlspecialchars(substr($row['week_dias'], 0, 3)) ?>
+                                    </td>
 
 
-                                          <td scope="row" nowrap="nowrap"
-                                            class="bg_table_fix_verde <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_verde_escuro' : '' ?>">
-                                            <?= htmlspecialchars($res_mes) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap"
-                                            class="bg_table_fix_azul <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_azul_escuro' : '' ?>">
-                                            <?= htmlspecialchars($res_ano) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap"
-                                            class="bg_table_fix_roxo <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_roxo_escuro' : '' ?>">
-                                            <?= htmlspecialchars(date("H:i", strtotime($res_hora_inicio))) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap"
-                                            class="bg_table_fix_rosa <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_rosa_escuro' : '' ?>">
-                                            <?= htmlspecialchars(date("H:i", strtotime($res_hora_fim))) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap"
-                                            class="bg_table_fix_cinza <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_cinza_escuro' : '' ?>">
-                                            <?= htmlspecialchars($res_turno) ?>
-                                          </td>
-                                          <th scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($res_codigo) ?>
-                                          </th>
-                                          <td scope="row" nowrap="nowrap"><span
-                                              class="badge <?= $tipo_aula_color ?>"><?= htmlspecialchars($cta_tipo_aula) ?></span>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($curs_curso) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($cs_semestre) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($componente) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($res_modulo) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($res_professor) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($res_titulo_aula) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap"><span
-                                              class="badge <?= $recursos_color ?>"><?= htmlspecialchars($res_recursos) ?></span>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($recursos_formatados) ?>
-                                          </td>
-                                          <td scope="row">
+                                    <td scope="row" nowrap="nowrap"
+                                      class="bg_table_fix_verde <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_verde_escuro' : '' ?>">
+                                      <?= htmlspecialchars($res_mes) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap"
+                                      class="bg_table_fix_azul <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_azul_escuro' : '' ?>">
+                                      <?= htmlspecialchars($res_ano) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap"
+                                      class="bg_table_fix_roxo <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_roxo_escuro' : '' ?>">
+                                      <?= htmlspecialchars(date("H:i", strtotime($res_hora_inicio))) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap"
+                                      class="bg_table_fix_rosa <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_rosa_escuro' : '' ?>">
+                                      <?= htmlspecialchars(date("H:i", strtotime($res_hora_fim))) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap"
+                                      class="bg_table_fix_cinza <?= $conflito_class ?> <?= $conflito_class ? 'bg_table_fix_cinza_escuro' : '' ?>">
+                                      <?= htmlspecialchars($res_turno) ?>
+                                    </td>
+                                    <th scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($res_codigo) ?>
+                                    </th>
+                                    <td scope="row" nowrap="nowrap"><span
+                                        class="badge <?= $tipo_aula_color ?>"><?= htmlspecialchars($cta_tipo_aula) ?></span>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($curs_curso) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($cs_semestre) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($componente) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($res_modulo) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($res_professor) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($res_titulo_aula) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap"><span
+                                        class="badge <?= $recursos_color ?>"><?= htmlspecialchars($res_recursos) ?></span>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($recursos_formatados) ?>
+                                    </td>
+                                    <td scope="row">
 
-                                            <?php if ($res_obs) { ?>
-                                                <button type="button" class="btn btn_soft_azul_escuro btn-sm" data-bs-toggle="modal"
-                                                  data-bs-target="#modal_obs<?= $res_id ?>"><i
-                                                    class="fa-regular fa-comment-dots"></i></button>
-                                                <div id="modal_obs<?= $res_id ?>" class="modal zoomIn fade" tabindex="-1"
-                                                  aria-labelledby="ModalObsLabel" aria-hidden="true" style="display: none;">
-                                                  <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content">
-                                                      <div class="modal-header">
-                                                        <h5 class="modal-title" id="ModalObsLabel">Observação</h5>
-                                                        <a type="button" class="btn-close" data-bs-dismiss="modal"
-                                                          aria-label="Close"></a>
-                                                      </div>
-                                                      <div class="modal-body">
-                                                        <p class="fs-14 m-0">
-                                                          <?= htmlspecialchars($res_obs) ?>
-                                                        </p>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                            <?php } ?>
-
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($res_quant_pessoas) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap"><span
-                                              class="badge <?= $tipo_reserva_color ?>"><?= htmlspecialchars($ctr_tipo_reserva) ?></span>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <strong><?= htmlspecialchars($esp_codigo) ?></strong>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($esp_nome_local) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap" class="text-uppercase">
-                                            <?= htmlspecialchars($and_andar) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap" class="text-uppercase">
-                                            <?= htmlspecialchars($pav_pavilhao) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap" class="text-uppercase">
-                                            <?= htmlspecialchars($uni_unidade) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap" class="text-uppercase">
-                                            <?= htmlspecialchars($tipesp_tipo_espaco) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($esp_quant_maxima) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($admin_nome) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap"><span
-                                              class="hide_data"><?= date('Ymd', strtotime($solic_data_cad)) ?></span><?= htmlspecialchars(htmlspecialchars(date('d/m/Y', strtotime($solic_data_cad)))) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap"><span
-                                              class="hide_data"><?= date('Ymd', strtotime($res_data_cad)) ?></span><?= htmlspecialchars(htmlspecialchars(date('d/m/Y', strtotime($res_data_cad)))) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <strong><?= htmlspecialchars($solic_codigo) ?></strong>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($ch_programada) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <strong><?= htmlspecialchars($oco_codigo) ?></strong>
-                                          </td>
-                                          <td><span
-                                              class="<?= $borda_inicio_realizado ?>"><?= htmlspecialchars(date("H:i", strtotime($inicio_real))) ?></span>
-                                          </td>
-                                          <td><span
-                                              class="<?= $borda_fim_realizado ?>"><?= htmlspecialchars(date("H:i", strtotime($fim_real))) ?></span>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($realizada) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($faltante) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap">
-                                            <?= htmlspecialchars($a_mais) ?>
-                                          </td>
-                                          <td scope="row" nowrap="nowrap"> <span
-                                              class="badge <?= $conflito_class ? 'bg_info_vermelho' : '' ?>"><?= $conflito_class ? 'CONFLITO' : '' ?></span>
-                                          </td>
-                                          <td class="text-end d-flex flex-row">
-                                            <a class="btn btn_soft_azul btn-sm me-2" data-bs-toggle="modal"
-                                              data-bs-target="#modal_edit_espaco" data-bs-res_id="<?= $res_id ?>"
-                                              data-bs-res_tipo_reserva="<?= $res_tipo_reserva ?>"
-                                              data-bs-res_campus="<?= $res_campus ?>"
-                                              data-bs-res_espaco_id_cabula="<?= $res_espaco_id ?>"
-                                              data-bs-res_espaco_id_brotas="<?= $res_espaco_id ?>"
-                                              data-bs-res_quant_pessoas="<?= $res_quant_pessoas ?>"
-                                              data-bs-res_recursos="<?= $res_recursos ?>"
-                                              data-bs-res_recursos_add="<?= $res_recursos_add ?>" data-bs-res_obs="<?= $res_obs ?>"
-                                              data-bs-res_tipo_aula="<?= $res_tipo_aula ?>" data-bs-res_curso="<?= $res_curso ?>"
-                                              data-bs-res_curso_nome="<?= $res_curso_nome ?>"
-                                              data-bs-res_curso_extensao="<?= $res_curso_extensao ?>"
-                                              data-bs-res_semestre="<?= $res_semestre ?>"
-                                              data-bs-res_componente_atividade="<?= $res_componente_atividade ?>"
-                                              data-bs-res_componente_atividade_nome="<?= $res_componente_atividade_nome ?>"
-                                              data-bs-res_nome_atividade="<?= $res_nome_atividade ?>"
-                                              data-bs-res_modulo="<?= $res_modulo ?>" data-bs-res_professor="<?= $res_professor ?>"
-                                              data-bs-res_titulo_aula="<?= $res_titulo_aula ?>" data-bs-res_data="<?= $res_data ?>"
-                                              data-bs-res_mes="<?= $res_mes ?>" data-bs-res_ano="<?= $res_ano ?>"
-                                              data-bs-res_data_inicio_semanal="<?= $res_data_inicio_semanal ?>"
-                                              data-bs-res_data_fim_semanal="<?= $res_data_fim_semanal ?>"
-                                              data-bs-res_dia_semana_fixa="<?= $row['res_dia_semana'] ?>"
-                                              data-bs-res_hora_inicio="<?= date('H:i', strtotime($res_hora_inicio)) ?>"
-                                              data-bs-res_hora_fim="<?= date('H:i', strtotime($res_hora_fim)) ?>"
-                                              data-bs-res_turno="<?= $res_turno ?>" title="Editar">
-                                              <i class="fa-regular fa-pen-to-square"></i>
-                                            </a>
-
-                                            <a href="../router/web.php?r=Reserv&acao=deletar&res_id=<?= $res_id ?>"
-                                              class="btn btn_soft_vermelho btn-sm del-btn"><i
-                                                class="fa-regular fa-trash-can"></i></a>
-
-                                            <div class="dropdown drop_tabela d-inline-block d-none">
-                                              <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button"
-                                                data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="ri-more-fill align-middle"></i>
-                                              </button>
-                                              <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal"
-                                                    data-bs-target="#modal_edit_espaco" data-bs-esp_id="id" title="Editar"><i
-                                                      class="fa-regular fa-pen-to-square me-2"></i>
-                                                    Editar</a></li>
-                                                <li><a href="../router/web.php?r=Reserv&acao=deletar&res_id=<?= $res_id ?>"
-                                                    class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
-                                                      class="fa-regular fa-trash-can me-2"></i>
-                                                    Excluir</a></li>
-                                              </ul>
+                                      <?php if ($res_obs) { ?>
+                                        <button type="button" class="btn btn_soft_azul_escuro btn-sm" data-bs-toggle="modal"
+                                          data-bs-target="#modal_obs<?= $res_id ?>"><i
+                                            class="fa-regular fa-comment-dots"></i></button>
+                                        <div id="modal_obs<?= $res_id ?>" class="modal zoomIn fade" tabindex="-1"
+                                          aria-labelledby="ModalObsLabel" aria-hidden="true" style="display: none;">
+                                          <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                              <div class="modal-header">
+                                                <h5 class="modal-title" id="ModalObsLabel">Observação</h5>
+                                                <a type="button" class="btn-close" data-bs-dismiss="modal"
+                                                  aria-label="Close"></a>
+                                              </div>
+                                              <div class="modal-body">
+                                                <p class="fs-14 m-0">
+                                                  <?= htmlspecialchars($res_obs) ?>
+                                                </p>
+                                              </div>
                                             </div>
-                                          </td>
+                                          </div>
+                                        </div>
+                                      <?php } ?>
 
-                                        </tr>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($res_quant_pessoas) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap"><span
+                                        class="badge <?= $tipo_reserva_color ?>"><?= htmlspecialchars($ctr_tipo_reserva) ?></span>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <strong><?= htmlspecialchars($esp_codigo) ?></strong>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($esp_nome_local) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap" class="text-uppercase">
+                                      <?= htmlspecialchars($and_andar) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap" class="text-uppercase">
+                                      <?= htmlspecialchars($pav_pavilhao) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap" class="text-uppercase">
+                                      <?= htmlspecialchars($uni_unidade) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap" class="text-uppercase">
+                                      <?= htmlspecialchars($tipesp_tipo_espaco) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($esp_quant_maxima) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($admin_nome) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap"><span
+                                        class="hide_data"><?= date('Ymd', strtotime($solic_data_cad)) ?></span><?= htmlspecialchars(htmlspecialchars(date('d/m/Y', strtotime($solic_data_cad)))) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap"><span
+                                        class="hide_data"><?= date('Ymd', strtotime($res_data_cad)) ?></span><?= htmlspecialchars(htmlspecialchars(date('d/m/Y', strtotime($res_data_cad)))) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <strong><?= htmlspecialchars($solic_codigo) ?></strong>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($ch_programada) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <strong><?= htmlspecialchars($oco_codigo) ?></strong>
+                                    </td>
+                                    <td><span
+                                        class="<?= $borda_inicio_realizado ?>"><?= htmlspecialchars(date("H:i", strtotime($inicio_real))) ?></span>
+                                    </td>
+                                    <td><span
+                                        class="<?= $borda_fim_realizado ?>"><?= htmlspecialchars(date("H:i", strtotime($fim_real))) ?></span>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($realizada) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($faltante) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap">
+                                      <?= htmlspecialchars($a_mais) ?>
+                                    </td>
+                                    <td scope="row" nowrap="nowrap"> <span
+                                        class="badge <?= $conflito_class ? 'bg_info_vermelho' : '' ?>"><?= $conflito_class ? 'CONFLITO' : '' ?></span>
+                                    </td>
+                                    <td class="text-end d-flex flex-row">
+                                      <a class="btn btn_soft_azul btn-sm me-2" data-bs-toggle="modal"
+                                        data-bs-target="#modal_edit_espaco" data-bs-res_id="<?= $res_id ?>"
+                                        data-bs-res_tipo_reserva="<?= $res_tipo_reserva ?>"
+                                        data-bs-res_campus="<?= $res_campus ?>"
+                                        data-bs-res_espaco_id_cabula="<?= $res_espaco_id ?>"
+                                        data-bs-res_espaco_id_brotas="<?= $res_espaco_id ?>"
+                                        data-bs-res_quant_pessoas="<?= $res_quant_pessoas ?>"
+                                        data-bs-res_recursos="<?= $res_recursos ?>"
+                                        data-bs-res_recursos_add="<?= $res_recursos_add ?>" data-bs-res_obs="<?= $res_obs ?>"
+                                        data-bs-res_tipo_aula="<?= $res_tipo_aula ?>" data-bs-res_curso="<?= $res_curso ?>"
+                                        data-bs-res_curso_nome="<?= $res_curso_nome ?>"
+                                        data-bs-res_curso_extensao="<?= $res_curso_extensao ?>"
+                                        data-bs-res_semestre="<?= $res_semestre ?>"
+                                        data-bs-res_componente_atividade="<?= $res_componente_atividade ?>"
+                                        data-bs-res_componente_atividade_nome="<?= $res_componente_atividade_nome ?>"
+                                        data-bs-res_nome_atividade="<?= $res_nome_atividade ?>"
+                                        data-bs-res_modulo="<?= $res_modulo ?>" data-bs-res_professor="<?= $res_professor ?>"
+                                        data-bs-res_titulo_aula="<?= $res_titulo_aula ?>" data-bs-res_data="<?= $res_data ?>"
+                                        data-bs-res_mes="<?= $res_mes ?>" data-bs-res_ano="<?= $res_ano ?>"
+                                        data-bs-res_data_inicio_semanal="<?= $res_data_inicio_semanal ?>"
+                                        data-bs-res_data_fim_semanal="<?= $res_data_fim_semanal ?>"
+                                        data-bs-res_dia_semana_fixa="<?= $row['res_dia_semana'] ?>"
+                                        data-bs-res_hora_inicio="<?= date('H:i', strtotime($res_hora_inicio)) ?>"
+                                        data-bs-res_hora_fim="<?= date('H:i', strtotime($res_hora_fim)) ?>"
+                                        data-bs-res_turno="<?= $res_turno ?>" title="Editar">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                      </a>
 
-                                    <?php }
-                                } catch (PDOException $e) {
-                                  // echo "Erro: " . $e->getMessage();
-                                  echo "Erro ao tentar recuperar os dados";
-                                } ?>
+                                      <a href="../router/web.php?r=Reserv&acao=deletar&res_id=<?= $res_id ?>"
+                                        class="btn btn_soft_vermelho btn-sm del-btn"><i
+                                          class="fa-regular fa-trash-can"></i></a>
 
-                              </tbody>
-                            </table>
-                          </div>
+                                      <div class="dropdown drop_tabela d-inline-block d-none">
+                                        <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button"
+                                          data-bs-toggle="dropdown" aria-expanded="false">
+                                          <i class="ri-more-fill align-middle"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                          <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal"
+                                              data-bs-target="#modal_edit_espaco" data-bs-esp_id="id" title="Editar"><i
+                                                class="fa-regular fa-pen-to-square me-2"></i>
+                                              Editar</a></li>
+                                          <li><a href="../router/web.php?r=Reserv&acao=deletar&res_id=<?= $res_id ?>"
+                                              class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
+                                                class="fa-regular fa-trash-can me-2"></i>
+                                              Excluir</a></li>
+                                        </ul>
+                                      </div>
+                                    </td>
+
+                                  </tr>
+
+                                <?php }
+                              } catch (PDOException $e) {
+                                // echo "Erro: " . $e->getMessage();
+                                echo "Erro ao tentar recuperar os dados";
+                              } ?>
+
+                            </tbody>
+                          </table>
+                        </div>
 
 
 
-                          <script>
-                            document.addEventListener('DOMContentLoaded', function () {
-                              const checkboxes = document.querySelectorAll('.checkbox');
-                              const btnExcluir = document.getElementById('btnExcluirSelecionados');
-                              const formExcluirSelecionados = document.getElementById('formExcluirSelecionados');
-                              const btnEditar = document.getElementById('btnEditarSelecionados');
-                              const modalEdit = document.getElementById('modal_edit_espaco');
+                        <script>
+                          document.addEventListener('DOMContentLoaded', function () {
+                            const checkboxes = document.querySelectorAll('.checkbox');
+                            const btnExcluir = document.getElementById('btnExcluirSelecionados');
+                            const formExcluirSelecionados = document.getElementById('formExcluirSelecionados');
+                            const btnEditar = document.getElementById('btnEditarSelecionados');
+                            const modalEdit = document.getElementById('modal_edit_espaco');
 
-                              // Função para atualizar os botões de ação
-                              function atualizarBotoesAcao() {
-                                const algumMarcado = document.querySelectorAll('.checkbox:checked').length > 0;
-                                btnExcluir.style.display = algumMarcado ? 'inline-block' : 'none';
-                                btnEditar.style.display = algumMarcado ? 'inline-block' : 'none';
-                              }
+                            // Função para atualizar os botões de ação
+                            function atualizarBotoesAcao() {
+                              const algumMarcado = document.querySelectorAll('.checkbox:checked').length > 0;
+                              btnExcluir.style.display = algumMarcado ? 'inline-block' : 'none';
+                              btnEditar.style.display = algumMarcado ? 'inline-block' : 'none';
+                            }
 
-                              // Adiciona event listeners aos checkboxes
-                              checkboxes.forEach(cb => cb.addEventListener('change', atualizarBotoesAcao));
-                              document.getElementById('marcarTodos').addEventListener('change', function () {
-                                checkboxes.forEach(cb => cb.checked = this.checked);
-                                atualizarBotoesAcao();
-                              });
-
-                              // Event listener para o botão de Editar em Massa
-                              btnEditar.addEventListener('click', function () {
-                                const checkboxesSelecionados = document.querySelectorAll('.checkbox:checked');
-                                const idsSelecionados = Array.from(checkboxesSelecionados).map(cb => cb.value).join(',');
-
-                                if (idsSelecionados) {
-                                  // Pega a primeira linha da tabela com um checkbox marcado
-                                  const primeiraLinha = checkboxesSelecionados[0].closest('tr');
-                                  const button = primeiraLinha.querySelector('a[data-bs-toggle="modal"]');
-
-                                  if (button) {
-                                    // Chama a função de preenchimento com os dados da primeira linha
-                                    preencherModalEdicao(button);
-
-                                    // Seta o campo de ID no modal com a lista completa de IDs
-                                    modalEdit.querySelector('.res_id').value = idsSelecionados;
-
-                                    // Oculta os campos de data de repetição para evitar confusão na edição em massa
-                                    const tipoReserva = button.getAttribute('data-bs-res_tipo_reserva');
-                                    if (tipoReserva === "2") {
-                                      modalEdit.querySelector('#edit_data_inicio_semanal').closest('.col-6').style.display = 'none';
-                                      modalEdit.querySelector('#edit_data_fim_semanal').closest('.col-6').style.display = 'none';
-                                    } else {
-                                      modalEdit.querySelector('#edit_data_reserva').closest('.col-6').style.display = 'none';
-                                    }
-
-                                    const myModal = new bootstrap.Modal(modalEdit);
-                                    myModal.show();
-                                  }
-                                }
-                              });
-
-                              // Event listener para o botão de Excluir Selecionados
-                              formExcluirSelecionados.addEventListener('submit', function (e) {
-                                e.preventDefault();
-                                Swal.fire({
-                                  text: 'Deseja excluir os itens selecionados?',
-                                  icon: 'question',
-                                  showCancelButton: true,
-                                  confirmButtonColor: '#0461AD',
-                                  cancelButtonColor: '#C4453E',
-                                  confirmButtonText: 'Excluir',
-                                  cancelButtonText: 'Cancelar',
-                                }).then((result) => {
-                                  if (result.isConfirmed) {
-                                    formExcluirSelecionados.submit();
-                                  }
-                                });
-                              });
-
-                              // Chama a função ao carregar a página para o estado inicial
+                            // Adiciona event listeners aos checkboxes
+                            checkboxes.forEach(cb => cb.addEventListener('change', atualizarBotoesAcao));
+                            document.getElementById('marcarTodos').addEventListener('change', function () {
+                              checkboxes.forEach(cb => cb.checked = this.checked);
                               atualizarBotoesAcao();
                             });
-                          </script>
-                          <script>
-                            const modal_edit_espaco = document.getElementById('modal_edit_espaco');
 
-                            if (modal_edit_espaco) {
-                              modal_edit_espaco.addEventListener('show.bs.modal', event => {
-                                const button = event.relatedTarget;
+                            // Event listener para o botão de Editar em Massa
+                            btnEditar.addEventListener('click', function () {
+                              const checkboxesSelecionados = document.querySelectorAll('.checkbox:checked');
+                              const idsSelecionados = Array.from(checkboxesSelecionados).map(cb => cb.value).join(',');
+
+                              if (idsSelecionados) {
+                                // Pega a primeira linha da tabela com um checkbox marcado
+                                const primeiraLinha = checkboxesSelecionados[0].closest('tr');
+                                const button = primeiraLinha.querySelector('a[data-bs-toggle="modal"]');
+
                                 if (button) {
+                                  // Chama a função de preenchimento com os dados da primeira linha
                                   preencherModalEdicao(button);
+
+                                  // Seta o campo de ID no modal com a lista completa de IDs
+                                  modalEdit.querySelector('.res_id').value = idsSelecionados;
+
+                                  // Oculta os campos de data de repetição para evitar confusão na edição em massa
+                                  const tipoReserva = button.getAttribute('data-bs-res_tipo_reserva');
+                                  if (tipoReserva === "2") {
+                                    modalEdit.querySelector('#edit_data_inicio_semanal').closest('.col-6').style.display = 'none';
+                                    modalEdit.querySelector('#edit_data_fim_semanal').closest('.col-6').style.display = 'none';
+                                  } else {
+                                    modalEdit.querySelector('#edit_data_reserva').closest('.col-6').style.display = 'none';
+                                  }
+
+                                  const myModal = new bootstrap.Modal(modalEdit);
+                                  myModal.show();
+                                }
+                              }
+                            });
+
+                            // Event listener para o botão de Excluir Selecionados
+                            formExcluirSelecionados.addEventListener('submit', function (e) {
+                              e.preventDefault();
+                              Swal.fire({
+                                text: 'Deseja excluir os itens selecionados?',
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonColor: '#0461AD',
+                                cancelButtonColor: '#C4453E',
+                                confirmButtonText: 'Excluir',
+                                cancelButtonText: 'Cancelar',
+                              }).then((result) => {
+                                if (result.isConfirmed) {
+                                  formExcluirSelecionados.submit();
                                 }
                               });
-                            }
-                          </script>
-                        </div>
-                      </div>
+                            });
 
-                    </form>
+                            // Chama a função ao carregar a página para o estado inicial
+                            atualizarBotoesAcao();
+                          });
+                        </script>
+                        <script>
+                          const modal_edit_espaco = document.getElementById('modal_edit_espaco');
+
+                          if (modal_edit_espaco) {
+                            modal_edit_espaco.addEventListener('show.bs.modal', event => {
+                              const button = event.relatedTarget;
+                              if (button) {
+                                preencherModalEdicao(button);
+                              }
+                            });
+                          }
+                        </script>
+                      </div>
+                    </div>
+
+                  </form>
 
                 <?php } ?>
 
@@ -1544,7 +1542,6 @@ ORDER BY reservas.res_data ASC;");
 
               <div class="tab-pane fade" id="atividades" role="tabpanel">
                 <div class="card">
-
                   <div class="card-header">
                     <div class="row align-items-center" id="ancora_dados_projetos">
                       <div class="col-lg-12">
@@ -1555,69 +1552,138 @@ ORDER BY reservas.res_data ASC;");
 
                   <div class="card-body p-4">
                     <div class="acitivity-timeline">
-
                       <?php
                       try {
-                        $stmt = $conn->prepare("SELECT * FROM solicitacao_analise_status
-                                                                             INNER JOIN status_solicitacao ON status_solicitacao.stsolic_id = solicitacao_analise_status.sta_an_status
-                                                                             LEFT JOIN admin ON admin.admin_id COLLATE SQL_Latin1_General_CP1_CI_AI = solicitacao_analise_status.sta_an_user_id
-                                                                             WHERE sta_an_solic_id = :solic_id
-                                                                             ORDER BY sta_an_data_upd DESC");
-                        $stmt->execute([':solic_id' => $solic_id]);
-                        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                          $row = array_map('htmlspecialchars', $row); // APLICAR htmlspecialchars A TODOS OS VALORES DO ARRAY
-                          extract($row); //EXTRAI OS DADOS JÁ TRATADOS
-                      
-                          // ÍCONE NOME
-                          $nome_atv = empty($admin_nome) ? $user_nome : $admin_nome;
-                          $color_atv = empty($admin_nome) ? 'icon_avatar_roxo' : 'icon_avatar_azul';
+                        // Consulta 1: Buscar atividades de status
+                        $sql_status = "SELECT
+                        sas.sta_an_data_upd AS data_registro,
+                        sas.sta_an_obs AS obs,
+                        COALESCE(admin.admin_nome, usuarios.user_nome) AS nome_usuario,
+                        ss.stsolic_status AS tipo_registro,
+                        'status' AS tipo_evento,
+                        NULL AS tipo_ocorrencia_ids,
+                        sas.sta_an_status AS stsolic_id
+                    FROM
+                        solicitacao_analise_status AS sas
+                    INNER JOIN
+                        status_solicitacao AS ss ON ss.stsolic_id = sas.sta_an_status
+                    LEFT JOIN
+                        admin ON admin.admin_id = sas.sta_an_user_id
+                    LEFT JOIN
+                        usuarios ON usuarios.user_id = sas.sta_an_user_id
+                    WHERE
+                        sas.sta_an_solic_id = :solic_id";
+
+                        $stmt_status = $conn->prepare($sql_status);
+                        $stmt_status->execute([':solic_id' => $solic_id]);
+                        $atividades_status = $stmt_status->fetchAll(PDO::FETCH_ASSOC);
+
+                        // Consulta 2: Buscar registros de ocorrências
+                        $sql_ocorrencias = "SELECT
+                        oco.oco_data_cad AS data_registro,
+                        CAST(oco.oco_obs AS VARCHAR(MAX)) AS obs,
+                        COALESCE(admin.admin_nome, usuarios.user_nome) AS nome_usuario,
+                        'Ocorrência Registrada' AS tipo_registro,
+                        'ocorrencia' AS tipo_evento,
+                        oco.oco_tipo_ocorrencia AS tipo_ocorrencia_ids,
+                        NULL AS stsolic_id
+                    FROM
+                        ocorrencias AS oco
+                    LEFT JOIN
+                        admin ON admin.admin_id = oco.oco_user_id
+                    LEFT JOIN
+                        usuarios ON usuarios.user_id = oco.oco_user_id
+                    WHERE
+                        oco.oco_solic_id = :solic_id";
+
+                        $stmt_ocorrencias = $conn->prepare($sql_ocorrencias);
+                        $stmt_ocorrencias->execute([':solic_id' => $solic_id]);
+                        $registros_ocorrencia = $stmt_ocorrencias->fetchAll(PDO::FETCH_ASSOC);
+
+                        // Unir e ordenar os resultados
+                        $todos_registros = array_merge($atividades_status, $registros_ocorrencia);
+
+                        // A função de ordenação é crucial aqui
+                        usort($todos_registros, function ($a, $b) {
+                          return strtotime($b['data_registro']) - strtotime($a['data_registro']);
+                        });
+
+                        foreach ($todos_registros as $row) {
+                          $data_registro = htmlspecialchars($row['data_registro']);
+                          $obs = htmlspecialchars_decode($row['obs']);
+                          $nome_usuario = htmlspecialchars($row['nome_usuario']);
+                          $tipo_registro = htmlspecialchars($row['tipo_registro']);
+                          $tipo_evento = htmlspecialchars($row['tipo_evento']);
+
+                          // ÍCONE E NOME
+                          $nome_atv = !empty($nome_usuario) ? $nome_usuario : 'Desconhecido';
+                          $color_atv = 'icon_avatar_azul';
 
                           // PEGA O PRIMEIRO NOME E ÚLTIMO NOME
                           $partesNome = explode(" ", $nome_atv);
                           $primeiroNome = $partesNome[0];
-                          $ultimoNome = end($partesNome);
+                          $ultimoNome = count($partesNome) > 1 ? end($partesNome) : '';
+                          $iniciais_analise = strtoupper(substr($primeiroNome, 0, 1) . substr($ultimoNome, 0, 1));
 
-                          // PEGA A PRIMEIRO E ÚLTIMO LETRA
-                          $firstNameInitial = strtoupper(substr($partesNome[0], 0, 1)); // PEGA A PRIMEIRA LETRA DO PRIMEIRO NOME
-                          $lastNameInitial = strtoupper(substr(end($partesNome), 0, 1)); // PEGA A PRIMEIRA LETRA DO ÚLTIMO NOME
-                          $iniciais_analise = $firstNameInitial . $lastNameInitial; // RETORNA AS INICIAIS
-                      
-                          // CONFIGURAÇÃO DO STATUS
-                          $status_colors = [
-                            1 => 'bg_info_laranja',
-                            2 => 'bg_info_azul',
-                            3 => 'bg_info_roxo',
-                            4 => 'bg_info_verde',
-                            5 => 'bg_info_azul_escuro',
-                            6 => 'bg_info_vermelho'
-                          ];
+                          // CONFIGURAÇÃO DO STATUS E DESCRIÇÃO
+                          $descricao = $obs;
+                          $solic_status_color = 'bg_info_cinza';
+                          $tipo_registro_display = $tipo_registro;
 
-                          $solic_status_color = $status_colors[$sta_an_status] ?? ''; // Usa '' como padrão se não existir
-                      
+                          if ($tipo_evento === 'ocorrencia') {
+                            $solic_status_color = 'bg_info_vermelho';
+                            $tipos_ocorrencia_display = 'N/A';
+
+                            $tipo_ids = trim($row['tipo_ocorrencia_ids']);
+                            if (!empty($tipo_ids)) {
+                              $ids_array = array_filter(array_map('trim', explode(',', $tipo_ids)), 'ctype_digit');
+                              if (count($ids_array) > 0) {
+                                $tipo_ocorrencia_ids_sql = implode(',', $ids_array);
+                                $sql_tipo_oco = "SELECT cto_tipo_ocorrencia FROM conf_tipo_ocorrencia WHERE cto_id IN ($tipo_ocorrencia_ids_sql)";
+                                $stmt_oco = $conn->prepare($sql_tipo_oco);
+                                $stmt_oco->execute();
+                                $tipos_ocorrencia_db = $stmt_oco->fetchAll(PDO::FETCH_COLUMN);
+                                $tipos_ocorrencia_display = implode(' / ', $tipos_ocorrencia_db);
+                              }
+                            }
+                            $descricao = "Tipo de Ocorrência: " . $tipos_ocorrencia_display . ". Observação: " . $obs;
+                          } else {
+                            $stsolic_id = $row['stsolic_id'];
+                            $status_colors = [
+                              1 => 'bg_info_laranja', // EM ELABORAÇÃO
+                              2 => 'bg_info_azul',    // SOLICITADO
+                              3 => 'bg_info_roxo',    // EM ANÁLISE
+                              4 => 'bg_info_verde',   // RESERVADO
+                              5 => 'bg_info_azul_escuro', // AGUARDANDO RESERVA
+                              6 => 'bg_info_vermelho', // INDEFERIDO
+                              7 => 'bg_info_cinza',   // AGUARDANDO CANCELAMENTO
+                              8 => 'bg_info_preto'    // CANCELADA
+                            ];
+                            $solic_status_color = $status_colors[$stsolic_id] ?? 'bg_info_cinza';
+                            $tipo_registro_display = $tipo_registro;
+                          }
                           ?>
-
-                              <div class="line_time acitivity-item pb-3 d-flex">
-                                <div class="flex-shrink-0">
-                                  <div class="icon_avatar <?= $color_atv ?>"><?= $iniciais_analise ?>
-                                  </div>
-                                </div>
-                                <div class="flex-grow-1 ms-3">
-                                  <span class="badge align-middle mb-2 <?= $solic_status_color ?>"><?= $stsolic_status ?></span>
-                                  <h6 class="mb-1">
-                                    <?= date("d/m/Y H:i", strtotime($sta_an_data_upd)) . ' ' . $primeiroNome . '&nbsp;' . $ultimoNome ?>
-                                  </h6>
-                                  <p class="text-muted mt-2">
-                                    <?= htmlspecialchars_decode($sta_an_obs) ?>
-                                  </p>
-                                </div>
-                              </div>
-
-                          <?php }
+                          <div class="line_time acitivity-item pb-3 d-flex">
+                            <div class="flex-shrink-0">
+                              <div class="icon_avatar <?= $color_atv ?>"><?= $iniciais_analise ?></div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                              <span
+                                class="badge align-middle mb-2 <?= $solic_status_color ?>"><?= $tipo_registro_display ?></span>
+                              <h6 class="mb-1">
+                                <?= date("d/m/Y H:i", strtotime($data_registro)) . ' ' . $primeiroNome . '&nbsp;' . $ultimoNome ?>
+                              </h6>
+                              <p class="text-muted mt-2">
+                                <?= $descricao ?>
+                              </p>
+                            </div>
+                          </div>
+                          <?php
+                        }
                       } catch (PDOException $e) {
-                        // echo "Erro: " . $e->getMessage();
-                        echo "Erro ao tentar recuperar os dados";
-                      } ?>
-
+                        echo "Erro: " . $e->getMessage();
+                      }
+                      ?>
                     </div>
                   </div>
                 </div>
@@ -1716,57 +1782,57 @@ ORDER BY reservas.res_data ASC;");
 
 
                             ?>
-                                <tr>
-                                  <th scope="row" class="text-bolder"><?= $oco_codigo ?></th>
-                                  <td scope="row" class="text-uppercase"><?= $tipos_formatados ?></td>
-                                  <td scope="row" class="text-uppercase"><?= $esp_nome_local ?></td>
-                                  <td scope="row" nowrap="nowrap" class="text-uppercase">
-                                    <?= $and_andar ?>
-                                  </td>
-                                  <td scope="row" nowrap="nowrap" class="text-uppercase">
-                                    <?= $pav_pavilhao ?>
-                                  </td>
-                                  <td scope="row" class="text-uppercase"><?= $uni_unidade ?></td>
-                                  <td scope="row" class="text-uppercase"><?= $tipesp_tipo_espaco ?>
-                                  </td>
-                                  <th scope="row" nowrap="nowrap" class="text-bolder"><span
-                                      class="hide_data"><?= date('Ymd', strtotime($res_data)) ?></span><?= htmlspecialchars(date('d/m/Y', strtotime($res_data))) ?>
-                                  </th>
-                                  <th scope="row" nowrap="nowrap" class="text-bolder"><span
-                                      class="hide_data"><?= date('iH', strtotime($oco_hora_inicio_realizado)) ?></span><?= date('H:i', strtotime($oco_hora_inicio_realizado)) ?>
-                                  </th>
-                                  <th scope="row" nowrap="nowrap" class="text-bolder"><span
-                                      class="hide_data"><?= date('iH', strtotime($oco_hora_fim_realizado)) ?></span><?= date('H:i', strtotime($oco_hora_fim_realizado)) ?>
-                                  </th>
-                                  <td scope="row" class="text-uppercase"><?= $admin_nome ?></td>
-                                  <td scope="row" nowrap="nowrap" class="text-bolder"><span
-                                      class="hide_data"><?= date('Ymd', strtotime($oco_data_cad)) ?></span><?= date('d/m/Y H:i', strtotime($oco_data_cad)) ?>
-                                  </td>
-                                  <td class="text-end">
-                                    <div class="dropdown dropdown drop_tabela d-inline-block">
-                                      <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="ri-more-fill align-middle"></i>
-                                      </button>
-                                      <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal"
-                                            data-bs-target="#modal_edit_ocorrencia" data-bs-oco_id="<?= $oco_id ?>"
-                                            data-bs-oco_res_id="<?= $oco_res_id ?>" data-bs-oco_solic_id="<?= $oco_solic_id ?>"
-                                            data-bs-oco_tipo_ocorrencia="<?= $oco_tipo_ocorrencia ?>"
-                                            data-bs-oco_hora_inicio_realizado="<?= date('H:i', strtotime($oco_hora_inicio_realizado)) ?>"
-                                            data-bs-oco_hora_fim_realizado="<?= date('H:i', strtotime($oco_hora_fim_realizado)) ?>"
-                                            data-bs-oco_obs="<?= $oco_obs ?>" title="Editar"><i
-                                              class="fa-regular fa-pen-to-square me-2"></i>
-                                            Editar</a></li>
-                                        <li><a href="../router/web.php?r=Ocorrenc&acao=deletar&oco_id=<?= $oco_id ?>"
-                                            class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
-                                              class="fa-regular fa-trash-can me-2"></i>
-                                            Excluir</a></li>
-                                      </ul>
-                                    </div>
-                                  </td>
-                                </tr>
-                            <?php }
+                            <tr>
+                              <th scope="row" class="text-bolder"><?= $oco_codigo ?></th>
+                              <td scope="row" class="text-uppercase"><?= $tipos_formatados ?></td>
+                              <td scope="row" class="text-uppercase"><?= $esp_nome_local ?></td>
+                              <td scope="row" nowrap="nowrap" class="text-uppercase">
+                                <?= $and_andar ?>
+                              </td>
+                              <td scope="row" nowrap="nowrap" class="text-uppercase">
+                                <?= $pav_pavilhao ?>
+                              </td>
+                              <td scope="row" class="text-uppercase"><?= $uni_unidade ?></td>
+                              <td scope="row" class="text-uppercase"><?= $tipesp_tipo_espaco ?>
+                              </td>
+                              <th scope="row" nowrap="nowrap" class="text-bolder"><span
+                                  class="hide_data"><?= date('Ymd', strtotime($res_data)) ?></span><?= htmlspecialchars(date('d/m/Y', strtotime($res_data))) ?>
+                              </th>
+                              <th scope="row" nowrap="nowrap" class="text-bolder"><span
+                                  class="hide_data"><?= date('iH', strtotime($oco_hora_inicio_realizado)) ?></span><?= date('H:i', strtotime($oco_hora_inicio_realizado)) ?>
+                              </th>
+                              <th scope="row" nowrap="nowrap" class="text-bolder"><span
+                                  class="hide_data"><?= date('iH', strtotime($oco_hora_fim_realizado)) ?></span><?= date('H:i', strtotime($oco_hora_fim_realizado)) ?>
+                              </th>
+                              <td scope="row" class="text-uppercase"><?= $admin_nome ?></td>
+                              <td scope="row" nowrap="nowrap" class="text-bolder"><span
+                                  class="hide_data"><?= date('Ymd', strtotime($oco_data_cad)) ?></span><?= date('d/m/Y H:i', strtotime($oco_data_cad)) ?>
+                              </td>
+                              <td class="text-end">
+                                <div class="dropdown dropdown drop_tabela d-inline-block">
+                                  <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ri-more-fill align-middle"></i>
+                                  </button>
+                                  <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal"
+                                        data-bs-target="#modal_edit_ocorrencia" data-bs-oco_id="<?= $oco_id ?>"
+                                        data-bs-oco_res_id="<?= $oco_res_id ?>" data-bs-oco_solic_id="<?= $oco_solic_id ?>"
+                                        data-bs-oco_tipo_ocorrencia="<?= $oco_tipo_ocorrencia ?>"
+                                        data-bs-oco_hora_inicio_realizado="<?= date('H:i', strtotime($oco_hora_inicio_realizado)) ?>"
+                                        data-bs-oco_hora_fim_realizado="<?= date('H:i', strtotime($oco_hora_fim_realizado)) ?>"
+                                        data-bs-oco_obs="<?= $oco_obs ?>" title="Editar"><i
+                                          class="fa-regular fa-pen-to-square me-2"></i>
+                                        Editar</a></li>
+                                    <li><a href="../router/web.php?r=Ocorrenc&acao=deletar&oco_id=<?= $oco_id ?>"
+                                        class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
+                                          class="fa-regular fa-trash-can me-2"></i>
+                                        Excluir</a></li>
+                                  </ul>
+                                </div>
+                              </td>
+                            </tr>
+                          <?php }
                         } catch (PDOException $e) {
                           // echo "Erro: " . $e->getMessage();
                           echo "Erro ao tentar recuperar os dados";

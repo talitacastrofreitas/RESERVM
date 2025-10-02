@@ -237,11 +237,17 @@ if (empty($_SESSION['session_admin_logged_in'])) {
               <a class="nav-link menu-link" href="#sidebarLanding" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarLanding"><span data-key="t-landing">Solicitações</span>
                 <?php
-                // QUANTIDADE DE SOLICITAÇÃO DE SUBMISSÃO PENDENTES
-                $query = "SELECT * FROM solicitacao_status WHERE solic_sta_status IN (2,3)";
+                //QUANTIDADE DE SOLICITAÇÃO DE SUBMISSÃO PENDENTES
+                $query = "SELECT * FROM solicitacao_status WHERE solic_sta_status IN (2, 3, 5, 7)";
                 $stmt = $conn->prepare($query, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
                 $stmt->execute();
                 $row_count = $stmt->rowCount();
+
+
+
+
+
+
                 ?>
                 <?php if ($row_count) { ?>
                   <div class="cont_sub"><?= $row_count ?></div>
@@ -249,14 +255,36 @@ if (empty($_SESSION['session_admin_logged_in'])) {
               </a>
               <div class="collapse menu-dropdown" id="sidebarLanding">
                 <ul class="nav nav-sm flex-column">
+
+                  <li class="nav-item">
+                    <a href="solicitacoes_elaboracao.php" class="nav-link">Em Elaboração</a>
+                  </li>
+
                   <li class="nav-item">
                     <a href="solicitacoes_submetidas.php" class="nav-link">Solicitado
                       <?php
-                      // QUANTIDADE DE SOLICITAÇÃO DE SUBMISSÃO PENDENTES
-                      $query = "SELECT * FROM solicitacao_status WHERE solic_sta_status IN (2)";
+
+                      // QUANTIDADE DE SOLICITAÇÃO DE SUBMISSÃO PENDENTES PARA O SAAP
+                      $query = "SELECT 
+            COUNT(s.solic_id) 
+          FROM 
+            solicitacao s
+          LEFT JOIN 
+            solicitacao_status ss ON ss.solic_sta_solic_id = s.solic_id
+          LEFT JOIN 
+            cursos c ON c.curs_id = s.solic_curso
+          WHERE 
+            (
+                (ss.solic_sta_status = 2 AND c.curs_matricula_prof IS NULL)
+                OR
+                ss.solic_sta_status IN (5, 7)
+            )";
+
                       $stmt = $conn->prepare($query, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
                       $stmt->execute();
-                      $row_count = $stmt->rowCount();
+
+                      // Altera como a contagem é obtida para queries com COUNT()
+                      $row_count = $stmt->fetchColumn();
                       ?>
                       <?php if ($row_count) { ?>
                         <div class="cont_sub"><?= $row_count ?></div>
@@ -264,18 +292,43 @@ if (empty($_SESSION['session_admin_logged_in'])) {
                     </a>
                   </li>
 
-                  <li class="nav-item">
-                    <a href="solicitacoes_elaboracao.php" class="nav-link">Em Elaboração</a>
-                  </li>
+
 
                   <li class="nav-item">
-                    <a href="solicitacoes_emAnalise.php" class="nav-link">Em Análise
+                    <a href="solicitacoes_emAnalise.php" class="nav-link">Pendências do Coordenador
                       <?php
                       // QUANTIDADE DE SOLICITAÇÃO DE SUBMISSÃO PENDENTES
-                      $query = "SELECT * FROM solicitacao_status WHERE solic_sta_status IN (3)";
+                      // $query = "SELECT * FROM solicitacao_status WHERE solic_sta_status IN (3)";
+                      // $stmt = $conn->prepare($query, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
+                      // $stmt->execute();
+                      // $row_count = $stmt->rowCount();
+                      
+                      // QUANTIDADE DE SOLICITAÇÕES NA FILA DE TRABALHO DO COORDENADOR (VISÃO DO SAAP)
+                      $query = "SELECT 
+                COUNT(s.solic_id) 
+              FROM 
+                solicitacao s
+              LEFT JOIN 
+                solicitacao_status ss ON ss.solic_sta_solic_id = s.solic_id
+              LEFT JOIN 
+                cursos c ON c.curs_id = s.solic_curso -- Necessário para a checagem do coordenador
+              WHERE 
+                -- FILA 1: Solicitações que JÁ estão em 'EM ANÁLISE PELO COORDENADOR' (Status 3)
+                ss.solic_sta_status = 3
+              OR
+                (
+                    -- FILA 2: Solicitações que estão 'SOLICITADO' (Status 2)
+                    ss.solic_sta_status = 2
+                    AND
+                    -- E que POSSUEM um Coordenador para pré-analisar
+                    c.curs_matricula_prof IS NOT NULL
+                )";
+
                       $stmt = $conn->prepare($query, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
                       $stmt->execute();
-                      $row_count = $stmt->rowCount();
+
+                      // Pega o resultado da função COUNT()
+                      $row_count = $stmt->fetchColumn();
                       ?>
                       <?php if ($row_count) { ?>
                         <div class="cont_sub"><?= $row_count ?></div>
@@ -289,9 +342,9 @@ if (empty($_SESSION['session_admin_logged_in'])) {
                   <li class="nav-item">
                     <a href="solicitacoes_indeferidas.php" class="nav-link">Indeferido</a>
                   </li>
-                  <li class="nav-item">
+                  <!-- <li class="nav-item">
                     <a href="solicitacoes_canceladas.php" class="nav-link">Cancelado</a>
-                  </li>
+                  </li> -->
 
 
 
@@ -333,9 +386,9 @@ if (empty($_SESSION['session_admin_logged_in'])) {
               <a class="nav-link menu-link" href="reservas_confirmadas.php"><span>Reservas Confirmadas</span></a>
             </li>
 
-            <li class="nav-item">
+            <!-- <li class="nav-item">
               <a class="nav-link menu-link" href="reservas_canceladas.php"><span>Reservas Canceladas</span></a>
-            </li>
+            </li> -->
 
             <li class="nav-item">
               <a class="nav-link menu-link" href="programacao_diaria.php"><span>Programação Diária</span></a>
