@@ -64,7 +64,7 @@
                           class="navbar d-flex align-items-center justify-content-sm-end justify-content-center p-0 mt-3 mt-sm-0">
 
                           <?php
-                          $sta_solic = array(1, 4, 5, 6);
+                          $sta_solic = array(1, 3, 4, 6, 8);
                           if (!in_array($solic_sta_status, $sta_solic)) {
                             ?>
                             <button class="btn botao_w botao botao_vermelho waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
@@ -77,7 +77,7 @@
                           <?php } ?>
 
                           <?php
-                          $sta_solic = array(1, 4, 5, 6);
+                          $sta_solic = array(1, 3, 4, 6, 8);
                           if (!in_array($solic_sta_status, $sta_solic)) {
                             ?>
                             <button class="btn botao_w botao botao_verde waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
@@ -86,7 +86,7 @@
 
                           <?php } else { ?>
                             <button class="btn botao_w botao botao_disabled waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
-                              type="button">Deferir</button>
+                              type="button">Iniciar Análise</button>
                           <?php } ?>
 
                         </nav>
