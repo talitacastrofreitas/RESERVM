@@ -221,7 +221,19 @@ $turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'
                             $params[':data'] = $dataFiltro;
 
                             // Construção da query SQL em partes
-                            $sql = "SELECT res_hora_inicio, res_hora_fim, curs_curso, cs_semestre, compc_componente, res_componente_atividade, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, esp_nome_local_resumido,pav_pavilhao, and_andar, uni_unidade, res_obs
+        //                     $sql = "SELECT res_hora_inicio, res_hora_fim, curs_curso, cs_semestre, compc_componente, res_componente_atividade, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, esp_nome_local_resumido,pav_pavilhao, and_andar, uni_unidade, res_obs
+        //    FROM reservas
+        //    LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
+        //    LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
+        //    LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
+        //    INNER JOIN espaco ON espaco.esp_id = reservas.res_espaco_id
+        //    INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
+        //    LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
+        //    LEFT JOIN andares ON andares.and_id = espaco.esp_andar
+        //    LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
+        //    WHERE res_data = :data";
+
+        $sql = "SELECT res_hora_inicio, res_hora_fim, curs_curso, cs_semestre, compc_componente, res_componente_atividade, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, esp_nome_local_resumido,pav_pavilhao, and_andar, uni_unidade, res_obs
            FROM reservas
            LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
            LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
@@ -231,7 +243,10 @@ $turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'
            LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
            LEFT JOIN andares ON andares.and_id = espaco.esp_andar
            LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
-           WHERE res_data = :data";
+           -- NOVO JOIN PARA FILTRAR PELO STATUS PRINCIPAL DA SOLICITAÇÃO (RESERVADO = 4)
+           INNER JOIN solicitacao_status AS ss ON ss.solic_sta_solic_id = reservas.res_solic_id
+           WHERE res_data = :data
+           AND ss.solic_sta_status = 4"; // NOVO FILTRO AQUI
 
                             // Filtro por unidade
                             if (!empty($unidadeFiltro)) {

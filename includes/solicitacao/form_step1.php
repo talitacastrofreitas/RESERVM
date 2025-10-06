@@ -1,5 +1,6 @@
 <div class="card-body p-sm-4 p-3">
-  <form class="needs-validation form_solicitacao" method="POST" action="router/web.php?r=Solic" autocomplete="off" novalidate>
+  <form class="needs-validation form_solicitacao" method="POST" action="router/web.php?r=Solic" autocomplete="off"
+    novalidate>
 
     <div class="row grid gx-3">
 
@@ -18,9 +19,8 @@
           <label class="form-label">Curso <span>*</span></label>
           <select class="form-select text-uppercase" name="solic_curso" id="cad_solic_curso" required>
             <option value="" disabled <?= (empty($solic_curso)) ? 'selected' : '' ?>>-- Selecione um Curso --</option>
-            <?php foreach ($result as $res) : ?>
-              <option value="<?= htmlspecialchars($res['curs_id']) ?>"
-                <?= (!empty($solic_curso) && $solic_curso == $res['curs_id']) ? 'selected' : '' ?>>
+            <?php foreach ($result as $res): ?>
+              <option value="<?= htmlspecialchars($res['curs_id']) ?>" <?= (!empty($solic_curso) && $solic_curso == $res['curs_id']) ? 'selected' : '' ?>>
                 <?= htmlspecialchars($res['curs_curso']) ?>
               </option>
             <?php endforeach; ?>
@@ -31,7 +31,7 @@
           const cad_solic_tipo_ativ = document.getElementById("cad_solic_tipo_ativ");
           // const campo_solic_curso = document.getElementById("campo_solic_curso");
 
-          cad_solic_tipo_ativ.addEventListener("change", function() {
+          cad_solic_tipo_ativ.addEventListener("change", function () {
             if (cad_solic_tipo_ativ.value === "1") {
               campo_solic_curso.style.display = "block";
               document.getElementById("cad_solic_curso").required = true;
@@ -51,14 +51,16 @@
       <div class="col-12" id="campo_solic_comp_curric" style="display: none;">
         <div class="form_margem">
           <label class="form-label">Componente Curricular <span>*</span></label>
-          <div class="label_info label_info_verde mt-0">Os componentes curriculares estão ordenados por semestre e ordem alfabética.</div>
-          <select class="form-select text-uppercase" name="solic_comp_curric" id="cad_solic_comp_curric" data-valor="<?= $compc_id ?>">
+          <div class="label_info label_info_verde mt-0">Os componentes curriculares estão ordenados por semestre e ordem
+            alfabética.</div>
+          <select class="form-select text-uppercase" name="solic_comp_curric" id="cad_solic_comp_curric"
+            data-valor="<?= $compc_id ?>">
             <option value="<?= $compc_id ?>"><?= $compc_componente ?></option>
           </select>
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
         <script>
-          $(document).ready(function() {
+          $(document).ready(function () {
             // Inicializa o select2
             $('#cad_solic_curso').select2();
 
@@ -75,7 +77,7 @@
             verificarSelecao();
 
             // Adiciona o evento de mudança
-            $('#cad_solic_curso').on('change', function() {
+            $('#cad_solic_curso').on('change', function () {
               verificarSelecao();
             });
           });
@@ -93,8 +95,8 @@
           } ?>
           <label class="form-label">Nome do Curso <span>*</span></label>
           <select class="form-select text-uppercase" name="solic_nome_curso" id="cad_solic_nome_curso">
-            <option selected value="<?= $cexc_id  ?>"><?= $cexc_curso ?></option>
-            <?php foreach ($result as $res) : ?>
+            <option selected value="<?= $cexc_id ?>"><?= $cexc_curso ?></option>
+            <?php foreach ($result as $res): ?>
               <option value="<?= $res['cexc_id'] ?>"><?= $res['cexc_curso'] ?></option>
             <?php endforeach; ?>
           </select>
@@ -105,7 +107,8 @@
       <div class="col-12" id="campo_solic_nome_curso_text" style="display: none;">
         <div class="form_margem">
           <label class="form-label">Nome do Curso <span>*</span></label>
-          <input type="text" class="form-control text-uppercase" name="solic_nome_curso_text" id="cad_solic_nome_curso_text" value="<?= $solic_nome_curso_text ?>" maxlength="200">
+          <input type="text" class="form-control text-uppercase" name="solic_nome_curso_text"
+            id="cad_solic_nome_curso_text" value="<?= $solic_nome_curso_text ?>" maxlength="200">
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
       </div>
@@ -113,7 +116,8 @@
       <div class="col-12" id="campo_solic_nome_atividade" style="display: none;">
         <div class="form_margem">
           <label class="form-label">Nome da Atividade <span>*</span></label>
-          <input type="text" class="form-control text-uppercase" name="solic_nome_atividade" id="cad_solic_nome_atividade" value="<?= $solic_nome_atividade ?>" maxlength="200">
+          <input type="text" class="form-control text-uppercase" name="solic_nome_atividade"
+            id="cad_solic_nome_atividade" value="<?= $solic_nome_atividade ?>" maxlength="200">
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
       </div>
@@ -121,7 +125,8 @@
       <div class="col-12" id="campo_solic_nome_comp_ativ" style="display: none;">
         <div class="form_margem">
           <label class="form-label">Nome do Componente/Atividade <span>*</span></label>
-          <input type="text" class="form-control text-uppercase" name="solic_nome_comp_ativ" id="cad_solic_nome_comp_ativ" value="<?= $solic_nome_comp_ativ ?>" maxlength="200">
+          <input type="text" class="form-control text-uppercase" name="solic_nome_comp_ativ"
+            id="cad_solic_nome_comp_ativ" value="<?= $solic_nome_comp_ativ ?>" maxlength="200">
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
       </div>
@@ -138,8 +143,8 @@
           } ?>
           <label class="form-label">Semestre <span>*</span></label>
           <select class="form-select text-uppercase" name="solic_semestre" id="cad_solic_semestre">
-            <option selected value="<?= $cs_id  ?>"><?= $cs_semestre ?></option>
-            <?php foreach ($result as $res) : ?>
+            <option selected value="<?= $cs_id ?>"><?= $cs_semestre ?></option>
+            <?php foreach ($result as $res): ?>
               <option value="<?= $res['cs_id'] ?>"><?= $res['cs_semestre'] ?></option>
             <?php endforeach; ?>
           </select>
@@ -150,7 +155,8 @@
       <div class="col-md-6" id="campo_solic_nome_prof_resp" style="display: none;">
         <div class="form_margem">
           <label class="form-label">Nome do Professor/Responsável <span>*</span></label>
-          <input type="text" class="form-control text-uppercase" name="solic_nome_prof_resp" id="cad_solic_nome_prof_resp" value="<?= $solic_nome_prof_resp ?>" maxlength="200">
+          <input type="text" class="form-control text-uppercase" name="solic_nome_prof_resp"
+            id="cad_solic_nome_prof_resp" value="<?= $solic_nome_prof_resp ?>" maxlength="200">
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
       </div>
@@ -158,7 +164,8 @@
       <div class="col-md-6" id="campo_solic_contato" style="display: none;">
         <div class="form_margem">
           <label class="form-label">Telefone para contato <span>*</span></label>
-          <input type="text" class="form-control cel_tel" name="solic_contato" id="cad_solic_contato" value="<?= $solic_contato ?>">
+          <input type="text" class="form-control cel_tel" name="solic_contato" id="cad_solic_contato"
+            value="<?= $solic_contato ?>">
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
       </div>
@@ -168,11 +175,13 @@
           <p class="label_asterisco me-auto my-0"><span>*</span> Campo obrigatório</p>
 
           <?php
-          $sta_solic = array(3, 5, 6);
+          $sta_solic = array(3, 4, 5, 6, 7, 8);
           if (in_array($solic_sta_status, $sta_solic)) {
-          ?><a class="btn botao_disabled btn-label right ms-auto nexttab nexttab waves-effect"><i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Próximo</a>
+            ?><a class="btn botao_disabled btn-label right ms-auto nexttab nexttab waves-effect"><i
+                class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Próximo</a>
           <?php } else { ?>
-            <button type="submit" class="btn botao_azul_escuro btn-label right ms-auto nexttab nexttab waves-effect"><i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Próximo</button>
+            <button type="submit" class="btn botao_azul_escuro btn-label right ms-auto nexttab nexttab waves-effect"><i
+                class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Próximo</button>
           <?php } ?>
 
         </div>
@@ -182,7 +191,7 @@
 </div>
 
 <script>
-  $(document).ready(function() {
+  $(document).ready(function () {
     function toggleFields() {
       var tipoAtiv = $('#cad_solic_tipo_ativ').val();
       var curso = $('#cad_solic_curso').val();
@@ -244,7 +253,7 @@
       }
     }
 
-    $('#cad_solic_tipo_ativ, #cad_solic_curso, #cad_solic_comp_curric, #cad_solic_nome_curso, #campo_solic_nome_curso_text').change(function() {
+    $('#cad_solic_tipo_ativ, #cad_solic_curso, #cad_solic_comp_curric, #cad_solic_nome_curso, #campo_solic_nome_curso_text').change(function () {
       $('[id^="campo_"]').hide().find('input, select').prop('required', false);
       toggleFields();
     });
@@ -254,7 +263,7 @@
 </script>
 
 <script>
-  $(document).ready(function() {
+  $(document).ready(function () {
     function carregarComponentes(cursoId, componenteSelecionado) {
       if (cursoId !== "") {
         $.ajax({
@@ -263,7 +272,7 @@
           data: {
             curso_id: cursoId
           },
-          success: function(data) {
+          success: function (data) {
             $('#cad_solic_comp_curric').html(data);
 
             // Se houver um componente já selecionado, definir ele no select
@@ -278,7 +287,7 @@
     }
 
     // Evento quando o curso for alterado manualmente pelo usuário
-    $('#cad_solic_curso').change(function() {
+    $('#cad_solic_curso').change(function () {
       var cursoId = $(this).val();
       carregarComponentes(cursoId, null);
     });

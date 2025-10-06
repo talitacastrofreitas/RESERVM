@@ -1,4 +1,38 @@
-<?php include 'includes/header.php'; ?>
+<?php include 'includes/header.php';
+
+
+// BOTÃO LIMPAR
+
+if (isset($_GET['limpar']) && $_GET['limpar'] === 'true') {
+  // Limpa os filtros armazenados na sessão
+  unset($_SESSION['filtros_programacao_diaria']);
+  // Redireciona para a mesma página sem parâmetros na URL
+  header("Location: programacao_diaria.php");
+  exit();
+}
+
+// --- Lógica para gerenciar os filtros e manter o estado ---
+
+// 1. Recebe os dados do formulário, se houver submissão
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET)) {
+  $_SESSION['filtros_programacao_diaria'] = [
+    'data' => $_GET['data'] ?? date('Y-m-d'),
+    'unidade' => $_GET['unidade'] ?? '',
+    'turno' => $_GET['turno'] ?? ''
+  ];
+}
+
+// 2. Tenta pegar os valores na seguinte ordem:
+//    a) da URL (se o formulário foi submetido);
+//    b) da sessão (se a página foi atualizada);
+//    c) a data de hoje como padrão.
+$dataFiltro = $_SESSION['filtros_programacao_diaria']['data'] ?? $_GET['data'] ?? date('Y-m-d');
+$unidadeFiltro = $_SESSION['filtros_programacao_diaria']['unidade'] ?? $_GET['unidade'] ?? '';
+$turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'] ?? '';
+
+
+
+?>
 
 <div class="profile-foreground position-relative mx-n4 mt-n4">
   <div class="profile-wid-bg">
@@ -28,7 +62,8 @@
           <div class="row g-3">
 
             <div class="col-md-3 col-lg-3 col-xl-4">
-              <input type="date" class="form-control flatpickr-input" name="data" id="data" value="<?= htmlspecialchars($_GET['data'] ?? date('Y-m-d')) ?>">
+              <input type="date" class="form-control flatpickr-input" name="data" id="data"
+                value="<?= htmlspecialchars($dataFiltro) ?>">
               <script>
                 flatpickr("#data", {
                   dateFormat: "Y-m-d", // formato do valor REAL do input (enviado na query)
@@ -42,13 +77,15 @@
             <div class="col-md-3 col-lg-3">
               <div>
                 <select class="form-select text-uppercase" name="unidade">
-                  <option selected disabled value="">CAMPUS</option>
+                  <option value="" <?= ($unidadeFiltro === '') ? 'selected' : '' ?>>TODOS OS CAMPUS
+                  </option>
                   <?php
                   $sql = $conn->query("SELECT uni_id, uni_unidade FROM unidades ORDER BY uni_unidade");
                   while ($propc = $sql->fetch(PDO::FETCH_ASSOC)) {
-                    $selected = ($_GET['unidade'] ?? '') == $propc['uni_id'] ? 'selected' : '';
+                    $selected = ($unidadeFiltro == $propc['uni_id']) ? 'selected' : '';
                     echo "<option value='{$propc['uni_id']}' $selected>{$propc['uni_unidade']}</option>";
                   }
+
                   ?>
                 </select>
               </div>
@@ -57,21 +94,25 @@
             <div class="col-md-3 col-lg-3">
               <div>
                 <select class="form-select" name="turno">
-                  <option selected disabled value="">TURNO</option>
+                  <option value="" <?= ($turnoFiltro === '') ? 'selected' : '' ?>>TODOS OS TURNOS
+                  </option>
                   <?php
+
                   $sql = $conn->query("SELECT cturn_id, cturn_turno FROM conf_turno ORDER BY cturn_id");
                   while ($propc = $sql->fetch(PDO::FETCH_ASSOC)) {
-                    $selected = ($_GET['turno'] ?? '') == $propc['cturn_turno'] ? 'selected' : '';
+                    $selected = ($turnoFiltro == $propc['cturn_turno']) ? 'selected' : '';
                     echo "<option value='{$propc['cturn_turno']}' $selected>{$propc['cturn_turno']}</option>";
                   }
                   ?>
+
                 </select>
               </div>
             </div>
 
             <div class="col-md-3 col-lg-3 col-xl-2 d-flex gap-1">
               <button type="submit" class="btn botao botao_azul_escuro w-100">Filtrar</button>
-              <a href="programacao_diaria.php" class="btn botao botao_cinza waves-effect w-100 ms-2">Limpar</a>
+              <a href="programacao_diaria.php?limpar=true"
+                class="btn botao botao_cinza waves-effect w-100 ms-2">Limpar</a>
             </div>
 
           </div>
@@ -136,6 +177,8 @@
               $sql = "SELECT res_id, res_status, res_data, res_hora_inicio, res_hora_fim, curs_curso, cs_semestre, compc_componente, res_componente_atividade, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, esp_nome_local_resumido,pav_pavilhao, and_andar, uni_unidade, res_obs, user_id, user_nome, solicitacao.solic_id
                       FROM reservas
                       INNER JOIN solicitacao ON solicitacao.solic_id = reservas.res_solic_id
+                      -- NOVO JOIN para filtrar apenas RESERVADO (Status 4)
+                      INNER JOIN solicitacao_status AS ss ON ss.solic_sta_solic_id = solicitacao.solic_id
                       LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
                       LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
                       LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
@@ -146,27 +189,32 @@
                       LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
                       INNER JOIN usuarios ON usuarios.user_id = solicitacao.solic_cad_por
                       WHERE user_id = :user_id 
+                      AND ss.solic_sta_status = 4 
+                      -- A condição original de res_status (cancelamento) não é mais necessária, mas mantida:
                       AND (res_status IS NULL OR res_status NOT IN (8))
-                      -- WHERE res_data = :data
                       ";
 
-              // Filtro por data
-              if (!empty($_GET['data'])) {
+              // Filtro por data (usando $dataFiltro da lógica inicial)
+              if (!empty($dataFiltro)) {
                 $sql .= " AND res_data = :res_data";
-                $params[':res_data'] = $_GET['data'];
+                $params[':res_data'] = $dataFiltro;
               }
 
-              // Filtro por unidade
-              if (!empty($_GET['unidade'])) {
+              // Filtro por unidade (usando $unidadeFiltro da lógica inicial)
+              if (!empty($unidadeFiltro)) {
                 $sql .= " AND esp_unidade = :unidade";
-                $params[':unidade'] = $_GET['unidade'];
+                $params[':unidade'] = $unidadeFiltro;
               }
 
-              // Filtro por turno
-              if (!empty($_GET['turno'])) {
+              // Filtro por turno (usando $turnoFiltro da lógica inicial)
+              if (!empty($turnoFiltro)) {
                 $sql .= " AND res_turno = :turno";
-                $params[':turno'] = $_GET['turno'];
+                $params[':turno'] = $turnoFiltro;
               }
+
+              // Adiciona ordenação
+              $sql .= " ORDER BY res_hora_inicio, uni_unidade, esp_nome_local_resumido";
+
 
               // Agora sim: preparar e executar com a SQL montada
               $stmt = $conn->prepare($sql);
@@ -176,21 +224,21 @@
                 $res_id = $row['res_id']; // Variável crucial para o cancelamento
                 $solic_id = $row['solic_id'];
 
-                $res_data                      = $row['res_data'];
-                $res_hora_inicio               = $row['res_hora_inicio'];
-                $res_hora_fim                  = $row['res_hora_fim'];
-                $curs_curso                    = $row['curs_curso'];
-                $cs_semestre                   = $row['cs_semestre'];
-                $compc_componente              = $row['compc_componente'];
-                $res_componente_atividade      = $row['res_componente_atividade'];
+                $res_data = $row['res_data'];
+                $res_hora_inicio = $row['res_hora_inicio'];
+                $res_hora_fim = $row['res_hora_fim'];
+                $curs_curso = $row['curs_curso'];
+                $cs_semestre = $row['cs_semestre'];
+                $compc_componente = $row['compc_componente'];
+                $res_componente_atividade = $row['res_componente_atividade'];
                 $res_componente_atividade_nome = $row['res_componente_atividade_nome'];
-                $res_nome_atividade            = $row['res_nome_atividade'];
-                $res_modulo                    = $row['res_modulo'];
-                $res_professor                 = $row['res_professor'];
-                $esp_nome_local_resumido       = $row['esp_nome_local_resumido'];
-                $pav_pavilhao                  = $row['pav_pavilhao'];
-                $and_andar                     = $row['and_andar'];
-                $uni_unidade                   = $row['uni_unidade'];
+                $res_nome_atividade = $row['res_nome_atividade'];
+                $res_modulo = $row['res_modulo'];
+                $res_professor = $row['res_professor'];
+                $esp_nome_local_resumido = $row['esp_nome_local_resumido'];
+                $pav_pavilhao = $row['pav_pavilhao'];
+                $and_andar = $row['and_andar'];
+                $uni_unidade = $row['uni_unidade'];
 
                 // CONFIGURAÇÃO COMPONENTES
                 if (!empty($res_componente_atividade)) {
@@ -220,9 +268,11 @@
                   $classe_link = 'text-danger';
                 }
 
-            ?>
+                ?>
                 <tr>
-                  <th scope="row" nowrap="nowrap"><span class="hide_data"><?= date('Ymd', strtotime($res_data)) ?></span><?= htmlspecialchars(date('d/m/Y', strtotime($res_data))) ?></th>
+                  <th scope="row" nowrap="nowrap"><span
+                      class="hide_data"><?= date('Ymd', strtotime($res_data)) ?></span><?= htmlspecialchars(date('d/m/Y', strtotime($res_data))) ?>
+                  </th>
                   <th scope="row" class="fw-bold"><?= htmlspecialchars(date('H:i', strtotime($res_hora_inicio))) ?></th>
                   <th scope="row" class="fw-bold"><?= htmlspecialchars(date('H:i', strtotime($res_hora_fim))) ?></th>
                   <td scope="row"><?= htmlspecialchars($curs_curso) ?></td>
@@ -237,7 +287,8 @@
 
                   <td class="text-end">
                     <div class="dropdown dropdown drop_tabela d-inline-block">
-                      <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
                         <i class="ri-more-fill align-middle"></i>
                       </button>
                       <ul class="dropdown-menu dropdown-menu-end">
@@ -246,7 +297,8 @@
 
 
                         <li>
-                          <a href="#" class="dropdown-item <?= $classe_link ?>" data-bs-toggle="modal" data-bs-target="#modal_cancelar_reserva_unica" data-res-id="<?= htmlspecialchars($res_id) ?>">
+                          <a href="#" class="dropdown-item <?= $classe_link ?>" data-bs-toggle="modal"
+                            data-bs-target="#modal_cancelar_reserva_unica" data-res-id="<?= htmlspecialchars($res_id) ?>">
                             <i class="fa-solid fa-ban me-2"></i> Cancelar Reserva
                           </a>
                         </li>
@@ -258,7 +310,7 @@
                   </td>
 
                 </tr>
-            <?php }
+              <?php }
             } catch (PDOException $e) {
               // echo "Erro: " . $e->getMessage();
               echo "Erro ao tentar recuperar os dados" . $e->getMessage();
@@ -285,9 +337,9 @@
 <?php include 'includes/modal/modal_cancelar_reserva.php'; ?>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     var cancelReservaUnicaModal = document.getElementById('modal_cancelar_reserva_unica');
-    cancelReservaUnicaModal.addEventListener('show.bs.modal', function(event) {
+    cancelReservaUnicaModal.addEventListener('show.bs.modal', function (event) {
       var button = event.relatedTarget;
       var resId = button.getAttribute('data-res-id');
       var modalResIdInput = cancelReservaUnicaModal.querySelector('#res_id_cancelar');

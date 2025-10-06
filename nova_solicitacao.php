@@ -59,7 +59,7 @@ if (isset($_GET['i'])) {
           3 => '100%', // Adicionado para a etapa 3
         ];
 
-        $current_step = isset($_GET['st']) ? (int)$_GET['st'] : 1;
+        $current_step = isset($_GET['st']) ? (int) $_GET['st'] : 1;
         $color_barra = $color_map[$current_step] ?? '0%';
         ?>
 
@@ -68,18 +68,31 @@ if (isset($_GET['i'])) {
 
           <div id="custom-progress-bar" class="progress-nav step_prop mb-4">
             <div class="progress" style="height: 1px;">
-              <div class="progress-bar" role="progressbar" style="width: <?= $color_barra ?>;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar" role="progressbar" style="width: <?= $color_barra ?>;" aria-valuenow="0"
+                aria-valuemin="0" aria-valuemax="100"></div>
             </div>
 
             <ul class="nav nav-pills progress-bar-tab custom-nav" role="tablist">
               <li class="nav-item" role="presentation">
-                <button onclick="location.href='nova_solicitacao.php?st=1&i=<?= $_GET['i'] ?>'" class="nav-link rounded-pill <?= ($current_step >= 1) ? 'active' : ''; ?>" data-progressbar="custom-progress-bar" id="pills-gen-info-tab" data-bs-toggle="pill" data-bs-target="#pills-gen-info" type="button" role="tab" aria-controls="pills-gen-info" aria-selected="true" data-position="0"><i class="fa-solid fa-check"></i></button>
+                <button onclick="location.href='nova_solicitacao.php?st=1&i=<?= $_GET['i'] ?>'"
+                  class="nav-link rounded-pill <?= ($current_step >= 1) ? 'active' : ''; ?>"
+                  data-progressbar="custom-progress-bar" id="pills-gen-info-tab" data-bs-toggle="pill"
+                  data-bs-target="#pills-gen-info" type="button" role="tab" aria-controls="pills-gen-info"
+                  aria-selected="true" data-position="0"><i class="fa-solid fa-check"></i></button>
               </li>
               <li class="nav-item" role="presentation">
-                <button onclick="location.href='nova_solicitacao.php?st=2&i=<?= $_GET['i'] ?>'" class="nav-link rounded-pill <?= ($current_step >= 2) ? 'active' : ''; ?>" data-progressbar="custom-progress-bar" id="pills-success-tab" data-bs-toggle="pill" data-bs-target="#pills-success" type="button" role="tab" aria-controls="pills-success" aria-selected="false" data-position="1" tabindex="-1" <?php echo ($solic_etapa == 0) ? 'disabled' : ''; ?>><?php echo ($solic_etapa >= 2 || $current_step > 1) ? '<i class="fa-solid fa-check"></i>' : '2'; ?></button>
+                <button onclick="location.href='nova_solicitacao.php?st=2&i=<?= $_GET['i'] ?>'"
+                  class="nav-link rounded-pill <?= ($current_step >= 2) ? 'active' : ''; ?>"
+                  data-progressbar="custom-progress-bar" id="pills-success-tab" data-bs-toggle="pill"
+                  data-bs-target="#pills-success" type="button" role="tab" aria-controls="pills-success"
+                  aria-selected="false" data-position="1" tabindex="-1" <?php echo ($solic_etapa == 0) ? 'disabled' : ''; ?>><?php echo ($solic_etapa >= 2 || $current_step > 1) ? '<i class="fa-solid fa-check"></i>' : '2'; ?></button>
               </li>
               <li class="nav-item" role="presentation">
-                <button onclick="location.href='nova_solicitacao.php?st=3&i=<?= $_GET['i'] ?>'" class="nav-link rounded-pill <?= ($current_step >= 3) ? 'active' : ''; ?>" data-progressbar="custom-progress-bar" id="pills-success-tab" data-bs-toggle="pill" data-bs-target="#pills-success" type="button" role="tab" aria-controls="pills-success" aria-selected="false" data-position="2" tabindex="-1" <?php echo ($solic_etapa < 2) ? 'disabled' : ''; ?>><?php echo ($solic_etapa >= 3 || $current_step > 2) ? '<i class="fa-solid fa-check"></i>' : '3'; ?></button>
+                <button onclick="location.href='nova_solicitacao.php?st=3&i=<?= $_GET['i'] ?>'"
+                  class="nav-link rounded-pill <?= ($current_step >= 3) ? 'active' : ''; ?>"
+                  data-progressbar="custom-progress-bar" id="pills-success-tab" data-bs-toggle="pill"
+                  data-bs-target="#pills-success" type="button" role="tab" aria-controls="pills-success"
+                  aria-selected="false" data-position="2" tabindex="-1" <?php echo ($solic_etapa < 2) ? 'disabled' : ''; ?>><?php echo ($solic_etapa >= 3 || $current_step > 2) ? '<i class="fa-solid fa-check"></i>' : '3'; ?></button>
               </li>
             </ul>
           </div>
@@ -88,18 +101,28 @@ if (isset($_GET['i'])) {
 
           <div id="custom-progress-bar" class="progress-nav step_prop mb-4">
             <div class="progress" style="height: 1px;">
-              <div class="progress-bar" role="progressbar" style="width: <?= $color_barra ?>;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar" role="progressbar" style="width: <?= $color_barra ?>;" aria-valuenow="0"
+                aria-valuemin="0" aria-valuemax="100"></div>
             </div>
 
             <ul class="nav nav-pills progress-bar-tab custom-nav" role="tablist">
               <li class="nav-item" role="presentation">
-                <button onclick="location.href='nova_solicitacao.php'" class=" nav-link rounded-pill active" data-progressbar="custom-progress-bar" id="pills-gen-info-tab" data-bs-toggle="pill" data-bs-target="#pills-gen-info" type="button" role="tab" aria-controls="pills-gen-info" aria-selected="true" data-position="0">1</button>
+                <button onclick="location.href='nova_solicitacao.php'" class=" nav-link rounded-pill active"
+                  data-progressbar="custom-progress-bar" id="pills-gen-info-tab" data-bs-toggle="pill"
+                  data-bs-target="#pills-gen-info" type="button" role="tab" aria-controls="pills-gen-info"
+                  aria-selected="true" data-position="0">1</button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar" id="pills-info-desc-tab" data-bs-toggle="pill" data-bs-target="#pills-info-desc" type="button" role="tab" aria-controls="pills-info-desc" aria-selected="false" data-position="1" tabindex="-1" disabled="">2</button>
+                <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar" id="pills-info-desc-tab"
+                  data-bs-toggle="pill" data-bs-target="#pills-info-desc" type="button" role="tab"
+                  aria-controls="pills-info-desc" aria-selected="false" data-position="1" tabindex="-1"
+                  disabled="">2</button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar" id="pills-info-desc-tab" data-bs-toggle="pill" data-bs-target="#pills-info-desc" type="button" role="tab" aria-controls="pills-info-desc" aria-selected="false" data-position="1" tabindex="-1" disabled="">3</button>
+                <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar" id="pills-info-desc-tab"
+                  data-bs-toggle="pill" data-bs-target="#pills-info-desc" type="button" role="tab"
+                  aria-controls="pills-info-desc" aria-selected="false" data-position="1" tabindex="-1"
+                  disabled="">3</button>
               </li>
             </ul>
           </div>
@@ -168,6 +191,12 @@ if (isset($_GET['i'])) {
 
     </div>
   </div>
+
+
+
+
+
+
 </div> <?php include 'includes/footer.php'; ?>
 
 <script src="includes/select/select2.js"></script>

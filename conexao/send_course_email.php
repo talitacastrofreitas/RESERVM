@@ -50,20 +50,20 @@ function sendCourseNotificationEmail($conn, $curs_id, $subject, $message, $view_
     $mail = new PHPMailer(true); // true habilita exceções
 
     try {
-        // Configurações do Servidor SMTP (Suas configurações do Gmail)
-        // $mail->SMTPDebug = SMTP::DEBUG_OFF; // Mantenha OFF em produção. Use SMTP::DEBUG_SERVER para depurar.
-        $mail->SMTPDebug = SMTP::DEBUG_SERVER; // Mude para DEBUG_SERVER
-        $mail->CharSet = "UTF-8";
-        $mail->isSMTP();
-        $mail->SMTPAuth = true;
-        // Ajuste para Gmail: porta 587 com STARTTLS (TLS explícito)
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-        $mail->Host = 'smtp.gmail.com';
-        $mail->Username = 'talitacastrofreitas@gmail.com';
-        $mail->Password = 'vmvottyedfzursuw'; // <<< SUBSTITUA PELA SUA SENHA REAL OU SENHA DE APLICATIVO DO GMAIL
 
-        $mail->setFrom('talitacastrofreitas@gmail.com', 'RESERVM - Sistema de Reservas de Espaços');
+        $mail->isSMTP();
+        $mail->SMTPDebug = SMTP::DEBUG_SERVER; // DEBUG_SERVER para desenvolvimento, DEBUG_OFF em produção
+        $mail->CharSet = "UTF-8";
+        $mail->SMTPAuth = true;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // TLS explícito (STARTTLS)
+        $mail->Port = 587; // Porta correta para STARTTLS
+        $mail->Host = 'smtp-mail.outlook.com'; // Servidor SMTP do Outlook
+        $mail->Username = 'dev-noreply@bahiana.edu.br';
+        $mail->Password = 'F#370732640306uz'; // Coloque a senha real ou senha de aplicativo
+
+        $mail->setFrom('dev-noreply@bahiana.edu.br', 'RESERVM - Sistema de Reservas de Espaços');
+
+
 
         // Adicionar os destinatários (coordenadores)
         foreach ($coordenador_emails as $email) {
@@ -73,7 +73,7 @@ function sendCourseNotificationEmail($conn, $curs_id, $subject, $message, $view_
         // Conteúdo do E-mail
         $mail->isHTML(true); // Definir formato de e-mail como HTML
         $mail->Subject = $subject;
-        $mail->Body    = $message;
+        $mail->Body = $message;
         $mail->AltBody = strip_tags($message); // Versão em texto plano
 
         $mail->send();

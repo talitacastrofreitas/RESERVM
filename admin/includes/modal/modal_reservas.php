@@ -1,4 +1,13 @@
 <?php
+// // BUSCAS AS HORAS DE FUNCIONAMENTO PARA LIMITAR NOS CAMPOS DE HORAS DE INÍCIO E FIM
+// $sql = "SELECT MIN(chf_hora_inicio) AS hora_inicio, MAX(chf_hora_fim) AS hora_fim FROM conf_hora_funcionamento";
+// $stmt = $conn->prepare($sql);
+// $stmt->execute();
+// $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// $limit_hora_inicio = substr($result['hora_inicio'], 0, 5); // "07:00"
+// $limit_hora_fim = substr($result['hora_fim'], 0, 5);       // "21:00"
+
 // BUSCAS AS HORAS DE FUNCIONAMENTO PARA LIMITAR NOS CAMPOS DE HORAS DE INÍCIO E FIM
 $sql = "SELECT MIN(chf_hora_inicio) AS hora_inicio, MAX(chf_hora_fim) AS hora_fim FROM conf_hora_funcionamento";
 $stmt = $conn->prepare($sql);
@@ -7,6 +16,54 @@ $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
 $limit_hora_inicio = substr($result['hora_inicio'], 0, 5); // "07:00"
 $limit_hora_fim = substr($result['hora_fim'], 0, 5);       // "21:00"
+
+// --- INÍCIO DO CÓDIGO DE PRÉ-PREENCHIMENTO ---
+
+// 1. Obtenha o ID da solicitação diretamente da URL
+$solicId = $_GET['i'];
+
+// 2. Consulta para obter o status das aulas e as datas fixas
+$stmt = $conn->prepare("SELECT 
+    solic_ap_campus, solic_at_campus, 
+    solic_ap_aula_pratica, solic_at_aula_teorica,
+    solic_ap_tipo_reserva, solic_at_tipo_reserva,
+    solic_ap_data_inicio, solic_ap_data_fim, 
+    solic_at_data_inicio, solic_at_data_fim
+    FROM solicitacao WHERE solic_id = ?");
+$stmt->execute([$solicId]);
+$solicitacao_dados = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// 3. Extrair variáveis
+$solic_ap_aula_pratica = $solicitacao_dados['solic_ap_aula_pratica'] ?? 0;
+$solic_at_aula_teorica = $solicitacao_dados['solic_at_aula_teorica'] ?? 0;
+$solic_ap_tipo_reserva = $solicitacao_dados['solic_ap_tipo_reserva'] ?? 0;
+$solic_at_tipo_reserva = $solicitacao_dados['solic_at_tipo_reserva'] ?? 0;
+$solic_ap_data_inicio = $solicitacao_dados['solic_ap_data_inicio'] ?? '';
+$solic_ap_data_fim = $solicitacao_dados['solic_ap_data_fim'] ?? '';
+$solic_at_data_inicio = $solicitacao_dados['solic_at_data_inicio'] ?? '';
+$solic_at_data_fim = $solicitacao_dados['solic_at_data_fim'] ?? '';
+
+// 4. Lógica de Pré-preenchimento Condicional
+$data_inicio_reserva = '';
+$data_fim_reserva = '';
+
+// Apenas Aula Prática (AP) E Reserva Fixa (Tipo 2)?
+$ap_is_sole_fixed = ($solic_ap_aula_pratica == 1 && $solic_at_aula_teorica == 0 && $solic_ap_tipo_reserva == 2);
+
+// Apenas Aula Teórica (AT) E Reserva Fixa (Tipo 2)?
+$at_is_sole_fixed = ($solic_at_aula_teorica == 1 && $solic_ap_aula_pratica == 0 && $solic_at_tipo_reserva == 2);
+
+if ($ap_is_sole_fixed) {
+    $data_inicio_reserva = $solic_ap_data_inicio;
+    $data_fim_reserva = $solic_ap_data_fim;
+} elseif ($at_is_sole_fixed) {
+    $data_inicio_reserva = $solic_at_data_inicio;
+    $data_fim_reserva = $solic_at_data_fim;
+}
+// Se houver ambos os tipos de aula, $data_inicio_reserva e $data_fim_reserva permanecem vazios.
+
+// --- CONTINUAÇÃO DO CÓDIGO DO CAMPUS (O bloco `try` abaixo foi adaptado para usar $solicitacao_dados) ---
+
 ?>
 
 <div class="modal fade modal_padrao" id="modal_cad_espaco" aria-hidden="true" tabindex="-1">
@@ -68,18 +125,15 @@ $limit_hora_fim = substr($result['hora_fim'], 0, 5);       // "21:00"
                             <div class="col-xl-3">
                                 <?php
                                 try {
-                                    // Obtenha o ID da solicitação diretamente da URL
-                                    $solicId = $_GET['i'];
+                                    $solic_ap_campus = $solicitacao_dados['solic_ap_campus'] ?? null;
+                                    $solic_at_campus = $solicitacao_dados['solic_at_campus'] ?? null;
 
-                                    // Consulta para obter o campus das aulas práticas e teóricas
-                                    $stmt = $conn->prepare("SELECT solic_ap_campus, solic_at_campus FROM solicitacao WHERE solic_id = ?");
-                                    $stmt->execute([$solicId]);
-                                    $solicitacao = $stmt->fetch(PDO::FETCH_ASSOC);
 
                                     $selected_campus = '';
-                                    if ($solicitacao) {
-                                        $solic_ap_campus = $solicitacao['solic_ap_campus'];
-                                        $solic_at_campus = $solicitacao['solic_at_campus'];
+
+                                    if ($solicitacao_dados) {
+                                        $solic_ap_campus = $solicitacao_dados['solic_ap_campus'];
+                                        $solic_at_campus = $solicitacao_dados['solic_at_campus'];
 
                                         if (!empty($solic_ap_campus) && ($solic_ap_campus == $solic_at_campus || empty($solic_at_campus))) {
                                             $selected_campus = $solic_ap_campus;
@@ -93,7 +147,6 @@ $limit_hora_fim = substr($result['hora_fim'], 0, 5);       // "21:00"
                                     $result = $sql->fetchAll(PDO::FETCH_ASSOC);
 
                                 } catch (PDOException $e) {
-                                    // Exibe uma mensagem de erro em caso de falha na consulta
                                     echo "Erro ao tentar recuperar os dados do campus: " . $e->getMessage();
                                 }
                                 ?>
@@ -159,52 +212,7 @@ $limit_hora_fim = substr($result['hora_fim'], 0, 5);       // "21:00"
                                 </select>
                                 <div class="invalid-feedback">Este campo é obrigatório</div>
                             </div>
-                            <!-- <script>
-                                const cad_reserva_campus = document.getElementById("cad_reserva_campus");
-                                const camp_reserv_campus = document.getElementById("camp_reserv_campus");
-                                const camp_reserv_local_cabula = document.getElementById("camp_reserv_local_cabula");
-                                const camp_reserv_local_brotas = document.getElementById("camp_reserv_local_brotas");
 
-                                cad_reserva_campus.addEventListener("change", function () {
-                                    if (cad_reserva_campus.value === "1") {
-                                        camp_reserv_campus.style.display = "none";
-                                        //
-                                        camp_reserv_local_cabula.style.display = "block";
-                                        // document.getElementById("cad_reserva_local_cabula").required = true;
-                                        $('#cad_reserva_local_cabula').prop('required', true);
-                                        //
-                                        camp_reserv_local_brotas.style.display = "none";
-                                        // document.getElementById("cad_reserva_local_brotas").required = false;
-                                        $('#cad_reserva_local_brotas').prop('required', false);
-                                        //
-                                        $('#cad_reserva_local_cabula').val(null).trigger('change'); // APAGA OS DADOS DE UM SELECT2
-                                        $('#cad_reserva_local_brotas').val(null).trigger('change'); // APAGA OS DADOS DE UM SELECT2
-                                        document.getElementById("cad_reserva_tipo_sala").value = '';
-                                        document.getElementById("cad_reserva_andar").value = '';
-                                        document.getElementById("cad_reserva_pavilhao").value = '';
-                                        document.getElementById("esp_quant_maxima").value = '';
-                                        document.getElementById("cad_reserva_camp_media").value = '';
-                                        document.getElementById("esp_quant_minima").value = '';
-                                    } else {
-                                        camp_reserv_campus.style.display = "none";
-                                        //
-                                        camp_reserv_local_cabula.style.display = "none";
-                                        document.getElementById("cad_reserva_local_cabula").required = false;
-                                        //
-                                        camp_reserv_local_brotas.style.display = "block";
-                                        document.getElementById("cad_reserva_local_brotas").required = true;
-                                        //
-                                        $('#cad_reserva_local_cabula').val(null).trigger('change'); // APAGA OS DADOS DE UM SELECT2
-                                        $('#cad_reserva_local_brotas').val(null).trigger('change'); // APAGA OS DADOS DE UM SELECT2
-                                        document.getElementById("cad_reserva_tipo_sala").value = '';
-                                        document.getElementById("cad_reserva_andar").value = '';
-                                        document.getElementById("cad_reserva_pavilhao").value = '';
-                                        document.getElementById("esp_quant_maxima").value = '';
-                                        document.getElementById("cad_reserva_camp_media").value = '';
-                                        document.getElementById("esp_quant_minima").value = '';
-                                    }
-                                });
-                            </script> -->
 
                             <script>
                                 // Crie uma função para a lógica de atualização
@@ -741,6 +749,7 @@ $limit_hora_fim = substr($result['hora_fim'], 0, 5);       // "21:00"
                                     <option value="5">Sexta-feira</option>
                                     <option value="6">Sábado</option>
                                 </select>
+                                <input type="hidden" name="res_dia_semana" id="cad_diaSemanaId_reserva">
                             </div>
                             <div class="col-6 col-lg-4 col-xl-3 campo-diario-cad">
                                 <label class="form-label">Mês</label>
@@ -771,7 +780,7 @@ $limit_hora_fim = substr($result['hora_fim'], 0, 5);       // "21:00"
                                 </select>
                                 <div class="invalid-feedback">Este campo é obrigatório</div>
                             </div>
-                            <div class="col-6 col-lg-4 col-xl-3 campo-fixa-cad" style="display: none;">
+                            <!-- <div class="col-6 col-lg-4 col-xl-3 campo-fixa-cad" style="display: none;">
                                 <label class="form-label">Data Início <span>*</span></label>
                                 <input type="text" class="form-control flatpickr-input" name="res_data_inicio_semanal"
                                     id="cad_data_inicio_semanal">
@@ -782,7 +791,27 @@ $limit_hora_fim = substr($result['hora_fim'], 0, 5);       // "21:00"
                                 <input type="text" class="form-control flatpickr-input" name="res_data_fim_semanal"
                                     id="cad_data_fim_semanal">
                                 <div class="invalid-feedback">Este campo é obrigatório</div>
+                            </div> -->
+
+
+                            <div class="col-6 col-lg-4 col-xl-3 campo-fixa-cad" style="display: none;">
+                                <label class="form-label">Data Início Repetição <span>*</span></label>
+                                <input type="text" class="form-control flatpickr-input" name="res_data_inicio_semanal"
+                                    id="cad_data_inicio_semanal"
+                                    value="<?= (isset($data_inicio_reserva) && !empty($data_inicio_reserva) && $data_inicio_reserva !== '0000-00-00') ? $data_inicio_reserva : ''; ?>">
+                                <div class="invalid-feedback">Este campo é obrigatório</div>
                             </div>
+                            <div class="col-6 col-lg-4 col-xl-3 campo-fixa-cad" style="display: none;">
+                                <label class="form-label">Data Fim Repetição <span>*</span></label>
+
+
+                                <input type="text" class="form-control flatpickr-input" name="res_data_fim_semanal"
+                                    id="cad_data_fim_semanal"
+                                    value="<?= (isset($data_fim_reserva) && !empty($data_fim_reserva) && $data_fim_reserva !== '0000-00-00') ? $data_fim_reserva : ''; ?>">
+                                <div class="invalid-feedback">Este campo é obrigatório</div>
+                            </div>
+
+
                             <!-- </div> -->
                             <div class="col-6 col-lg-4 col-xl-3">
                                 <label class="form-label">Hora Início <span>*</span></label>

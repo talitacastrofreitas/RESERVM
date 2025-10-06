@@ -94,24 +94,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
       // SQL base para INSERT
       $sql_insert_res = "INSERT INTO reservas (
-                                      res_id, res_codigo, res_solic_id, res_tipo_reserva, res_data,
-                                      res_mes, res_ano, res_dia_semana, res_data_inicio_semanal,
-                                      res_data_fim_semanal, res_hora_inicio, res_hora_fim, res_turno,
-                                      res_tipo_aula, res_curso, res_curso_nome, res_curso_extensao,
-                                      res_semestre, res_componente_atividade, res_componente_atividade_nome,
-                                      res_nome_atividade, res_modulo, res_professor, res_titulo_aula,
-                                      res_espaco_id, res_campus, res_quant_pessoas, res_recursos,
-                                      res_recursos_add, res_obs, res_user_id, res_data_cad, res_data_upd
-                                    ) VALUES (
-                                      :res_id, :res_codigo, :res_solic_id, :res_tipo_reserva, :res_data,
-                                      UPPER(:res_mes), :res_ano, :res_dia_semana, :res_data_inicio_semanal,
-                                      :res_data_fim_semanal, :res_hora_inicio, :res_hora_fim, :res_turno,
-                                      :res_tipo_aula, :res_curso, UPPER(:res_curso_nome), :res_curso_extensao,
-                                      :res_semestre, :res_componente_atividade, UPPER(:res_componente_atividade_nome),
-                                      UPPER(:res_nome_atividade), UPPER(:res_modulo), UPPER(:res_professor),
-                                      UPPER(:res_titulo_aula), :res_espaco_id, :res_campus, :res_quant_pessoas,
-                                      :res_recursos, :res_recursos_add, :res_obs, :res_user_id, GETDATE(), GETDATE()
-                                    )";
+                                         res_id, res_codigo, res_solic_id, res_tipo_reserva, res_data,
+                                         res_mes, res_ano, res_dia_semana, res_data_inicio_semanal,
+                                         res_data_fim_semanal, res_hora_inicio, res_hora_fim, res_turno,
+                                         res_tipo_aula, res_curso, res_curso_nome, res_curso_extensao,
+                                         res_semestre, res_componente_atividade, res_componente_atividade_nome,
+                                         res_nome_atividade, res_modulo, res_professor, res_titulo_aula,
+                                         res_espaco_id, res_campus, res_quant_pessoas, res_recursos,
+                                         res_recursos_add, res_obs, res_user_id, res_data_cad, res_data_upd
+                                         ) VALUES (
+                                         :res_id, :res_codigo, :res_solic_id, :res_tipo_reserva, :res_data,
+                                         UPPER(:res_mes), :res_ano, :res_dia_semana, :res_data_inicio_semanal,
+                                         :res_data_fim_semanal, :res_hora_inicio, :res_hora_fim, :res_turno,
+                                         :res_tipo_aula, :res_curso, UPPER(:res_curso_nome), :res_curso_extensao,
+                                         :res_semestre, :res_componente_atividade, UPPER(:res_componente_atividade_nome),
+                                         UPPER(:res_nome_atividade), UPPER(:res_modulo), UPPER(:res_professor),
+                                         UPPER(:res_titulo_aula), :res_espaco_id, :res_campus, :res_quant_pessoas,
+                                         :res_recursos, :res_recursos_add, :res_obs, :res_user_id, GETDATE(), GETDATE()
+                                         )";
       $stmt_insert_res = $conn->prepare($sql_insert_res);
 
       $reservation_inserted = false;
@@ -133,8 +133,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
           '12' => 'Dezembro'
         ];
 
-        $inicio = new DateTime($res_data_inicio_semanal);
-        $fim = new DateTime($res_data_fim_semanal);
+        $inicio = new DateTime($_POST['res_data_inicio_semanal']);
+        $fim = new DateTime($_POST['res_data_fim_semanal']);
         $fim->modify('+1 day');
         $intervalo = new DateInterval('P1D');
         $periodo = new DatePeriod($inicio, $intervalo, $fim);
@@ -248,64 +248,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
         }
       }
 
-      if ($reservation_inserted) {
-        $status_reservado_id = 4;
-        $status_aguardando_reserva_id = 5;
-
-        // Busca o status atual da solicitação para verificar se está em "Aguardando Reserva"
-        $sql_check_status = "SELECT solic_sta_status FROM solicitacao_status WHERE solic_sta_solic_id = :solic_sta_solic_id";
-        $stmt_check_status = $conn->prepare($sql_check_status);
-        $stmt_check_status->execute([':solic_sta_solic_id' => $res_solic_id]);
-        $current_status = $stmt_check_status->fetchColumn();
-
-        // Apenas se o status atual for 'Aguardando Reserva', atualiza para 'Reservado' e registra a ação.
-        if ($current_status == $status_aguardando_reserva_id) {
-          // Atualiza o status principal da solicitação na tabela `solicitacao_status`
-          $sql_update_solicitation_status = "
-            UPDATE solicitacao_status
-            SET
-              solic_sta_status = :solic_sta_status,
-              solic_sta_user_id = :solic_sta_user_id,
-              solic_sta_data_cad = GETDATE()
-            WHERE
-              solic_sta_solic_id = :solic_sta_solic_id
-        ";
-          $stmt_update_status = $conn->prepare($sql_update_solicitation_status);
-          $stmt_update_status->execute([
-            ':solic_sta_status' => $status_reservado_id,
-            ':solic_sta_user_id' => $rvm_admin_id,
-            ':solic_sta_solic_id' => $res_solic_id
-          ]);
-
-          // Insere o registro na tabela de histórico `solicitacao_analise_status`
-          // $observacao_status = "Reserva cadastrada.";
-          $sql_insert_status_log = "INSERT INTO solicitacao_analise_status
-            (sta_an_solic_id, sta_an_status, sta_an_obs, sta_an_user_id, sta_an_data_cad, sta_an_data_upd)
-            VALUES (:solic_id, :status_id, :observacao, :user_id, GETDATE(), GETDATE())";
-
-          $stmt_insert_log = $conn->prepare($sql_insert_status_log);
-          $stmt_insert_log->execute([
-            ':solic_id' => $res_solic_id,
-            ':status_id' => $status_reservado_id,
-            ':observacao' => $observacao_status,
-            ':user_id' => $rvm_admin_id
-          ]);
-
-          // Insere o log de ação, se necessário
-          $log_acao_status = 'Status_Solicitacao_Reservado';
-          $log_dados_status = ['solic_id' => $res_solic_id, 'novo_status_id' => $status_reservado_id, 'novo_status_nome' => 'Reservado'];
-          $sqlLogStatus = "INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data)
-                                   VALUES (:modulo, upper(:acao), :acao_id, :dados, :user_id, GETDATE())";
-          $stmtLogStatus = $conn->prepare($sqlLogStatus);
-          $stmtLogStatus->execute([
-            ':modulo' => 'SOLICITAÇÃO STATUS',
-            ':acao' => $log_acao_status,
-            ':acao_id' => $res_solic_id,
-            ':dados' => json_encode($log_dados_status, JSON_UNESCAPED_UNICODE),
-            ':user_id' => $rvm_admin_id
-          ]);
-        }
-      }
+      // -----------------------------------------------------------------------------------------------------------------------------------
+      // *** TRECHO REMOVIDO: ANTES ATUALIZAVA O STATUS DA SOLICITAÇÃO AQUI. AGORA ISSO SÓ ACONTECE NO DEFERIMENTO (controller_solicitacao_analise_status.php) ***
+      // -----------------------------------------------------------------------------------------------------------------------------------
 
     } elseif ($acao === 'atualizar') {
       if (empty($_POST['res_id'])) {

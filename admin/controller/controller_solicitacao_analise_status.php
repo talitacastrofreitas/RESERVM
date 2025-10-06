@@ -76,6 +76,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $log_acao = 'Deferido SAAP';
       $num_status_final = $num_status_defere; // ID 4 (RESERVADO)
 
+
+      // Verifica se há pelo menos uma reserva para esta solicitação
+      $query_check_reservas_exist = "SELECT COUNT(*) FROM reservas WHERE res_solic_id = :solic_id";
+      $stmt_check_reservas_exist = $conn->prepare($query_check_reservas_exist);
+      $stmt_check_reservas_exist->execute([':solic_id' => $solic_id]);
+      $has_reservations = $stmt_check_reservas_exist->fetchColumn() > 0;
+
+      if (!$has_reservations) {
+        // Se o admin tentar deferir sem ter cadastrado a reserva antes no modal
+        throw new Exception("É necessário cadastrar a reserva no local antes de deferir a solicitação.");
+      }
+
       // 1. REGISTRA O NOVO STATUS NA TABELA DE HISTÓRICO
       $sql = "INSERT INTO solicitacao_analise_status (
                                                             sta_an_solic_id, sta_an_status, sta_an_obs, sta_an_user_id, sta_an_data_cad, sta_an_data_upd

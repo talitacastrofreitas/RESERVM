@@ -240,14 +240,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
         $solic_ap_quant_turma = isset($_POST['solic_ap_quant_turma']) ? trim($_POST['solic_ap_quant_turma']) : null;
         $solic_ap_quant_particip = isset($_POST['solic_ap_quant_particip']) ? trim($_POST['solic_ap_quant_particip']) : null;
         $solic_ap_tipo_reserva = isset($_POST['solic_ap_tipo_reserva']) ? trim($_POST['solic_ap_tipo_reserva']) : null;
+
+        // NOVOS CAMPOS: DATA INICIAL E DATA FINAL (PRÁTICA)
+        $solic_ap_data_inicio = null;
+        $solic_ap_data_fim = null;
+
         if ($solic_ap_tipo_reserva == 1) {
           $solic_ap_data_reserva = trim($_POST['solic_ap_data_reserva']) !== '' ? nl2br(trim($_POST['solic_ap_data_reserva'])) : NULL;
+          $solic_ap_dia_reserva = null; // Garante que dias da semana não sejam salvos para esporádica
         } else {
+          $solic_ap_data_reserva = null; // Garante que o campo de texto de datas não seja salvo para fixas
           if (isset($_POST['solic_ap_dia_reserva'])) {
             $solic_ap_dia_reserva = isset($_POST['solic_ap_dia_reserva']) && is_array($_POST['solic_ap_dia_reserva'])
               ? implode(', ', array_map('htmlspecialchars', $_POST['solic_ap_dia_reserva'])) : null;
           }
+          // CONVERSÃO E SALVAMENTO DOS NOVOS CAMPOS DE DATA FIXA
+          if (!empty($_POST['solic_ap_data_inicio'])) {
+            $date_obj_start = DateTime::createFromFormat('d/m/Y', $_POST['solic_ap_data_inicio']);
+            $solic_ap_data_inicio = $date_obj_start ? $date_obj_start->format('Y-m-d') : NULL;
+          }
+          if (!empty($_POST['solic_ap_data_fim'])) {
+            $date_obj_end = DateTime::createFromFormat('d/m/Y', $_POST['solic_ap_data_fim']);
+            $solic_ap_data_fim = $date_obj_end ? $date_obj_end->format('Y-m-d') : NULL;
+          }
+
         }
+
+        $solic_ap_hora_inicio = isset($_POST['solic_ap_hora_inicio']) ? trim($_POST['solic_ap_hora_inicio']) : null;
+        $solic_ap_hora_fim = isset($_POST['solic_ap_hora_fim']) ? trim($_POST['solic_ap_hora_fim']) : null;
+
+
         $solic_ap_hora_inicio = isset($_POST['solic_ap_hora_inicio']) ? trim($_POST['solic_ap_hora_inicio']) : null;
         $solic_ap_hora_fim = isset($_POST['solic_ap_hora_fim']) ? trim($_POST['solic_ap_hora_fim']) : null;
         $solic_ap_tipo_material = isset($_POST['solic_ap_tipo_material']) ? trim($_POST['solic_ap_tipo_material']) : null;
@@ -260,7 +282,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
         $solic_ap_obs = trim($_POST['solic_ap_obs']) !== '' ? nl2br(trim($_POST['solic_ap_obs'])) : NULL;
       }
 
-      $sql = "UPDATE solicitacao SET solic_etapa = :solic_etapa, solic_ap_aula_pratica = :solic_ap_aula_pratica, solic_ap_campus = :solic_ap_campus, solic_ap_espaco = :solic_ap_espaco, solic_ap_quant_turma = :solic_ap_quant_turma, solic_ap_quant_particip = :solic_ap_quant_particip, solic_ap_tipo_reserva = :solic_ap_tipo_reserva, solic_ap_data_reserva = :solic_ap_data_reserva, solic_ap_dia_reserva = :solic_ap_dia_reserva, solic_ap_hora_inicio = :solic_ap_hora_inicio, solic_ap_hora_fim = :solic_ap_hora_fim, solic_ap_tipo_material = :solic_ap_tipo_material, solic_ap_tit_aulas = :solic_ap_tit_aulas, solic_ap_quant_material = :solic_ap_quant_material, solic_ap_obs = :solic_ap_obs, solic_upd_por = :solic_upd_por, solic_data_upd = GETDATE() WHERE solic_id = :solic_id";
+      $sql = "UPDATE solicitacao SET solic_etapa = :solic_etapa, solic_ap_aula_pratica = :solic_ap_aula_pratica, solic_ap_campus = :solic_ap_campus, solic_ap_espaco = :solic_ap_espaco, solic_ap_quant_turma = :solic_ap_quant_turma, solic_ap_quant_particip = :solic_ap_quant_particip, solic_ap_tipo_reserva = :solic_ap_tipo_reserva, solic_ap_data_reserva = :solic_ap_data_reserva, solic_ap_dia_reserva = :solic_ap_dia_reserva, solic_ap_hora_inicio = :solic_ap_hora_inicio, solic_ap_hora_fim = :solic_ap_hora_fim, solic_ap_tipo_material = :solic_ap_tipo_material, solic_ap_tit_aulas = :solic_ap_tit_aulas, solic_ap_quant_material = :solic_ap_quant_material, solic_ap_obs = :solic_ap_obs, solic_ap_data_inicio = :solic_ap_data_inicio, solic_ap_data_fim = :solic_ap_data_fim, solic_upd_por = :solic_upd_por, solic_data_upd = GETDATE() WHERE solic_id = :solic_id";
       $stmt = $conn->prepare($sql);
       $stmt->bindParam(':solic_id', $solic_id, PDO::PARAM_STR);
       $stmt->bindParam(':solic_etapa', $solic_etapa, PDO::PARAM_INT);
@@ -278,8 +300,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $stmt->bindParam(':solic_ap_tit_aulas', $solic_ap_tit_aulas, PDO::PARAM_STR);
       $stmt->bindParam(':solic_ap_quant_material', $solic_ap_quant_material, PDO::PARAM_STR);
       $stmt->bindParam(':solic_ap_obs', $solic_ap_obs, PDO::PARAM_STR);
+      $stmt->bindParam(':solic_ap_quant_material', $solic_ap_quant_material, PDO::PARAM_STR);
+      $stmt->bindParam(':solic_ap_obs', $solic_ap_obs, PDO::PARAM_STR);
+
+      // NOVOS BIND PARAMETERS
+      $stmt->bindParam(':solic_ap_data_inicio', $solic_ap_data_inicio, PDO::PARAM_STR);
+      $stmt->bindParam(':solic_ap_data_fim', $solic_ap_data_fim, PDO::PARAM_STR);
+
       $stmt->bindParam(':solic_upd_por', $solic_user_id, PDO::PARAM_STR);
       $stmt->execute();
+
 
       if ($solic_ap_aula_pratica == 0) {
         $sql = "DELETE FROM solicitacao_arq WHERE sarq_solic_id = :sarq_solic_id";
@@ -443,6 +473,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
             $solic_at_dia_reserva = isset($_POST['solic_at_dia_reserva']) && is_array($_POST['solic_at_dia_reserva'])
               ? implode(', ', array_map('htmlspecialchars', $_POST['solic_at_dia_reserva'])) : null;
           }
+
+          $solic_at_quant_particip = isset($_POST['solic_at_quant_particip']) ? trim($_POST['solic_at_quant_particip']) : null;
+          $solic_at_tipo_reserva = isset($_POST['solic_at_tipo_reserva']) ? trim($_POST['solic_at_tipo_reserva']) : null;
+
+          // NOVOS CAMPOS: DATA INICIAL E DATA FINAL (TEÓRICA)
+          $solic_at_data_inicio = null;
+          $solic_at_data_fim = null;
+
+          if ($solic_at_tipo_reserva == 1) { // Esporádica
+            $solic_at_data_reserva = trim($_POST['solic_at_data_reserva']) !== '' ? nl2br(trim($_POST['solic_at_data_reserva'])) : NULL;
+            $solic_at_dia_reserva = null; // Garante que dias da semana não sejam salvos para esporádica
+          } else { // Fixa (Valor 2)
+            $solic_at_data_reserva = null; // Garante que o campo de texto de datas não seja salvo para fixas
+            if (isset($_POST['solic_at_dia_reserva'])) {
+              $solic_at_dia_reserva = isset($_POST['solic_at_dia_reserva']) && is_array($_POST['solic_at_dia_reserva'])
+                ? implode(', ', array_map('htmlspecialchars', $_POST['solic_at_dia_reserva'])) : null;
+            }
+            // CONVERSÃO E SALVAMENTO DOS NOVOS CAMPOS DE DATA FIXA
+            if (!empty($_POST['solic_at_data_inicio'])) {
+              $date_obj_start = DateTime::createFromFormat('d/m/Y', $_POST['solic_at_data_inicio']);
+              $solic_at_data_inicio = $date_obj_start ? $date_obj_start->format('Y-m-d') : NULL;
+            }
+            if (!empty($_POST['solic_at_data_fim'])) {
+              $date_obj_end = DateTime::createFromFormat('d/m/Y', $_POST['solic_at_data_fim']);
+              $solic_at_data_fim = $date_obj_end ? $date_obj_end->format('Y-m-d') : NULL;
+            }
+          }
+          $solic_at_hora_inicio = isset($_POST['solic_at_hora_inicio']) ? trim($_POST['solic_at_hora_inicio']) : null;
+          $solic_at_hora_fim = isset($_POST['solic_at_hora_fim']) ? trim($_POST['solic_at_hora_fim']) : null;
         }
         $solic_at_hora_inicio = isset($_POST['solic_at_hora_inicio']) ? trim($_POST['solic_at_hora_inicio']) : null;
         $solic_at_hora_fim = isset($_POST['solic_at_hora_fim']) ? trim($_POST['solic_at_hora_fim']) : null;
@@ -450,7 +509,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
         $solic_at_obs = trim($_POST['solic_at_obs']) !== '' ? nl2br(trim($_POST['solic_at_obs'])) : NULL;
       }
 
-      $sql = "UPDATE solicitacao SET solic_etapa = :solic_etapa, solic_at_aula_teorica = :solic_at_aula_teorica, solic_at_campus = :solic_at_campus, solic_at_quant_sala = :solic_at_quant_sala, solic_at_quant_particip = :solic_at_quant_particip, solic_at_tipo_reserva = :solic_at_tipo_reserva, solic_at_data_reserva = :solic_at_data_reserva, solic_at_dia_reserva = :solic_at_dia_reserva, solic_at_hora_inicio = :solic_at_hora_inicio, solic_at_hora_fim = :solic_at_hora_fim, solic_at_recursos = :solic_at_recursos, solic_at_obs = :solic_at_obs, solic_upd_por = :solic_upd_por, solic_data_upd = GETDATE() WHERE solic_id = :solic_id";
+      $sql = "UPDATE solicitacao SET solic_etapa = :solic_etapa, solic_at_aula_teorica = :solic_at_aula_teorica, solic_at_campus = :solic_at_campus, solic_at_quant_sala = :solic_at_quant_sala, solic_at_quant_particip = :solic_at_quant_particip, solic_at_tipo_reserva = :solic_at_tipo_reserva, solic_at_data_reserva = :solic_at_data_reserva, solic_at_dia_reserva = :solic_at_dia_reserva, solic_at_hora_inicio = :solic_at_hora_inicio, solic_at_hora_fim = :solic_at_hora_fim, solic_at_recursos = :solic_at_recursos, solic_at_obs = :solic_at_obs, solic_at_data_inicio = :solic_at_data_inicio, solic_at_data_fim = :solic_at_data_fim, solic_upd_por = :solic_upd_por, solic_data_upd = GETDATE() WHERE solic_id = :solic_id";
       $stmt = $conn->prepare($sql);
       $stmt->bindParam(':solic_id', $solic_id, PDO::PARAM_STR);
       $stmt->bindParam(':solic_etapa', $solic_etapa, PDO::PARAM_INT);
@@ -465,6 +524,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $stmt->bindParam(':solic_at_hora_fim', $solic_at_hora_fim, PDO::PARAM_STR);
       $stmt->bindParam(':solic_at_recursos', $solic_at_recursos, PDO::PARAM_STR);
       $stmt->bindParam(':solic_at_obs', $solic_at_obs, PDO::PARAM_STR);
+      $stmt->bindParam(':solic_at_recursos', $solic_at_recursos, PDO::PARAM_STR);
+      $stmt->bindParam(':solic_at_obs', $solic_at_obs, PDO::PARAM_STR);
+
+      // NOVOS BIND PARAMETERS
+      $stmt->bindParam(':solic_at_data_inicio', $solic_at_data_inicio, PDO::PARAM_STR);
+      $stmt->bindParam(':solic_at_data_fim', $solic_at_data_fim, PDO::PARAM_STR);
+
       $stmt->bindParam(':solic_upd_por', $solic_user_id, PDO::PARAM_STR);
       $stmt->execute();
 

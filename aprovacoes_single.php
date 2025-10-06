@@ -668,6 +668,28 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
               </div>
 
               <div class="row">
+
+                <?php if ($solic_ap_tipo_reserva == 2) { ?>
+                  <div class="col-md-6">
+                    <div class="form_margem">
+                      <label class="form-label">Data Início</label>
+                      <input type="text" class="form-control" id="solic_ap_data_inicio"
+                        value="<?= $solic_ap_data_inicio ? htmlspecialchars(date("d/m/Y", strtotime($solic_ap_data_inicio))) : ''; ?>"
+                        disabled>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form_margem">
+                      <label class="form-label">Data Fim</label>
+                      <input type="text" class="form-control" id="solic_ap_data_fim"
+                        value="<?= $solic_ap_data_fim ? htmlspecialchars(date("d/m/Y", strtotime($solic_ap_data_fim))) : ''; ?>"
+                        disabled>
+                    </div>
+                  </div>
+                <?php } ?>
+              </div>
+
+              <div class="row">
                 <div class="col-md-6">
                   <div class="form_margem">
                     <label class="form-label">Horário inicial <span>*</span></label>
@@ -1200,6 +1222,30 @@ if ($solic_row && $solic_row['solic_sta_status'] > 1) {
                     disabled><?= htmlspecialchars(str_replace('<br />', '', $solic_at_data_reserva)) ?></textarea>
                 </div>
               </div>
+
+              <div class="row">
+                <?php if ($solic_at_tipo_reserva == 2) { ?>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form_margem">
+                        <label class="form-label">Data Início</label>
+                        <input type="text" class="form-control" id="solic_at_data_inicio"
+                          value="<?= $solic_at_data_inicio ? htmlspecialchars(date("d/m/Y", strtotime($solic_at_data_inicio))) : ''; ?>"
+                          disabled>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form_margem">
+                        <label class="form-label">Data Fim</label>
+                        <input type="text" class="form-control" id="solic_at_data_fim"
+                          value="<?= $solic_at_data_fim ? htmlspecialchars(date("d/m/Y", strtotime($solic_at_data_fim))) : ''; ?>"
+                          disabled>
+                      </div>
+                    </div>
+                  </div>
+                <?php } ?>
+              </div>
+
 
               <div class="row">
                 <div class="col-md-6">

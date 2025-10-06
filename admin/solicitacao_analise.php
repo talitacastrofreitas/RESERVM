@@ -709,6 +709,23 @@
                           <hr>
                         </div>
 
+                        <?php if ($solic_ap_tipo_reserva == 2) { ?>
+                          <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label>Data Início</label>
+                            <p>
+                              <?= $solic_ap_data_inicio ? htmlspecialchars(date("d/m/Y", strtotime($solic_ap_data_inicio))) : '' ?>
+                            </p>
+                            <hr>
+                          </div>
+                          <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label>Data Fim</label>
+                            <p>
+                              <?= $solic_ap_data_fim ? htmlspecialchars(date("d/m/Y", strtotime($solic_ap_data_fim))) : '' ?>
+                            </p>
+                            <hr>
+                          </div>
+                        <?php } ?>
+
                         <div class="col-sm-6 col-xl-4 col-xxl-3">
                           <label>Horário inicial</label>
                           <p><?= date("H:i", strtotime($solic_ap_hora_inicio)) ?></p>
@@ -837,6 +854,23 @@
                           <p><?= $ctr_tipo_reserva ?></p>
                           <hr>
                         </div>
+
+                        <?php if ($solic_at_tipo_reserva == 2) { ?>
+                          <div class="col-md-6 col-xl-4 col-xxl-3">
+                            <label>Data Início</label>
+                            <p>
+                              <?= $solic_at_data_inicio ? htmlspecialchars(date("d/m/Y", strtotime($solic_at_data_inicio))) : '' ?>
+                            </p>
+                            <hr>
+                          </div>
+                          <div class="col-md-6 col-xl-4 col-xxl-3">
+                            <label>Data Fim</label>
+                            <p>
+                              <?= $solic_at_data_fim ? htmlspecialchars(date("d/m/Y", strtotime($solic_at_data_fim))) : '' ?>
+                            </p>
+                            <hr>
+                          </div>
+                        <?php } ?>
 
                         <div class="col-md-6 col-xl-4 col-xxl-3">
                           <label>Horário inicial</label>

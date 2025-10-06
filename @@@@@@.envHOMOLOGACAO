@@ -1,0 +1,82 @@
+# --- CONFIGURAÃ‡Ã•ES DO AMBIENTE ---
+
+# =============================================================================
+# # --- E-MAIL DA APLICAÇÃO ---
+EMAIL_SAAP=nti.equipededesenvolvimento@gmail.com
+
+# MAIL_HOST="smtp-mail.outlook.com"
+# MAIL_PORT=465
+# MAIL_USERNAME="dev-noreply@bahiana.edu.br"
+# MAIL_PASSWORD="X%514713887805us"
+# # MAIL_ENCRYPTION="ssl"
+# MAIL_FROM_ADDRESS="dev-noreply@bahiana.edu.br"
+# MAIL_FROM_NAME="RESERVM - Sistema de Reservas de Espaços"
+
+# MAIL_HOST="smtp.gmail.com"
+# MAIL_PORT=587
+# MAIL_USERNAME="talitacastrofreitas@gmail.com"
+# MAIL_PASSWORD="vmvottyedfzursuw"
+# MAIL_ENCRYPTION="tls"
+# MAIL_FROM_ADDRESS="talitacastrofreitas@gmail.com"
+# MAIL_FROM_NAME="RESERVM - Sistema de Reservas de Espaços"
+
+# =============================================================================
+# LOCALHOST
+# APP_ENV=localhost
+
+# URL base da aplicação em LOCAL
+# APP_URL=http://localhost:8080/reservm
+# DB_HOST=127.0.0.1
+# DB_PORT=1433
+# DB_DATABASE=reservm
+# DB_USERNAME=reservm_user
+# DB_PASSWORD=reservm_pass
+
+# Configurações da API do Painel TV)
+PAINEL_TV_API_FULL_URL=http://10.71.50.85/painel/api/publicidade-sync
+PAINEL_TV_API_KEY='HXDO#V3OFz(RfsyKa##&er1tG7eRdbX!57nnK5nI7no--5^T%H50IfnV5+dwp*Zz'
+
+RESERVM_BASE_URL=http://10.71.50.85/reservm/
+
+
+# =============================================================================
+# HOMOLOGAÇÃO
+APP_ENV=homologacao
+
+# # URL base da aplicaÃ§Ã£o em homologaÃ§Ã£o
+APP_URL=http://10.71.50.85/reservm
+
+
+# --- CONEXÃOCOM BANCO DE DADOS SQL SERVER ---
+DB_HOST="boipeba\\bahiana2"
+DB_PORT=59504
+DB_DATABASE=reservm
+DB_USERNAME=reservm
+DB_PASSWORD='#R3servM@2025#'
+
+# # # # --- VIEWS DO BANCO ---
+VIEW_ALUNOS=alunos
+VIEW_COLABORADORES=colaboradores
+
+
+# =============================================================================
+# PRODUÇÃO
+# APP_ENV=producao
+
+# # --- E-MAIL DA APLICAÇÃO ---
+# EMAIL_SAAP="sigaext@bahiana.edu.br"
+
+# APP_URL=http://reservm.bahiana.edu.br/reservm
+# # --- BANCO DE DADOS ---
+# DB_SERVER="BD-CENTRAL\BAHIANA"
+# DB_PORT=56874
+# DB_DATABASE=siex
+# DB_USERNAME=siex
+# DB_PASSWORD="Si3xB@hian@"
+
+# # --- VIEWS DO BANCO ---
+# VIEW_ALUNOS="[bd-central\sagres].[academico].[dbo].[VW_Alunos_Ativos_SIEX]"
+# VIEW_COLABORADORES="[VILAS].[corpore].[dbo].[VW_Colaboradores_Ativos_SIEX]"
+
+
+# =============================================================================
