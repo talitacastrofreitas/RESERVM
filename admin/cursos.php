@@ -12,17 +12,21 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
   .select2-container {
     display: block !important;
     height: auto !important;
-    width: 100% !important; /* Ou o que for necessário */
+    width: 100% !important;
+    /* Ou o que for necessário */
     opacity: 1 !important;
     visibility: visible !important;
-    z-index: 9999 !important; /* Para garantir que esteja na frente */
-}
-.select2-dropdown { /* Se o dropdown aparece, mas não o input */
+    z-index: 9999 !important;
+    /* Para garantir que esteja na frente */
+  }
+
+  .select2-dropdown {
+    /* Se o dropdown aparece, mas não o input */
     display: block !important;
     opacity: 1 !important;
     visibility: visible !important;
     z-index: 9999 !important;
-}
+  }
 </style>
 
 <div class="row">
@@ -47,9 +51,10 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
           <div class="col-sm-6 text-sm-start text-center">
             <h5 class="card-title mb-0">Lista de Cursos</h5>
           </div>
-          <!-- <div class="col-sm-6 d-flex align-items-center d-flex justify-content-sm-end justify-content-center">
-            <button class="btn botao botao_amarelo waves-effect mt-3 mt-sm-0" data-bs-toggle="modal" data-bs-toggle="button" data-bs-target="#modal_cad_curso">+ Cadastrar Curso</button>
-          </div> -->
+          <div class="col-sm-6 d-flex align-items-center d-flex justify-content-sm-end justify-content-center">
+            <button class="btn botao botao_amarelo waves-effect mt-3 mt-sm-0" data-bs-toggle="modal"
+              data-bs-toggle="button" data-bs-target="#modal_cad_curso">+ Cadastrar Curso</button>
+          </div>
         </div>
       </div>
       <div class="card-body p-0">
@@ -109,19 +114,19 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
               $stmt->execute();
               while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
-                $curs_id             = $row['curs_id'];
-                $curs_curso          = $row['curs_curso'];
-                $curs_status         = $row['curs_status'];
-                $st_id               = $row['st_id'];
-                $st_status           = $row['st_status'];
+                $curs_id = $row['curs_id'];
+                $curs_curso = $row['curs_curso'];
+                $curs_status = $row['curs_status'];
+                $st_id = $row['st_id'];
+                $st_status = $row['st_status'];
                 // Novos campos concatenados da consulta
                 $CoordenadoresMatriculas = $row['CoordenadoresMatriculas'];
-                $CoordenadoresNomes      = $row['CoordenadoresNomes'];
-                $CoordenadoresEmails     = $row['CoordenadoresEmails'];
+                $CoordenadoresNomes = $row['CoordenadoresNomes'];
+                $CoordenadoresEmails = $row['CoordenadoresEmails'];
 
                 //CONFIGURAÇÃO DO STATUS
                 $status_color = ($st_id == 1) ? 'bg_info_verde' : 'bg_info_cinza';
-            ?>
+                ?>
 
                 <tr>
                   <th><?= htmlspecialchars($curs_curso) ?></th>
@@ -131,22 +136,25 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
                   <td><span class="badge <?= $status_color ?>"><?= htmlspecialchars($st_status) ?></span></td>
                   <td class="text-end">
                     <div class="dropdown drop_tabela d-inline-block">
-                      <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
                         <i class="ri-more-fill align-middle"></i>
                       </button>
                       <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal" data-bs-target="#modal_edit_curso"
-                            data-bs-curs_id="<?= htmlspecialchars($curs_id) ?>"
+                        <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal"
+                            data-bs-target="#modal_edit_curso" data-bs-curs_id="<?= htmlspecialchars($curs_id) ?>"
                             data-bs-curs_curso="<?= htmlspecialchars($curs_curso) ?>"
-                            data-bs-curs_status="<?= htmlspecialchars($curs_status) ?>"
-                            title="Editar"><i class="fa-regular fa-pen-to-square me-2"></i> Editar</a></li>
-                        <li><a href="../router/web.php?r=Curs&acao=deletar&curs_id=<?= $curs_id ?>" class="dropdown-item remove-item-btn del-btn" title="Excluir"><i class="fa-regular fa-trash-can me-2"></i> Excluir</a></li>
+                            data-bs-curs_status="<?= htmlspecialchars($curs_status) ?>" title="Editar"><i
+                              class="fa-regular fa-pen-to-square me-2"></i> Editar</a></li>
+                        <li><a href="../router/web.php?r=Curs&acao=deletar&curs_id=<?= $curs_id ?>"
+                            class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
+                              class="fa-regular fa-trash-can me-2"></i> Excluir</a></li>
                       </ul>
                     </div>
                   </td>
                 </tr>
 
-            <?php }
+              <?php }
             } catch (PDOException $e) {
               error_log("Erro ao tentar recuperar os dados: " . $e->getMessage()); // Mantenha este log para depuração
               echo "Erro ao tentar recuperar os dados. Por favor, verifique os logs de erro para mais detalhes."; // Mensagem mais amigável
@@ -160,12 +168,14 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
 
 
 <!-- CADASTRAR -->
-<div class="modal fade modal_padrao" id="modal_cad_curso" tabindex="-1" aria-labelledby="modal_cad_curso" aria-modal="true">
+<div class="modal fade modal_padrao" id="modal_cad_curso" tabindex="-1" aria-labelledby="modal_cad_curso"
+  aria-modal="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header modal_padrao_cinza">
         <h5 class="modal-title" id="modal_cad_curso">Cadastrar Curso</h5>
-        <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <form method="POST" action="../router/web.php?r=Curs" class="needs-validation" novalidate>
@@ -175,7 +185,8 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
 
             <div class="col-12">
               <label class="form-label">Curso <span>*</span></label>
-              <input type="text" class="form-control text-uppercase" name="curs_curso" value="<?= htmlspecialchars($_SESSION['form_curs']['curs_curso'] ?? '') ?>" maxlength="50" required>
+              <input type="text" class="form-control text-uppercase" name="curs_curso"
+                value="<?= htmlspecialchars($_SESSION['form_curs']['curs_curso'] ?? '') ?>" maxlength="50" required>
               <div class="invalid-feedback">Este campo é obrigatório</div>
             </div>
 
@@ -189,7 +200,8 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
 
             <div class="col-12">
               <label class="form-label">Coordenador(a)</label>
-              <select class="form-select text-uppercase" name="curs_matricula_prof[]" id="cad_curs_matricula_prof" multiple>
+              <select class="form-select text-uppercase" name="curs_matricula_prof[]" id="cad_curs_matricula_prof"
+                multiple>
                 <option value=""></option>
               </select>
               <div class="invalid-feedback">Este campo é obrigatório</div>
@@ -202,7 +214,8 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
 
             <div class="col-12">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="curs_status" name="curs_status" value="1" <?= (!isset($_SESSION['form_curs']) || !empty($_SESSION['form_curs']['curs_status'])) ? 'checked' : '' ?>>
+                <input class="form-check-input" type="checkbox" id="curs_status" name="curs_status" value="1"
+                  <?= (!isset($_SESSION['form_curs']) || !empty($_SESSION['form_curs']['curs_status'])) ? 'checked' : '' ?>>
                 <label class="form-check-label" for="curs_status">Ativo</label>
               </div>
             </div>
@@ -210,7 +223,8 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
             <div class="col-lg-12">
               <div class="hstack gap-3 align-items-center justify-content-end mt-2">
                 <p class="label_asterisco me-auto my-0 d-sm-block d-none"><span>*</span> Campo obrigatório</p>
-                <button type="button" class="btn botao btn-light waves-effect" data-bs-dismiss="modal" data-bs-toggle="button">Cancelar</button>
+                <button type="button" class="btn botao btn-light waves-effect" data-bs-dismiss="modal"
+                  data-bs-toggle="button">Cancelar</button>
                 <button type="submit" class="btn botao botao_verde waves-effect">Cadastrar</button>
               </div>
             </div>
@@ -229,12 +243,14 @@ unset($_SESSION['form_curs']);
 
 
 <!-- EDITAR -->
-<div class="modal fade modal_padrao" id="modal_edit_curso" tabindex="-1" aria-labelledby="modal_edit_curso" aria-modal="true">
+<div class="modal fade modal_padrao" id="modal_edit_curso" tabindex="-1" aria-labelledby="modal_edit_curso"
+  aria-modal="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header modal_padrao_cinza">
         <h5 class="modal-title" id="modal_edit_curso">Editar Curso</h5>
-        <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <form method="POST" action="../router/web.php?r=Curs" class="needs-validation" novalidate>
@@ -245,7 +261,8 @@ unset($_SESSION['form_curs']);
 
             <div class="col-12">
               <label class="form-label">Curso <span>*</span></label>
-              <input type="text" class="form-control text-uppercase curs_curso" name="curs_curso" maxlength="50" required>
+              <input type="text" class="form-control text-uppercase curs_curso" name="curs_curso" maxlength="50"
+                required>
               <div class="invalid-feedback">Este campo é obrigatório</div>
             </div>
 
@@ -259,7 +276,8 @@ unset($_SESSION['form_curs']);
 
             <div class="col-12">
               <label class="form-label">Coordenador(a)</label>
-              <select class="form-select text- curs_matricula_prof" name="curs_matricula_prof[]" id="edit_curs_matricula_prof" multiple>
+              <select class="form-select text- curs_matricula_prof" name="curs_matricula_prof[]"
+                id="edit_curs_matricula_prof" multiple>
                 <option value=""></option>
               </select>
               <div class="invalid-feedback">Este campo é obrigatório</div>
@@ -273,7 +291,8 @@ unset($_SESSION['form_curs']);
 
             <div class="col-12">
               <div class="form-check">
-                <input class="form-check-input curs_status" type="checkbox" id="curs_status" name="curs_status" value="1" checked>
+                <input class="form-check-input curs_status" type="checkbox" id="curs_status" name="curs_status"
+                  value="1" checked>
                 <label class="form-check-label" for="curs_status">Ativo</label>
               </div>
             </div>
@@ -281,7 +300,8 @@ unset($_SESSION['form_curs']);
             <div class="col-lg-12">
               <div class="hstack gap-3 align-items-center justify-content-end mt-2">
                 <p class="label_asterisco me-auto my-0 d-sm-block d-none"><span>*</span> Campo obrigatório</p>
-                <button type="button" class="btn botao btn-light waves-effect" data-bs-dismiss="modal" data-bs-toggle="button">Cancelar</button>
+                <button type="button" class="btn botao btn-light waves-effect" data-bs-dismiss="modal"
+                  data-bs-toggle="button">Cancelar</button>
                 <button type="submit" class="btn botao botao_verde waves-effect">Atualizar</button>
               </div>
             </div>
@@ -395,4 +415,3 @@ unset($_SESSION['form_curs']);
 <script src="includes/select/select2.js"></script>
 <!-- ITENS DOS SELECTS -->
 <script src="includes/select/select_colaboradores.js"></script>
-

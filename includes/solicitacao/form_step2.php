@@ -55,11 +55,16 @@
           <div class="col-12" id="campo_info_pratic_espaco_brotas">
             <?php try {
               $espaco_b = explode(", ", $solic_ap_espaco);
+              $espaco_b = explode(", ", $solic_ap_espaco);
               $sql = $conn->prepare("SELECT esp_id, esp_codigo, esp_nome_local, esp_nome_local_resumido, esp_quant_maxima, UPPER(and_andar) as and_andar, UPPER(pav_pavilhao) AS pav_pavilhao
-                                    FROM espaco
-                                    LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
-                                    INNER JOIN andares ON andares.and_id = espaco.esp_andar
-                                    WHERE esp_tipo_espaco NOT IN (1, 5) AND esp_unidade = 2 ORDER BY esp_nome_local");
+                        FROM espaco
+                        LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
+                        INNER JOIN andares ON andares.and_id = espaco.esp_andar
+                        INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco  /* Certifique-se que esta linha está na sua consulta real */
+                        WHERE esp_tipo_espaco NOT IN (1, 5) 
+                        AND esp_unidade = 2 
+                        AND tipo_espaco.tipesp_tipo_espaco NOT LIKE '%LABORATÓRIO DE INFORMÁTICA%' /* NOVA CONDIÇÃO */
+                        ORDER BY esp_nome_local");
               $sql->execute();
               $result = $sql->fetchAll(PDO::FETCH_ASSOC);
             } catch (PDOException $e) {
@@ -96,10 +101,14 @@
             <?php try {
               $espaco_c = explode(", ", $solic_ap_espaco);
               $sql = $conn->prepare("SELECT esp_id, esp_codigo, esp_nome_local, esp_nome_local_resumido, esp_quant_maxima, UPPER(and_andar) as and_andar, UPPER(pav_pavilhao) AS pav_pavilhao
-                                    FROM espaco
-                                    LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
-                                    INNER JOIN andares ON andares.and_id = espaco.esp_andar
-                                    WHERE esp_tipo_espaco NOT IN (1, 5) AND esp_unidade = 1 ORDER BY esp_nome_local");
+                        FROM espaco
+                        LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
+                        INNER JOIN andares ON andares.and_id = espaco.esp_andar
+                        INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco  /* Certifique-se que esta linha está na sua consulta real */
+                        WHERE esp_tipo_espaco NOT IN (1, 5) 
+                        AND esp_unidade = 1 
+                        AND tipo_espaco.tipesp_tipo_espaco NOT LIKE '%LABORATÓRIO DE INFORMÁTICA%' /* NOVA CONDIÇÃO */
+                        ORDER BY esp_nome_local");
               $sql->execute();
               $result = $sql->fetchAll(PDO::FETCH_ASSOC);
             } catch (PDOException $e) {
@@ -272,6 +281,7 @@
             <div class="form_margem">
               <label class="form-label">Data(s) da reserva <span>*</span></label>
               <textarea class="form-control" name="solic_ap_data_reserva" id="solic_ap_data_reserva"
+                placeholder="Ex. 15/10/2000 - 10:30"
                 rows="5"><?= htmlspecialchars(str_replace('<br />', '', $solic_ap_data_reserva)) ?></textarea>
               <div class="invalid-feedback">Este campo é obrigatório</div>
             </div>

@@ -5,7 +5,8 @@
         <p class="m-0">
           <script>
             document.write(new Date().getFullYear())
-          </script> © RESERVM <span class="d-none d-lg-inline-block"> - Sistema de Gestão de Atividades de Extensão Bahiana. Todos os direitos reservados.</span>
+          </script> © RESERVM <span class="d-none d-lg-inline-block"> - Sistema de Gestão de Atividades de Extensão
+            Bahiana. Todos os direitos reservados.</span>
         </p>
       </div>
       <div class="col-4">
@@ -50,7 +51,7 @@
 <!-- ALERTAS -->
 <script>
   // EXCLUIR
-  $('.del-btn').on('click', function(e) {
+  $('.del-btn').on('click', function (e) {
     e.preventDefault();
     const href = $(this).attr('href')
     Swal.fire({
@@ -71,7 +72,7 @@
   })
 
   // EXCLUIR CONTA
-  $('.del-btn-conta').on('click', function(e) {
+  $('.del-btn-conta').on('click', function (e) {
     e.preventDefault();
     const href = $(this).attr('href')
     Swal.fire({
@@ -97,12 +98,14 @@
 <script src="assets/js/mask/jquery.mask.min.js"></script>
 <script src="assets/js/mask/mask.js"></script>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
 <!-- DATATABLE JS -->
 <script src="assets/js/datatable/jquery.dataTables.min.js"></script>
 <script src="assets/js/datatable/dataTables.responsive.min.js"></script>
 <script src="assets/js/pages/datatables.init.js"></script>
+<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
 
 <!-- APP JS -->
 <script src="assets/js/app.js"></script>
@@ -127,7 +130,7 @@
       stopOnFocus: true, // Para a duração ao passar o mouse
     }).showToast();
   </script>
-<?php unset($_SESSION["msg"]);
+  <?php unset($_SESSION["msg"]);
 } ?>
 
 <?php if (isset($_SESSION["erro"])) { ?>
@@ -142,7 +145,7 @@
       stopOnFocus: true, // Para a duração ao passar o mouse
     }).showToast();
   </script>
-<?php unset($_SESSION["erro"]);
+  <?php unset($_SESSION["erro"]);
 } ?>
 
 <?php if (isset($_SESSION["rest"])) { ?>
@@ -157,7 +160,7 @@
       stopOnFocus: true, // Para a duração ao passar o mouse
     }).showToast();
   </script>
-<?php unset($_SESSION["rest"]);
+  <?php unset($_SESSION["rest"]);
 } ?>
 
 <?php if (isset($_SESSION["atencao"])) { ?>
@@ -172,7 +175,7 @@
       stopOnFocus: true, // Para a duração ao passar o mouse
     }).showToast();
   </script>
-<?php unset($_SESSION["atencao"]);
+  <?php unset($_SESSION["atencao"]);
 } ?>
 
 <!-- LOADER DE PÁGINA -->

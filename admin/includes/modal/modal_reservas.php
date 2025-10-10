@@ -28,7 +28,8 @@ $stmt = $conn->prepare("SELECT
     solic_ap_aula_pratica, solic_at_aula_teorica,
     solic_ap_tipo_reserva, solic_at_tipo_reserva,
     solic_ap_data_inicio, solic_ap_data_fim, 
-    solic_at_data_inicio, solic_at_data_fim
+    solic_at_data_inicio, solic_at_data_fim,
+      solic_ap_quant_particip, solic_at_quant_particip
     FROM solicitacao WHERE solic_id = ?");
 $stmt->execute([$solicId]);
 $solicitacao_dados = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -36,12 +37,46 @@ $solicitacao_dados = $stmt->fetch(PDO::FETCH_ASSOC);
 // 3. Extrair variáveis
 $solic_ap_aula_pratica = $solicitacao_dados['solic_ap_aula_pratica'] ?? 0;
 $solic_at_aula_teorica = $solicitacao_dados['solic_at_aula_teorica'] ?? 0;
+
+$solic_ap_quant_particip = $solicitacao_dados['solic_ap_quant_particip'] ?? 0; // Novo
+$solic_at_quant_particip = $solicitacao_dados['solic_at_quant_particip'] ?? 0; // Novo
+
 $solic_ap_tipo_reserva = $solicitacao_dados['solic_ap_tipo_reserva'] ?? 0;
 $solic_at_tipo_reserva = $solicitacao_dados['solic_at_tipo_reserva'] ?? 0;
 $solic_ap_data_inicio = $solicitacao_dados['solic_ap_data_inicio'] ?? '';
 $solic_ap_data_fim = $solicitacao_dados['solic_ap_data_fim'] ?? '';
 $solic_at_data_inicio = $solicitacao_dados['solic_at_data_inicio'] ?? '';
 $solic_at_data_fim = $solicitacao_dados['solic_at_data_fim'] ?? '';
+
+
+// Nº DE PESSOAS
+$quant_pessoas_reserva = '';
+
+// AP e não AT
+$ap_only = ($solic_ap_aula_pratica == 1 && $solic_at_aula_teorica == 0);
+// AT e não AP
+$at_only = ($solic_at_aula_teorica == 1 && $solic_ap_aula_pratica == 0);
+// AP e AT com a mesma quantidade
+$both_equal = (
+    $solic_ap_aula_pratica == 1 &&
+    $solic_at_aula_teorica == 1 &&
+    $solic_ap_quant_particip == $solic_at_quant_particip
+);
+
+if ($ap_only) {
+    $quant_pessoas_reserva = $solic_ap_quant_particip;
+} elseif ($at_only) {
+    $quant_pessoas_reserva = $solic_at_quant_particip;
+} elseif ($both_equal) {
+    $quant_pessoas_reserva = $solic_ap_quant_particip; // ou $solic_at_quant_particip, tanto faz
+}
+
+// Garante que se a quantidade for 0 ou vazia, permaneça vazia
+if (empty($quant_pessoas_reserva) || $quant_pessoas_reserva == 0) {
+    $quant_pessoas_reserva = '';
+}
+
+
 
 // 4. Lógica de Pré-preenchimento Condicional
 $data_inicio_reserva = '';
@@ -275,21 +310,33 @@ if ($ap_is_sole_fixed) {
                             </script>
 
                             <div class="col-xl-3">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT * FROM andares ORDER BY and_andar");
+                                <?php
+
+                                $id_tipo_espaco_atual = $dados_do_espaco['esp_tipo_espaco'] ?? null;
+
+                                // PASSO 2: CONSULTAR TODOS OS TIPOS DE SALA
+                                try {
+                                    $sql = $conn->prepare("SELECT tipesp_id, tipesp_tipo_espaco FROM tipo_espaco ORDER BY tipesp_tipo_espaco");
                                     $sql->execute();
                                     $result = $sql->fetchAll(PDO::FETCH_ASSOC);
                                 } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar o perfil";
+                                    echo "Erro ao tentar recuperar os Tipos de Sala: " . $e->getMessage();
                                 } ?>
+
                                 <label class="form-label">Tipo de Sala</label>
                                 <select class="form-select text-uppercase" id="cad_reserva_tipo_sala" disabled>
-                                    <option selected value=""></option>
-                                    <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['and_id'] ?>"><?= $res['and_andar'] ?></option>
+
+                                    <?php foreach ($result as $res):
+
+                                        $selected = ($res['tipesp_id'] == $id_tipo_espaco_atual) ? 'selected' : '';
+                                        ?>
+                                        <option value="<?= $res['tipesp_id'] ?>" <?= $selected ?>>
+                                            <?= $res['tipesp_tipo_espaco'] ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
+
 
                             <div class="col-xl-3">
                                 <?php try {
@@ -340,11 +387,19 @@ if ($ap_is_sole_fixed) {
                                 <input type="text" class="form-control" id="esp_quant_minima" disabled>
                             </div>
 
-                            <div class="col-xl-3">
+                            <!-- <div class="col-xl-3">
                                 <label class="form-label">Nº Pessoas <span>*</span></label>
                                 <input type="text" class="form-control" id="cad_reserva_quant_pessoas"
                                     name="res_quant_pessoas" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
                                     required>
+                                <div class="invalid-feedback">Este campo é obrigatório</div>
+                            </div> -->
+
+                            <div class="col-xl-3">
+                                <label class="form-label">Nº Pessoas <span>*</span></label>
+                                <input type="text" class="form-control" id="cad_reserva_quant_pessoas"
+                                    name="res_quant_pessoas" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                    value="<?= htmlspecialchars($quant_pessoas_reserva) ?>" required>
                                 <div class="invalid-feedback">Este campo é obrigatório</div>
                             </div>
 

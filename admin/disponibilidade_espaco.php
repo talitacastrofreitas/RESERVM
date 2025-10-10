@@ -112,7 +112,9 @@ include 'includes/header.php';
               class="col-12 col-md-6 col-lg-2 col-xl-2 d-flex align-items-end justify-content-center justify-content-md-end">
               <div class="d-flex w-100">
                 <button type="submit" class="btn botao botao_azul_escuro waves-effect w-100">Filtrar</button>
-                <div onclick="window.location.href='painel.php'" class="btn botao botao_cinza waves-effect w-100 ms-2">
+                <!-- <div onclick="window.location.href='painel.php'" class="btn botao botao_cinza waves-effect w-100 ms-2">
+                  Limpar</div> -->
+                <div onclick="limparFiltroCompleto()" class="btn botao botao_cinza waves-effect w-100 ms-2">
                   Limpar</div>
               </div>
             </div>
@@ -324,12 +326,12 @@ try {
 
   // Query SQL
   $sql_espacos = "SELECT esp_id, esp_nome_local, esp_nome_local_resumido, esp_codigo, esp.esp_unidade, tipesp_tipo_espaco_icone, and_andar_icone, pav_pavilhao_icone, uni_unidade_icone
-   FROM espaco AS esp
-   INNER JOIN tipo_espaco AS tipesp ON tipesp.tipesp_id = esp.esp_tipo_espaco
-   LEFT JOIN andares ON andares.and_id = esp.esp_andar
-   LEFT JOIN pavilhoes ON pavilhoes.pav_id = esp.esp_pavilhao
-   INNER JOIN unidades ON unidades.uni_id = esp.esp_unidade
-   WHERE 1=1 ";
+   FROM espaco AS esp
+   INNER JOIN tipo_espaco AS tipesp ON tipesp.tipesp_id = esp.esp_tipo_espaco
+   LEFT JOIN andares ON andares.and_id = esp.esp_andar
+   LEFT JOIN pavilhoes ON pavilhoes.pav_id = esp.esp_pavilhao
+   INNER JOIN unidades ON unidades.uni_id = esp.esp_unidade
+   WHERE 1=1 ";
 
   $params_espacos = [];
 
@@ -1027,6 +1029,97 @@ try {
     }
   });
 </script>
+
+
+<script>
+  // Chaves de Local Storage específicas para o filtro completo
+  const LS_DATA_INICIO = 'disponibilidade_espaco_data_inicio';
+  const LS_DATA_FIM = 'disponibilidade_espaco_data_fim';
+  const LS_HORA_INICIO = 'disponibilidade_espaco_hora_inicio';
+  const LS_HORA_FIM = 'disponibilidade_espaco_hora_fim';
+  const LS_ESPACO_ID = 'disponibilidade_espaco_espaco_id';
+
+  const form = document.querySelector('form');
+
+  // Função para salvar todos os 5 filtros
+  function salvarFiltroCompleto() {
+    localStorage.setItem(LS_DATA_INICIO, document.getElementById('data_inicio').value);
+    localStorage.setItem(LS_DATA_FIM, document.getElementById('data_fim').value);
+    localStorage.setItem(LS_HORA_INICIO, document.getElementById('hora_inicio').value);
+    localStorage.setItem(LS_HORA_FIM, document.getElementById('hora_fim').value);
+    localStorage.setItem(LS_ESPACO_ID, document.getElementById('espaco_id').value);
+  }
+
+  // Função para limpar todos os 5 filtros e recarregar
+  function limparFiltroCompleto() {
+    localStorage.removeItem(LS_DATA_INICIO);
+    localStorage.removeItem(LS_DATA_FIM);
+    localStorage.removeItem(LS_HORA_INICIO);
+    localStorage.removeItem(LS_HORA_FIM);
+    localStorage.removeItem(LS_ESPACO_ID);
+
+    // Redireciona para a página base, limpando os parâmetros GET
+    window.location.href = 'disponibilidade_espaco.php';
+  }
+
+  // Função que carrega os valores salvos e submete o formulário
+  function carregarFiltroCompleto() {
+    // Só carrega se a URL não tiver parâmetros GET (ou seja, sem filtro aplicado)
+    if (window.location.search === "" || window.location.search === "?") {
+      let shouldSubmit = false;
+
+      // Carrega os valores do Local Storage
+      const savedDataInicio = localStorage.getItem(LS_DATA_INICIO);
+      const savedDataFim = localStorage.getItem(LS_DATA_FIM);
+      const savedHoraInicio = localStorage.getItem(LS_HORA_INICIO);
+      const savedHoraFim = localStorage.getItem(LS_HORA_FIM);
+      const savedEspacoId = localStorage.getItem(LS_ESPACO_ID);
+
+      // Aplica os valores salvos aos inputs, se existirem
+      if (savedDataInicio && document.getElementById('data_inicio')) {
+        document.getElementById('data_inicio').value = savedDataInicio;
+        shouldSubmit = true;
+      }
+      if (savedDataFim && document.getElementById('data_fim')) {
+        document.getElementById('data_fim').value = savedDataFim;
+        shouldSubmit = true;
+      }
+      if (savedHoraInicio && document.getElementById('hora_inicio')) {
+        document.getElementById('hora_inicio').value = savedHoraInicio;
+        shouldSubmit = true;
+      }
+      if (savedHoraFim && document.getElementById('hora_fim')) {
+        document.getElementById('hora_fim').value = savedHoraFim;
+        // O flatpickr para hora_fim está como '.chf_hora[name="hora_fim"]' no seu JS original.
+        // Se a inicialização do flatpickr ocorreu antes, isso pode não funcionar perfeitamente.
+        // Submeter o formulário (abaixo) é o que resolve a aplicação do filtro.
+        shouldSubmit = true;
+      }
+      if (savedEspacoId && document.getElementById('espaco_id')) {
+        document.getElementById('espaco_id').value = savedEspacoId;
+        shouldSubmit = true;
+      }
+
+      // Se pelo menos um filtro foi carregado, submete o formulário para aplicar o filtro
+      if (shouldSubmit) {
+        // Ignora a validação de data/hora (que pode disparar SweetAlerts) no carregamento automático
+        // e submete o formulário via JavaScript.
+        form.submit();
+      }
+    }
+  }
+
+  // **ANEXAR LISTENERS NO CARREGAMENTO DA PÁGINA**
+  document.addEventListener('DOMContentLoaded', function () {
+    // 1. Tenta carregar e aplicar o filtro salvo (se a URL estiver limpa)
+    carregarFiltroCompleto();
+
+    // 2. Garante que os filtros sejam salvos quando o usuário clica em "Filtrar"
+    // O seu formulário já chama a validação no submit, então salvamos no submit.
+    form.addEventListener('submit', salvarFiltroCompleto);
+  });
+</script>
+
 
 <?php include 'includes/footer.php'; ?>
 <script src="includes/select/select2.js"></script>

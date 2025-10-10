@@ -43,7 +43,10 @@
             <div class="col-sm-4 col-xl-2">
               <div class="d-flex">
                 <button type="submit" class="btn botao botao_azul_escuro waves-effect w-100">Filtrar</button>
-                <div onclick="window.location.href='painel.php'" class="btn botao botao_cinza waves-effect w-100 ms-3">
+                <!-- <div onclick="window.location.href='disponibilidade_data.php'"
+                  class="btn botao botao_cinza waves-effect w-100 ms-3">
+                  Limpar</div> -->
+                <div onclick="limparFiltroDiario()" class="btn botao botao_cinza waves-effect w-100 ms-3">
                   Limpar</div>
               </div>
             </div>
@@ -575,3 +578,46 @@ try {
 </div>
 
 <?php include 'includes/footer.php'; ?>
+
+
+
+<script>
+  // Chaves de Local Storage específicas para o filtro diário
+  const LS_DATA = 'disponibilidade_data_data';
+
+  function salvarFiltroDiario() {
+    const data = document.getElementById('data').value;
+    if (data) {
+      localStorage.setItem(LS_DATA, data);
+    } else {
+      localStorage.removeItem(LS_DATA);
+    }
+  }
+
+  function limparFiltroDiario() {
+    localStorage.removeItem(LS_DATA);
+    // Redireciona para limpar os parâmetros GET da URL
+    window.location.href = 'disponibilidade_data.php';
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const dataInput = document.getElementById('data');
+
+    // **1. Lógica de Carregamento e Aplicação do Filtro Persistente**
+    // Verifica se a URL está vazia (sem filtros GET) E se há um valor salvo no Local Storage.
+    if ((window.location.search === "" || window.location.search === "?") && localStorage.getItem(LS_DATA)) {
+
+      const storedData = localStorage.getItem(LS_DATA);
+
+      // Define o valor no input (o flatpickr já o terá no input, mas garantimos aqui)
+      dataInput.value = storedData;
+
+      // **Submete o formulário** para aplicar o filtro salvo e renderizar a tabela.
+      dataInput.closest('form').submit();
+    }
+
+    // **2. Anexar o Listener para Salvar o Filtro**
+    // Isso deve ser feito APENAS uma vez.
+    dataInput.addEventListener('change', salvarFiltroDiario);
+  });
+</script>
