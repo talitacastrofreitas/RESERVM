@@ -1,7 +1,27 @@
 <?php include 'includes/header.php'; ?>
 
 
-<?php include 'includes/nav/header_analise.php'; ?>
+<?php include 'includes/nav/header_analise.php';
+
+// =====================================================================
+// 0. INICIALIZAÇÃO DE VARIÁVEIS CRÍTICAS (CORREÇÃO DE WARNINGS)
+// =====================================================================
+
+// Variáveis de Perfil (Capturadas do header.php)
+$PERFIL_ADMIN = 1;
+$PERFIL_OPERADOR = 2;
+$perfil_id = $global_admin_perfil ?? 0; // Perfil do usuário logado
+$user_id = $global_admin_id ?? '';       // ID do usuário logado
+
+// Variáveis de Ocorrência
+$ocorrencia_atual = null; // Inicializa para evitar o Warning na linha 1886 (ou similar)
+$pode_editar_operador = false;
+$edicao_cria_versao = false;
+
+// Busca os dados principais da solicitação (assumindo que essa lógica existe e define $solic_id)
+$solic_id = $_GET['i'] ?? die("ID da Solicitação não fornecido.");
+
+?>
 
 <div class="row">
   <div class="col-lg-12">
@@ -91,6 +111,8 @@
 
 
                           <?php
+
+
                           // Busca a matrícula do Coordenador (já está no escopo, mas repetindo a busca para segurança)
                           $sql_coord_matricula = $conn->prepare("SELECT curs_matricula_prof FROM cursos WHERE curs_id = :curs_id");
                           $sql_coord_matricula->execute([':curs_id' => $solic_curso]);
@@ -1827,6 +1849,7 @@ ORDER BY reservas.res_data ASC;");
                       <tbody>
 
                         <?php
+
                         try {
                           $stmt = $conn->prepare("SELECT * FROM ocorrencias
                                                                              INNER JOIN reservas ON reservas.res_id = ocorrencias.oco_res_id
@@ -1879,22 +1902,63 @@ ORDER BY reservas.res_data ASC;");
                             extract($row);
 
 
+                            // GARANTIR INICIALIZAÇÃO DA VARIÁVEL DE EDIÇÃO
+                            $pode_editar_operador = false; // Flag específica para o operador
+                        
+                            // Assumindo que:
+// $oco_status, $oco_data_cad e $oco_user_id (dados da ocorrência) estão disponíveis via extract($row);
+// $perfil_id e $user_id (dados do usuário logado) estão definidos no topo do arquivo.
+                        
+                            // Acesso seguro aos dados da ocorrência para esta linha
+                            $oco_status_linha = $row['oco_status']; // Acessa diretamente do array $row
+                            $oco_user_id_linha = $row['oco_user_id'];
+                            $oco_data_cad_linha = $row['oco_data_cad'];
+
+
+                            // O operador só pode editar se o status for 1 (Pendente)
+                            if ((int) $perfil_id === $PERFIL_OPERADOR && $oco_status_linha == 1) {
+
+                              // Calcula diferença de tempo
+                              $oco_data_criacao = new DateTime($oco_data_cad_linha);
+                              $agora = new DateTime();
+                              $diferenca_segundos = $agora->getTimestamp() - $oco_data_criacao->getTimestamp();
+                              $limite_24h = 24 * 60 * 60;
+
+                              $is_criador = ($user_id === $oco_user_id_linha);
+
+                              // REGRA DE EDIÇÃO: SÓ PERMITIDA se for criador E dentro de 24h.
+                              if ($is_criador && $diferenca_segundos <= $limite_24h) {
+                                $pode_editar_operador = true;
+                                // Se a edição for um UPDATE DIRETO, mantenha esta linha:
+                                $edicao_cria_versao = false;
+                              }
+                            }
                             ?>
+
                             <tr>
-                              <th scope="row" class="text-bolder"><?= $oco_codigo ?></th>
-                              <td scope="row" class="text-uppercase"><?= $tipos_formatados ?></td>
-                              <td scope="row" class="text-uppercase"><?= $esp_nome_local ?></td>
+                              <th scope="row" class="text-bolder">
+                                <?= $oco_codigo ?>
+                              </th>
+                              <td scope="row" class="text-uppercase">
+                                <?= $tipos_formatados ?>
+                              </td>
+                              <td scope="row" class="text-uppercase">
+                                <?= $esp_nome_local ?>
+                              </td>
                               <td scope="row" nowrap="nowrap" class="text-uppercase">
                                 <?= $and_andar ?>
                               </td>
                               <td scope="row" nowrap="nowrap" class="text-uppercase">
                                 <?= $pav_pavilhao ?>
                               </td>
-                              <td scope="row" class="text-uppercase"><?= $uni_unidade ?></td>
-                              <td scope="row" class="text-uppercase"><?= $tipesp_tipo_espaco ?>
+                              <td scope="row" class="text-uppercase">
+                                <?= $uni_unidade ?>
                               </td>
-                              <th scope="row" nowrap="nowrap" class="text-bolder"><span
-                                  class="hide_data"><?= date('Ymd', strtotime($res_data)) ?></span><?= htmlspecialchars(date('d/m/Y', strtotime($res_data))) ?>
+                              <td scope="row" class="text-uppercase">
+                                <?= $tipesp_tipo_espaco ?>
+                              </td>
+                              <th scope="row" nowrap="nowrap" class="text-bolder"><span class=" hide_data">
+                                  <?= date('Ymd', strtotime($res_data)) ?></span><?= htmlspecialchars(date('d/m/Y', strtotime($res_data))) ?>
                               </th>
                               <th scope="row" nowrap="nowrap" class="text-bolder"><span
                                   class="hide_data"><?= date('iH', strtotime($oco_hora_inicio_realizado)) ?></span><?= date('H:i', strtotime($oco_hora_inicio_realizado)) ?>
@@ -1903,29 +1967,36 @@ ORDER BY reservas.res_data ASC;");
                                   class="hide_data"><?= date('iH', strtotime($oco_hora_fim_realizado)) ?></span><?= date('H:i', strtotime($oco_hora_fim_realizado)) ?>
                               </th>
                               <td scope="row" class="text-uppercase"><?= $admin_nome ?></td>
-                              <td scope="row" nowrap="nowrap" class="text-bolder"><span
-                                  class="hide_data"><?= date('Ymd', strtotime($oco_data_cad)) ?></span><?= date('d/m/Y H:i', strtotime($oco_data_cad)) ?>
+                              <td scope="row" nowrap="nowrap" class="text-bolder"><span class="hide_data">
+                                  <?= date('Ymd', strtotime($oco_data_cad)) ?></span>
+                                <?= date('d/m/Y H:i', strtotime($oco_data_cad)) ?>
                               </td>
                               <td class="text-end">
                                 <div class="dropdown dropdown drop_tabela d-inline-block">
-                                  <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button"
+                                  <button class=" btn btn_soft_verde_musgo btn-sm dropdown" type="button"
                                     data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="ri-more-fill align-middle"></i>
                                   </button>
                                   <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal"
-                                        data-bs-target="#modal_edit_ocorrencia" data-bs-oco_id="<?= $oco_id ?>"
-                                        data-bs-oco_res_id="<?= $oco_res_id ?>" data-bs-oco_solic_id="<?= $oco_solic_id ?>"
-                                        data-bs-oco_tipo_ocorrencia="<?= $oco_tipo_ocorrencia ?>"
-                                        data-bs-oco_hora_inicio_realizado="<?= date('H:i', strtotime($oco_hora_inicio_realizado)) ?>"
-                                        data-bs-oco_hora_fim_realizado="<?= date('H:i', strtotime($oco_hora_fim_realizado)) ?>"
-                                        data-bs-oco_obs="<?= $oco_obs ?>" title="Editar"><i
-                                          class="fa-regular fa-pen-to-square me-2"></i>
-                                        Editar</a></li>
+                                    <?php if ($pode_editar_operador): ?>
+                                      <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal"
+                                          data-bs-target="#modal_edit_ocorrencia" data-bs-oco_id="<?= $oco_id ?>"
+                                          data-bs-oco_res_id="<?= $oco_res_id ?>" data-bs-oco_solic_id="<?= $oco_solic_id ?>"
+                                          data-bs-oco_tipo_ocorrencia="<?= $oco_tipo_ocorrencia ?>"
+                                          data-bs-oco_hora_inicio_realizado="<?= date('H:i', strtotime($oco_hora_inicio_realizado)) ?>"
+                                          data-bs-oco_hora_fim_realizado="<?= date('H:i', strtotime($oco_hora_fim_realizado)) ?>"
+                                          data-bs-oco_obs="
+                                      <?= $oco_obs ?>" title="Editar"><i class="fa-regular fa-pen-to-square me-2"></i>
+                                          Editar</a></li>
+                                    <?php else: ?>
+                                      <span class="text-danger small">A edição está bloqueada (Status alterado ou 24h
+                                        expiradas).</span>
+                                    <?php endif; ?>
                                     <li><a href="../router/web.php?r=Ocorrenc&acao=deletar&oco_id=<?= $oco_id ?>"
                                         class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
                                           class="fa-regular fa-trash-can me-2"></i>
-                                        Excluir</a></li>
+                                        Excluir
+                                      </a></li>
                                   </ul>
                                 </div>
                               </td>
@@ -1956,12 +2027,12 @@ ORDER BY reservas.res_data ASC;");
 
 <style>
   /* .progress-nav .nav .nav-link.active,
-    .progress-nav .nav .nav-link.done,
-    .progress-nav .nav .nav-link:focus,
-    .progress-nav .nav .nav-link:active {
-        border: 0 !important;
-        background-color: var(--verde_musgo) !important;
-    } */
+                        .progress-nav .nav .nav-link.done,
+                        .progress-nav .nav .nav-link:focus,
+                        .progress-nav .nav .nav-link:active {
+                        border: 0 !important;
+                        background-color: var(--verde_musgo) !important;
+                        } */
 
   .progress-nav .nav .nav-link {
     width: 100% !important;
@@ -1973,8 +2044,8 @@ ORDER BY reservas.res_data ASC;");
   }
 
   /* .progress-bar {
-        background-color: var(--verde_musgo) !important;
-    } */
+                        background-color: var(--verde_musgo) !important;
+                        } */
 
   .progress,
   .progress-stacked {

@@ -98,21 +98,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
       // 1. Pega os horários do registro atual para cálculo
       $stmt_tempos = $conn->prepare("SELECT oco_hora_inicio_realizado, oco_hora_fim_realizado FROM ocorrencias WHERE oco_id = :oco_id");
-
       $stmt_tempos->execute([':oco_id' => $oco_id_original]);
       $tempos = $stmt_tempos->fetch(PDO::FETCH_ASSOC);
 
       if (!$tempos || empty($tempos['oco_hora_inicio_realizado']) || empty($tempos['oco_hora_fim_realizado'])) {
         throw new Exception("Não é possível validar: horários de início ou fim não estão definidos.");
       }
+
       // 2. Calcula a carga horária
       $inicio = new DateTime($tempos['oco_hora_inicio_realizado']);
       $fim = new DateTime($tempos['oco_hora_fim_realizado']);
       $intervalo = $inicio->diff($fim);
-      $carga_horaria = $intervalo->format('%H:%I:%S'); // <--- A CARGA HORÁRIA É CALCULADA AQUI
+      $carga_horaria = $intervalo->format('%H:%I:%S');
 
       // 3. Atualiza o status e a carga horária no registro principal
-      $sql_update = "UPDATE ocorrencias SET oco_status = 2, oco_carga_horaria_calculada = :carga_horaria, oco_autor_edicao = :autor_edicao, oco_data_edicao = GETDATE() WHERE oco_id = :oco_id";
+      $sql_update = "UPDATE ocorrencias SET 
+                          oco_status = 2, -- Status VALIDADA
+                          oco_carga_horaria_calculada = :carga_horaria,
+                          oco_autor_edicao = :autor_edicao,
+                          oco_data_edicao = GETDATE()
+                       WHERE oco_id = :oco_id";
       $stmt_update = $conn->prepare($sql_update);
       $stmt_update->execute([
         ':carga_horaria' => $carga_horaria,

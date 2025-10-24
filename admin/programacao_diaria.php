@@ -221,33 +221,48 @@ $turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'
                             $params[':data'] = $dataFiltro;
 
                             // Construção da query SQL em partes
-        //                     $sql = "SELECT res_hora_inicio, res_hora_fim, curs_curso, cs_semestre, compc_componente, res_componente_atividade, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, esp_nome_local_resumido,pav_pavilhao, and_andar, uni_unidade, res_obs
-        //    FROM reservas
-        //    LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
-        //    LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
-        //    LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
-        //    INNER JOIN espaco ON espaco.esp_id = reservas.res_espaco_id
-        //    INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
-        //    LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
-        //    LEFT JOIN andares ON andares.and_id = espaco.esp_andar
-        //    LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
-        //    WHERE res_data = :data";
-
-        $sql = "SELECT res_hora_inicio, res_hora_fim, curs_curso, cs_semestre, compc_componente, res_componente_atividade, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, esp_nome_local_resumido,pav_pavilhao, and_andar, uni_unidade, res_obs
-           FROM reservas
-           LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
-           LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
-           LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
-           INNER JOIN espaco ON espaco.esp_id = reservas.res_espaco_id
-           INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
-           LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
-           LEFT JOIN andares ON andares.and_id = espaco.esp_andar
-           LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
-           -- NOVO JOIN PARA FILTRAR PELO STATUS PRINCIPAL DA SOLICITAÇÃO (RESERVADO = 4)
-           INNER JOIN solicitacao_status AS ss ON ss.solic_sta_solic_id = reservas.res_solic_id
-           WHERE res_data = :data
-           AND ss.solic_sta_status = 4"; // NOVO FILTRO AQUI
-
+                            //                     $sql = "SELECT res_hora_inicio, res_hora_fim, curs_curso, cs_semestre, compc_componente, res_componente_atividade, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, esp_nome_local_resumido,pav_pavilhao, and_andar, uni_unidade, res_obs
+                            //    FROM reservas
+                            //    LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
+                            //    LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
+                            //    LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
+                            //    INNER JOIN espaco ON espaco.esp_id = reservas.res_espaco_id
+                            //    INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
+                            //    LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
+                            //    LEFT JOIN andares ON andares.and_id = espaco.esp_andar
+                            //    LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
+                            //    WHERE res_data = :data";
+                        
+                            $sql = "SELECT 
+            reservas.res_hora_inicio, 
+            reservas.res_hora_fim, 
+            cursos.curs_curso, 
+            conf_semestre.cs_semestre, 
+            componente_curricular.compc_componente, 
+            reservas.res_componente_atividade, 
+            reservas.res_componente_atividade_nome, 
+            reservas.res_nome_atividade, 
+            reservas.res_modulo, 
+            reservas.res_professor, 
+            espaco.esp_nome_local_resumido,
+            pavilhoes.pav_pavilhao, 
+            andares.and_andar, 
+            unidades.uni_unidade, 
+            reservas.res_obs,
+            reservas.res_solic_id AS solic_id   -- ✅ ADICIONA ESTA LINHA
+        FROM reservas
+        LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
+        LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
+        LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
+        INNER JOIN espaco ON espaco.esp_id = reservas.res_espaco_id
+        INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
+        LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
+        LEFT JOIN andares ON andares.and_id = espaco.esp_andar
+        LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
+        INNER JOIN solicitacao_status AS ss ON ss.solic_sta_solic_id = reservas.res_solic_id
+        WHERE reservas.res_data = :data
+          AND ss.solic_sta_status = 4"; // NOVO FILTRO AQUI
+                        
                             // Filtro por unidade
                             if (!empty($unidadeFiltro)) {
                                 $sql .= " AND esp_unidade = :unidade";
@@ -284,7 +299,8 @@ $turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'
                                 $and_andar = $row['and_andar'];
                                 $uni_unidade = $row['uni_unidade'];
                                 $res_obs = $row['res_obs'];
-
+                                $solic_id = $row['solic_id']; // ✅ NOVO
+                        
                                 // CONFIGURAÇÃO COMPONENTES
                                 if (!empty($res_componente_atividade)) {
                                     $componente = $compc_componente;
@@ -295,7 +311,8 @@ $turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'
                                 }
 
                                 ?>
-                                <tr>
+                                <!-- <tr> -->
+                                <tr role="button" data-href='solicitacao_analise.php?i=<?= htmlspecialchars($solic_id) ?>'>
                                     <th scope="row" class="fw-bold">
                                         <?= htmlspecialchars(date('H:i', strtotime($res_hora_inicio))) ?>
                                     </th>
@@ -332,5 +349,37 @@ $turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'
 
 </div>
 </div>
+
+<script>
+    $(document).ready(function () {
+        // Quando clicar numa linha da tabela
+        $('table').on('click', 'tr', function (e) {
+            // Ignora cliques em botões, ícones, botões de fechar modal
+            if (
+                $(e.target).closest('.btn').length > 0 ||
+                $(e.target).closest('.btn-close').length > 0 ||
+                $(e.target).closest('.modal').length > 0
+            ) {
+                return;
+            }
+
+            // Vai para o link da linha (data-href)
+            const href = $(this).data('href');
+            if (href) {
+                window.location.href = href;
+            }
+        });
+
+        // Impede propagação de clique em botões ou ícones dentro da tabela
+        $(document).on('click', '.btn, .btn-close', function (e) {
+            e.stopPropagation();
+        });
+
+        // Impede que clique fora do modal acione a linha da tabela
+        $(document).on('click', '.modal, .modal *', function (e) {
+            e.stopPropagation();
+        });
+    });
+</script>
 
 <?php include 'includes/footer.php'; ?>

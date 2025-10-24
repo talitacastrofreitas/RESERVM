@@ -51,10 +51,10 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
           <div class="col-sm-6 text-sm-start text-center">
             <h5 class="card-title mb-0">Lista de Cursos</h5>
           </div>
-          <div class="col-sm-6 d-flex align-items-center d-flex justify-content-sm-end justify-content-center">
+          <!-- <div class="col-sm-6 d-flex align-items-center d-flex justify-content-sm-end justify-content-center">
             <button class="btn botao botao_amarelo waves-effect mt-3 mt-sm-0" data-bs-toggle="modal"
               data-bs-toggle="button" data-bs-target="#modal_cad_curso">+ Cadastrar Curso</button>
-          </div>
+          </div> -->
         </div>
       </div>
       <div class="card-body p-0">

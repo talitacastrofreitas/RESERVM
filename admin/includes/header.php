@@ -233,7 +233,7 @@ if (empty($_SESSION['session_admin_logged_in'])) {
 
 
 
-            <li class="nav-item ">
+            <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
               <a class="nav-link menu-link" href="#sidebarLanding" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarLanding"><span data-key="t-landing">Solicitações</span>
                 <?php
@@ -363,7 +363,7 @@ if (empty($_SESSION['session_admin_logged_in'])) {
 
 
 
-            <li class="nav-item">
+            <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
               <!-- <a class="nav-link menu-link" href="painel.php"><span>Disponibilidade</span></a> -->
 
               <a class="nav-link menu-link" href="#sidebarLanding" data-bs-toggle="collapse" role="button"
@@ -398,7 +398,7 @@ if (empty($_SESSION['session_admin_logged_in'])) {
               <a class="nav-link menu-link" href="ocorrencias.php"><span>Ocorrências</span></a>
             </li>
 
-            <li class="nav-item">
+            <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
               <a class="nav-link menu-link" href="usuarios.php"><span>Usuários</span></a>
             </li>
 

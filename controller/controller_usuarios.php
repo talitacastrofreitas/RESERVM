@@ -151,7 +151,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
         </p>
 
         <p style='font-size: 1rem; font-weight: 400; margin: 0px 0px 20px 0px;'>
-        Seu código do SIGAEXT chegou!
+        Seu código chegou!
         </p>
 
         <p style='font-size: 1rem; font-weight: 400; margin: 0px 0px 20px 0px;'>
