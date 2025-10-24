@@ -18,6 +18,25 @@ $ocorrencia_atual = null; // Inicializa para evitar o Warning na linha 1886 (ou 
 $pode_editar_operador = false;
 $edicao_cria_versao = false;
 
+// O operador só pode editar se o status for 1 (Pendente)
+if ((int) $perfil_id === $PERFIL_OPERADOR && $oco_status_linha == 1) {
+
+  // Calcula diferença de tempo
+  $oco_data_criacao = new DateTime($oco_data_cad_linha);
+  $agora = new DateTime();
+  $diferenca_segundos = $agora->getTimestamp() - $oco_data_criacao->getTimestamp();
+  $limite_24h = 24 * 60 * 60;
+
+  $is_criador = ($user_id === $oco_user_id_linha);
+
+  // REGRA DE EDIÇÃO: SÓ PERMITIDA se for criador E dentro de 24h.
+  if ($is_criador && $diferenca_segundos <= $limite_24h) {
+    $pode_editar_operador = true;
+    // Se a edição for um UPDATE DIRETO, mantenha esta linha:
+    $edicao_cria_versao = false;
+  }
+}
+
 // Busca os dados principais da solicitação (assumindo que essa lógica existe e define $solic_id)
 $solic_id = $_GET['i'] ?? die("ID da Solicitação não fornecido.");
 
@@ -1977,21 +1996,28 @@ ORDER BY reservas.res_data ASC;");
                                     data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="ri-more-fill align-middle"></i>
                                   </button>
-                                  <ul class="dropdown-menu dropdown-menu-end">
-                                    <?php if ($pode_editar_operador): ?>
-                                      <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal"
-                                          data-bs-target="#modal_edit_ocorrencia" data-bs-oco_id="<?= $oco_id ?>"
-                                          data-bs-oco_res_id="<?= $oco_res_id ?>" data-bs-oco_solic_id="<?= $oco_solic_id ?>"
-                                          data-bs-oco_tipo_ocorrencia="<?= $oco_tipo_ocorrencia ?>"
-                                          data-bs-oco_hora_inicio_realizado="<?= date('H:i', strtotime($oco_hora_inicio_realizado)) ?>"
-                                          data-bs-oco_hora_fim_realizado="<?= date('H:i', strtotime($oco_hora_fim_realizado)) ?>"
-                                          data-bs-oco_obs="
-                                      <?= $oco_obs ?>" title="Editar"><i class="fa-regular fa-pen-to-square me-2"></i>
-                                          Editar</a></li>
-                                    <?php else: ?>
-                                      <span class="text-danger small">A edição está bloqueada (Status alterado ou 24h
-                                        expiradas).</span>
-                                    <?php endif; ?>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                            <?php
+                                            // Se for Admin OU Operador com permissão ($pode_editar_operador é true se a regra de 24h foi atendida)
+                                            if ($pode_editar_operador || (int) $perfil_id === $PERFIL_ADMIN):
+                                              ?>
+                                              <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal"
+                                                  data-bs-target="#modal_edit_ocorrencia" data-bs-oco_id="<?= $oco_id ?>"
+                                                  data-bs-oco_res_id="<?= $oco_res_id ?>" data-bs-oco_solic_id="<?= $oco_solic_id ?>"
+                                                  data-bs-oco_tipo_ocorrencia="<?= $oco_tipo_ocorrencia ?>"
+                                                  data-bs-oco_hora_inicio_realizado="<?= date('H:i', strtotime($oco_hora_inicio_realizado)) ?>"
+                                                  data-bs-oco_hora_fim_realizado="<?= date('H:i', strtotime($oco_hora_fim_realizado)) ?>"
+                                                  data-bs-oco_obs="<?= $oco_obs ?>" title="Editar"><i
+                                                    class="fa-regular fa-pen-to-square me-2"></i>
+                                                  Editar</a></li>
+                                            <?php else:
+                                              // Item desabilitado e cinza
+                                              $title_block = 'Bloqueado: 24h expiradas ou status alterado.';
+                                              ?>
+                                              <li><a href="#" class="dropdown-item text-muted disabled" title="<?= $title_block ?>"><i
+                                                    class="fa-regular fa-pen-to-square me-2"></i>
+                                                  Editar</a></li>
+                                            <?php endif; ?>
                                     <li><a href="../router/web.php?r=Ocorrenc&acao=deletar&oco_id=<?= $oco_id ?>"
                                         class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
                                           class="fa-regular fa-trash-can me-2"></i>

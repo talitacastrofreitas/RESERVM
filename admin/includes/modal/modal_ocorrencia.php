@@ -553,6 +553,9 @@
       // REVERTE O NL2BR DO PHP (para exibir no textarea)
       let oco_obs = oco_obs_raw_nl2br ? oco_obs_raw_nl2br.replace(/<br\s*\/?>/gi, '\n') : '';
 
+      // REVERTE O PARECER TÉCNICO (O parecer técnico também usa nl2br)
+      let parecer_tecnico = oco_parecer_tecnico ? oco_parecer_tecnico.replace(/<br\s*\/?>/gi, '\n') : ''; // <--- LINHA DE TRATAMENTO ADICIONADA/CORRIGIDA
+
       // BUSCA ELEMENTOS
       const modal_oco_id = modal_admin_ocorrencia.querySelector('input[name="oco_id"]')
       const modal_parecer = modal_admin_ocorrencia.querySelector('.admin_oco_parecer_tecnico')
@@ -570,9 +573,9 @@
       // PREENCHIMENTO DOS CAMPOS
       // ===============================================
       modal_oco_id.value = oco_id
-      modal_parecer.value = '' // ** ZERA O PARECER TÉCNICO **
       inputStatus.value = '2'; // Define o status para VALIDADA por padrão no modal admin
-
+      modal_parecer.value = parecer_tecnico // <--- LINHA CHAVE CORRIGIDA
+      inputStatus.value = '2';
       // 1. PREENCHIMENTO DOS CAMPOS OBRIGATÓRIOS (HIDDEN)
       modal_res_id_hidden.value = oco_res_id;
       modal_obs_hidden.value = oco_obs_raw_nl2br; // Envia o valor original COM NL2BR de volta ao controller

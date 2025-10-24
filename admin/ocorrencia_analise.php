@@ -182,6 +182,8 @@ $tipo_reserva_nome = strtoupper($dados_reserva['res_tipo'] ?? '');
  */
 function renderOcorrenciaCard($data, $is_admin_card, $tipos_map = [])
 {
+    global $ocorrencia_atual; // Necessário para acessar o status e carga horária atualizados
+
     if (!$data)
         return;
 
@@ -250,57 +252,31 @@ function renderOcorrenciaCard($data, $is_admin_card, $tipos_map = [])
             </div>
         </div>
 
-        <div class="col-12 ">
-            <label class="mb-1 text-muted">Observações</label>
-            <p class="mb-0"><?= ($obs ?? 'N/A') ?></p>
+        <div class="row">
+            <div class="col-sm-12 col-xl-6">
+                <label class="mb-1 text-muted">Observações</label>
+                <p class="mb-0"><?= ($obs ?? 'N/A') ?></p>
+                <hr>
+            </div>
+            <?php 
+            // Carga Horária (6 colunas) APENAS se a ocorrência foi VALIDADA (status 2) E não possui Parecer Técnico.
+            if ($ocorrencia_atual['oco_status'] == 2 && empty($ocorrencia_atual['oco_parecer_tecnico'])): 
+            ?>
+                <div class="col-sm-12 col-xl-6">
+                    <label class="mb-1 text-muted">Carga Horária Calculada</label>
+                    <p class="mb-0 fw-medium"> 
+                        <?= (($ocorrencia_atual['oco_status'] == 2 && $ocorrencia_atual['oco_carga_horaria_calculada']) ? htmlspecialchars(date('H:i', strtotime($ocorrencia_atual['oco_carga_horaria_calculada']))) : 'N/A') ?>
+                    </p>
+                    <hr>
+                </div>
+            <?php endif; ?>
         </div>
 
         <?php
     else:
-        // LAYOUT DO ADMIN (Card de Revisão Técnica - SÓ CARGA HORÁRIA E EDIÇÃO)
+        // LAYOUT DO ADMIN (Este bloco está vazio, pois o conteúdo foi movido para o Accordion)
         ?>
-        <div class="card p-3 my-3 card-body-admin">
-            <h6 class="mb-3 text-primary">Revisão Técnica</h6>
-            <div class="row g-3">
-
-                <div class="col-sm-12 col-xl-4 col-xxl-3">
-                    <label>Tipo(s) de Ocorrência:</label>
-                    <p class="text-uppercase"><?= $tipos_selecionados_html ?> </p>
-                </div>
-                <hr>
-            </div>
-            <div class="row g-3">
-                <div class="col-sm-6 col-xl-4 col-xxl-3">
-                    <label>Início Realizado:</label>
-                    <p> <?= $inicio_realizado ?> </p>
-                    <hr>
-                </div>
-                <div class="col-sm-6 col-xl-4 col-xxl-3">
-                    <label>Término Realizado:</label>
-                    <p> <?= $fim_realizado ?> </p>
-                    <hr>
-                </div>
-            </div>
-
-                        <div class="col-sm-6 col-xl-4 col-xxl-3">
-                <label>Carga Horária Calculada:</label>
-                <p> <?= (($data['oco_status'] == 2 && $carga_horaria) ? htmlspecialchars(date('H:i', strtotime($carga_horaria))) : 'N/A') ?>
-                </p>
-                <hr>
-            </div>
-            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                <label>Operador</label>
-                <p> <?= $editor_nome ?> </p>
-                <hr>
-            </div>
-
-            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                <label>Data da Edição:</label>
-                <p> <?= $data_edicao ?> </p>
-                <hr>
-            </div>
-        </div>
-        </div>
+        
         <?php
     endif;
 }
@@ -355,12 +331,16 @@ if (!$ocorrencia_atual || $erro_busca_sql):
 
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
+            <div class="card card_dados_info">
                 <div class="card-header ">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Dados da ocorrência</h5>
                         <div class="d-flex justify-content-end ">
 
+                            <?php 
+                                // Determina qual conjunto de dados deve preencher o modal
+                                $dados_para_o_modal = !empty($ocorrencia_atual['oco_parecer_tecnico']) ? $ocorrencia_atual : $versao_original_absoluta;
+                            ?>
                             <?php if ($pode_editar && $ocorrencia_atual['oco_status'] == 1): ?>
                                 <form id="form_validar_ocorrencia" method="POST" action="../router/web.php?r=Ocorrenc"
                                     style="display:inline;">
@@ -375,20 +355,18 @@ if (!$ocorrencia_atual || $erro_busca_sql):
                                 </form>
                             <?php endif; ?>
 
-                            <?php if ($pode_editar):
-                                $dados_originais_para_modal = $versao_original_absoluta;
-                                ?>
+                            <?php if ($pode_editar): ?>
                                 <button type="button"
                                     class="btn botao_w botao botao_azul_escuro waves-effect mb-2 mb-sm-0 ms-0 ms-sm-3"
                                     data-bs-toggle="modal" data-bs-target="#modal_admin_ocorrencia"
                                     data-bs-oco_id="<?= htmlspecialchars($ocorrencia_atual['oco_id'] ?? '') ?>"
                                     data-bs-oco_res_id="<?= htmlspecialchars($ocorrencia_atual['oco_res_id'] ?? '') ?>"
-                                    data-bs-oco_status="<?= htmlspecialchars($ocorrencia_atual['oco_status'] ?? '1') ?>"
-                                    data-bs-oco_parecer_tecnico="<?= htmlspecialchars($ocorrencia_atual['oco_parecer_tecnico'] ?? '') ?>"
-                                    data-bs-oco_tipo_ocorrencia="<?= htmlspecialchars($dados_originais_para_modal['oco_tipo_ocorrencia'] ?? '') ?>"
-                                    data-bs-oco_hora_inicio_realizado="<?= htmlspecialchars($dados_originais_para_modal['oco_hora_inicio_realizado'] ?? '') ?>"
-                                    data-bs-oco_hora_fim_realizado="<?= htmlspecialchars($dados_originais_para_modal['oco_hora_fim_realizado'] ?? '') ?>"
-                                    data-bs-oco_obs="<?= htmlspecialchars($dados_originais_para_modal['oco_obs'] ?? '') ?>"
+                                    data-bs-oco_status="<?= htmlspecialchars($dados_para_o_modal['oco_status'] ?? '1') ?>"
+                                    data-bs-oco_parecer_tecnico="<?= htmlspecialchars($dados_para_o_modal['oco_parecer_tecnico'] ?? '') ?>"
+                                    data-bs-oco_tipo_ocorrencia="<?= htmlspecialchars($dados_para_o_modal['oco_tipo_ocorrencia'] ?? '') ?>"
+                                    data-bs-oco_hora_inicio_realizado="<?= htmlspecialchars($dados_para_o_modal['oco_hora_inicio_realizado'] ?? '') ?>"
+                                    data-bs-oco_hora_fim_realizado="<?= htmlspecialchars($dados_para_o_modal['oco_hora_fim_realizado'] ?? '') ?>"
+                                    data-bs-oco_obs="<?= htmlspecialchars($dados_para_o_modal['oco_obs'] ?? '') ?>"
                                     data-bs-res_hora_inicio="<?= htmlspecialchars($dados_reserva['res_hora_inicio'] ?? '') ?>"
                                     data-bs-res_hora_fim="<?= htmlspecialchars($dados_reserva['res_hora_fim'] ?? '') ?>"
                                     data-bs-res_codigo_data="<?= htmlspecialchars($dados_reserva['res_codigo'] . ': ' . date('d/m/Y', strtotime($dados_reserva['res_data'] ?? ''))) ?>">
@@ -408,343 +386,280 @@ if (!$ocorrencia_atual || $erro_busca_sql):
 
                     <?php renderOcorrenciaCard($dados_operador_para_exibir, false, $tipos_ocorrencia_map); ?>
 
-                    <?php if ($mostrar_secao_admin): ?>
-                                            <?php endif; ?>
-                    <?php if ($mostrar_secao_admin): ?>
-                        <h5 class="card-title mb-3 mt-4">Dados de Revisão (Admin)</h5>
-                        <div class="card p-3 my-3 card-body-admin">
-                            <h6 class="mb-3 text-primary">Revisão Técnica</h6>
-                            <div class="row g-3">
+                    <hr class="mt-4 mb-3" />
+                </div>
+            </div>
 
-                                <div class="col-sm-12 col-xl-4 col-xxl-3">
-                                    <label>Tipo(s) de Ocorrência:</label>
-                                    <p class="text-uppercase"><?= $tipos_selecionados_html ?> </p>
-                                </div>
+            <div class="card card_dados_info">
+
+                <div class="card-header " style="background: var(--roxo_alpha);">
+                    <div class="col-12 tit_nova_solicitacao">
+                        <h3 class="m-0 fs-16" style="color: var(--preto);">Dados da Reserva</h3>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label class="text-muted">ID da Reserva</label>
+                            <p>
+                                <?= htmlspecialchars($dados_reserva['res_codigo'] ?? 'N/A') ?>
+                            </p>
+                            <hr>
+                        </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label class="text-muted">Curso</label>
+                            <p><?= htmlspecialchars($dados_reserva['curso'] ?? 'N/A') ?></p>
+                            <hr>
+                        </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label class="text-muted">Componente
+                                Curricular/Atividade</label>
+                            <p><?= htmlspecialchars($dados_reserva['componente'] ?? 'N/A') ?></p>
+                            <hr>
+                        </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label class="text-muted">Nome do Professor/Responsável</label>
+                            <p><?= htmlspecialchars($dados_reserva['professor'] ?? 'N/A') ?></p>
+                            <hr>
+                        </div>
+
+                    </div>
+
+                    <div class="row g-3 mt-0">
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label class="text-muted">ID do Local</label>
+                            <p> <?= htmlspecialchars($dados_reserva['local_id'] ?? 'N/A') ?>
+                            </p>
+                            <hr>
+                        </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3"><label class="text-muted">Local
+                                Reservado</label>
+                            <p><?= htmlspecialchars($dados_reserva['local_nome'] ?? 'N/A') ?></p>
+                            <hr>
+                        </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label class="text-muted">Campus</label>
+                            <p><?= htmlspecialchars($dados_reserva['campus_nome'] ?? 'N/A') ?></p>
+                            <hr>
+                        </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label class="text-muted">Pavilhão</label>
+                            <p><?= htmlspecialchars($dados_reserva['pavi_nome'] ?? 'N/A') ?></p>
+                            <hr>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-0">
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label class="text-muted">Andar</label>
+                            <p><?= htmlspecialchars($dados_reserva['andar_nome'] ?? 'N/A') ?></p>
+                            <hr>
+                        </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3"><label class="text-muted">Tipo de
+                                Sala</label>
+                            <p><?= htmlspecialchars($dados_reserva['tipo_sala'] ?? 'N/A') ?></p>
+                            <hr>
+                        </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3"><label class="text-muted">Tipo de
+                                Aula</label>
+
+                            <p><?= htmlspecialchars($dados_reserva['tipo_aula'] ?? 'N/A') ?></p>
+                            <hr>
+                        </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3"><label class="text-muted">Tipo de
+                                Reserva</label>
+                            <p><?= htmlspecialchars($dados_reserva['res_tipo'] ?? 'N/A') ?></p>
+                            <hr>
+                        </div>
+                    </div>
+
+                    <?php
+                    $res_data_formatada = isset($dados_reserva['res_data']) ? htmlspecialchars(date('d/m/Y', strtotime($dados_reserva['res_data']))) : 'N/A';
+                    $res_inicio_formatado = isset($dados_reserva['res_hora_inicio']) ? htmlspecialchars(date('H:i', strtotime($dados_reserva['res_hora_inicio']))) : 'N/A';
+                    $res_fim_formatado = isset($dados_reserva['res_hora_fim']) ? htmlspecialchars(date('H:i', strtotime($dados_reserva['res_hora_fim']))) : 'N/A';
+
+                    // Datas de intervalo (para fixas)
+                    $data_inicio_semanal_raw = $dados_reserva['res_data_inicio_semanal'] ?? null;
+                    $data_fim_semanal_raw = $dados_reserva['res_data_fim_semanal'] ?? null;
+
+                    $data_inicio_semanal = $data_inicio_semanal_raw ? htmlspecialchars(date('d/m/Y', strtotime($data_inicio_semanal_raw))) : 'N/A';
+                    $data_fim_semanal = $data_fim_semanal_raw ? htmlspecialchars(date('d/m/Y', strtotime($data_fim_semanal_raw))) : 'N/A';
+
+
+                    $tipo_reserva_nome = strtoupper($dados_reserva['res_tipo'] ?? '');
+                    ?>
+
+                    <div class="row g-3 mt-0">
+                        <?php if ($tipo_reserva_nome !== 'FIXA'): ?>
+                            <div class="col-sm-6 col-xl-4 col-xxl-3">
+                                <label class="text-muted">Data da Reserva</label>
+                                <p><?= $res_data_formatada ?></p>
                                 <hr>
                             </div>
-                            <div class="row g-3">
-                                <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                    <label>Início Realizado:</label>
-                                    <p> <?= !empty($ocorrencia_atual['oco_hora_inicio_realizado']) ? htmlspecialchars(date('H:i', strtotime($ocorrencia_atual['oco_hora_inicio_realizado']))) : 'N/A' ?> </p>
-                                    <hr>
-                                </div>
-                                <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                    <label>Término Realizado:</label>
-                                    <p> <?= !empty($ocorrencia_atual['oco_hora_fim_realizado']) ? htmlspecialchars(date('H:i', strtotime($ocorrencia_atual['oco_hora_fim_realizado']))) : 'N/A' ?> </p>
-                                    <hr>
+                        <?php elseif ($tipo_reserva_nome === 'FIXA'): ?>
+                            <div class="col-sm-6 col-xl-4 col-xxl-3">
+                                <label class="text-muted">Data Início</label>
+                                <p><?= $data_inicio_semanal ?></p>
+                                <hr>
+                            </div>
+                            <div class="col-sm-6 col-xl-4 col-xxl-3">
+                                <label class="text-muted">Data Fim</label>
+                                <p><?= $data_fim_semanal ?></p>
+                                <hr>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label class="text-muted">Horário Inicial (Previsto)</label>
+                            <p><?= $res_inicio_formatado ?></p>
+                            <hr>
+                        </div>
+                        <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <label class="text-muted">Horário Final (Previsto)</label>
+                            <p><?= $res_fim_formatado ?></p>
+                            <hr>
+                        </div>
+
+                    </div>
+
+                    <?php if ($tipo_reserva_nome === 'FIXA'): ?>
+                        <div class="row g-3 mt-0">
+                            <div class="col-12">
+                                <label class="mb-2 text-muted">Dias da Semana</label><br>
+
+                                <div class="check_item_container hstack gap-2 flex-wrap mt-2">
+                                    <?php
+                                    $map_dias = [
+                                        '1' => 'SEGUNDA',
+                                        '2' => 'TERÇA',
+                                        '3' => 'QUARTA',
+                                        '4' => 'QUINTA',
+                                        '5' => 'SEXTA',
+                                        '6' => 'SÁBADO',
+                                        '7' => 'DOMINGO'
+                                    ];
+                                    $dias_selecionados_ids = explode(',', $dados_reserva['dias_semana_fixa'] ?? '');
+
+                                    foreach ($map_dias as $id => $nome_dia):
+                                        $is_selected = in_array($id, $dias_selecionados_ids);
+                                        $checked_attr = $is_selected ? "checked" : "";
+                                        ?>
+                                        <input type="checkbox" class="btn-check check_formulario_check" id="dias_semana<?= $id ?>"
+                                            value="<?= $id ?>" <?= $checked_attr ?> disabled>
+                                        <label class="check_item check_formulario"
+                                            for="dias_semana<?= $id ?>"><?= htmlspecialchars($nome_dia) ?></label>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
+                        <?php endif; ?>
+                </div>
+            </div>
+
+
+            <?php 
+            // CONDIÇÃO PARA EXIBIÇÃO DO ACCORDION DO PARECER TÉCNICO (SE PODE EDITAR E SE HOUVER PARECER)
+            if ($pode_editar && !empty($ocorrencia_atual['oco_parecer_tecnico'])): ?>
+                <div class="card card_dados_info mb-4">
+                    <div class="card-header " style="background: var(--azul_alpha);">
+                        <div class="col-12 tit_nova_solicitacao">
+                            <h3 class="m-0 fs-16" style="color: var(--preto);"> Parecer técnico</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <h5>Detalhes da Revisão Técnica:</h5>
+                        <?php
+                        $data_ac = $ocorrencia_atual; // Dados da ocorrência atual
+        
+                        // Redefinição de variáveis necessárias para a exibição completa
+                        $parecer_ac = nl2br(htmlspecialchars($data_ac['oco_parecer_tecnico'] ?? ''));
+                        $carga_horaria_ac = $data_ac['oco_carga_horaria_calculada'] ?? null;
+                        $editor_nome_ac = htmlspecialchars($data_ac['editor_nome'] ?? 'Admin');
+                        $oco_tipo_ids_ac = $data_ac['oco_tipo_ocorrencia'] ?? '';
+                        $data_edicao_ac = isset($data_ac['oco_data_edicao']) ? htmlspecialchars(date('d/m/Y H:i', strtotime($data_ac['oco_data_edicao']))) : 'N/A';
+                        $inicio_realizado_ac = !empty($data_ac['oco_hora_inicio_realizado']) ? htmlspecialchars(date('H:i', strtotime($data_ac['oco_hora_inicio_realizado']))) : 'N/A';
+                        $fim_realizado_ac = !empty($data_ac['oco_hora_fim_realizado']) ? htmlspecialchars(date('H:i', strtotime($data_ac['oco_hora_fim_realizado']))) : 'N/A';
+                        
+                        // Lógica dos Tipos de Ocorrência para o Accordion
+                        $tipos_selecionados_html_ac = 'N/A';
+                        if (!empty($oco_tipo_ids_ac) && !empty($tipos_ocorrencia_map)) {
+                            $ids_array_ac = explode(',', $oco_tipo_ids_ac);
+                            $nomes_tipos_ac = [];
+                            foreach ($ids_array_ac as $id) {
+                                $id = trim($id);
+                                if (isset($tipos_ocorrencia_map[$id])) {
+                                    $nomes_tipos_ac[] = '• ' . $tipos_ocorrencia_map[$id];
+                                }
+                            }
+                            if (!empty($nomes_tipos_ac)) {
+                                $tipos_selecionados_html_ac = implode('<br>', $nomes_tipos_ac);
+                            }
+                        }
+                        ?>
+
+                        <div class="row g-3">
+                            <div class="col-sm-12">
+                                <label class="text-muted">Tipo(s) de Ocorrência</label>
+                                <p class="text-uppercase"><?= $tipos_selecionados_html_ac ?> </p>
+                                <hr>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-xl-4 col-xxl-3">
+                                <label class="text-muted">Registrado por</label>
+                                <p> <?= $editor_nome_ac ?> </p>
+                                <hr>
+                            </div>
+                            <div class="col-sm-6 col-xl-4 col-xxl-3">
+                                <label class="text-muted">Data da Edição</label>
+                                <p> <?= $data_edicao_ac ?> </p>
+                                <hr>
+                            </div>
+
 
                             <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                <label>Carga Horária Calculada:</label>
-                                <p> <?= (($ocorrencia_atual['oco_status'] == 2 && $ocorrencia_atual['oco_carga_horaria_calculada']) ? htmlspecialchars(date('H:i', strtotime($ocorrencia_atual['oco_carga_horaria_calculada']))) : 'N/A') ?>
+                                <label class="text-muted">Início Realizado</label>
+                                <p> <?= $inicio_realizado_ac ?> </p>
+                                <hr>
+                            </div>
+                            <div class="col-sm-6 col-xl-4 col-xxl-3">
+                                <label class="text-muted">Término Realizado</label>
+                                <p> <?= $fim_realizado_ac ?> </p>
+                                <hr>
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-xl-4 col-xxl-3">
+                                <label class="text-muted">Carga Horária Calculada</label>
+                                <p> <?= (($data_ac['oco_status'] == 2 && $carga_horaria_ac) ? htmlspecialchars(date('H:i', strtotime($carga_horaria_ac))) : 'N/A') ?>
                                 </p>
                                 <hr>
                             </div>
-                            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                <label>Operador</label>
-                                <p> <?= htmlspecialchars($ocorrencia_atual['editor_nome'] ?? 'Admin') ?> </p>
-                                <hr>
-                            </div>
 
-                            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                <label>Data da Edição:</label>
-                                <p> <?= isset($ocorrencia_atual['oco_data_edicao']) ? htmlspecialchars(date('d/m/Y H:i', strtotime($ocorrencia_atual['oco_data_edicao']))) : 'N/A' ?> </p>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-sm-12">
+                                <label class="text-muted">Parecer Técnico</label>
+
+                                <p class="mb-0"> <?= ($parecer_ac ?: 'N/A') ?> </p>
+
                                 <hr>
                             </div>
                         </div>
-                    <?php endif; ?>
-                                        <hr class="mt-4 mb-3" />
+
+
+                    </div>
                 </div>
-            </div>
-
-
-            <div class="accordion" id="accordionFlushExample">
-
-                <div class="accordion-item mb-3">
-                    <h2 class="accordion-header" id="flush-headingTwo">
-                        <button class="accordion-button collapsed fw-medium" style="background: var(--roxo_alpha);"
-                            type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo"
-                            aria-expanded="false" aria-controls="flush-collapseTwo">
-                            <h3 class="ms-0 fs-16">Dados da Reserva</h3 class="ms-0 fs-16">
-                        </button>
-                    </h2>
-
-                    <div id="flush-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="flush-headingTwo"
-                        data-bs-parent="#accordionFlushExample">
-
-                        <div class="card">
-                            <div class="card-header ">
-                                <div class="card-body">
-                                    <div class="row g-3">
-
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                            <label>ID da Reserva</label>
-                                            <p>
-                                                <?= htmlspecialchars($dados_reserva['res_codigo'] ?? 'N/A') ?>
-                                            </p>
-                                            <hr>
-                                        </div>
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                            <label>Curso</label>
-                                            <p><?= htmlspecialchars($dados_reserva['curso'] ?? 'N/A') ?></p>
-                                            <hr>
-                                        </div>
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3"><label>Componente
-                                                Curricular/Atividade</label>
-                                            <p><?= htmlspecialchars($dados_reserva['componente'] ?? 'N/A') ?></p>
-                                            <hr>
-                                        </div>
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                            <label>Nome do Professor/Responsável</label>
-                                            <p><?= htmlspecialchars($dados_reserva['professor'] ?? 'N/A') ?></p>
-                                            <hr>
-                                        </div>
-
-                                    </div>
-
-                                    <div class="row g-3 mt-0">
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                            <label>ID do Local</label>
-                                            <p> <?= htmlspecialchars($dados_reserva['local_id'] ?? 'N/A') ?>
-                                            </p>
-                                            <hr>
-                                        </div>
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3"><label>Local
-                                                Reservado</label>
-                                            <p><?= htmlspecialchars($dados_reserva['local_nome'] ?? 'N/A') ?></p>
-                                            <hr>
-                                        </div>
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                            <label>Campus</label>
-                                            <p><?= htmlspecialchars($dados_reserva['campus_nome'] ?? 'N/A') ?></p>
-                                            <hr>
-                                        </div>
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                            <label>Pavilhão</label>
-                                            <p><?= htmlspecialchars($dados_reserva['pavi_nome'] ?? 'N/A') ?></p>
-                                            <hr>
-                                        </div>
-                                    </div>
-
-                                    <div class="row g-3 mt-0">
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                            <label>Andar</label>
-                                            <p><?= htmlspecialchars($dados_reserva['andar_nome'] ?? 'N/A') ?></p>
-                                            <hr>
-                                        </div>
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3"><label>Tipo de
-                                                Sala</label>
-                                            <p><?= htmlspecialchars($dados_reserva['tipo_sala'] ?? 'N/A') ?></p>
-                                            <hr>
-                                        </div>
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3"><label>Tipo de
-                                                Aula</label>
-
-                                            <p><?= htmlspecialchars($dados_reserva['tipo_aula'] ?? 'N/A') ?></p>
-                                            <hr>
-                                        </div>
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3"><label>Tipo de
-                                                Reserva</label>
-                                            <p><?= htmlspecialchars($dados_reserva['res_tipo'] ?? 'N/A') ?></p>
-                                            <hr>
-                                        </div>
-                                    </div>
-
-                                    <?php
-                                    $res_data_formatada = isset($dados_reserva['res_data']) ? htmlspecialchars(date('d/m/Y', strtotime($dados_reserva['res_data']))) : 'N/A';
-                                    $res_inicio_formatado = isset($dados_reserva['res_hora_inicio']) ? htmlspecialchars(date('H:i', strtotime($dados_reserva['res_hora_inicio']))) : 'N/A';
-                                    $res_fim_formatado = isset($dados_reserva['res_hora_fim']) ? htmlspecialchars(date('H:i', strtotime($dados_reserva['res_hora_fim']))) : 'N/A';
-
-                                    // Datas de intervalo (para fixas)
-                                    $data_inicio_semanal_raw = $dados_reserva['res_data_inicio_semanal'] ?? null;
-                                    $data_fim_semanal_raw = $dados_reserva['res_data_fim_semanal'] ?? null;
-
-                                    $data_inicio_semanal = $data_inicio_semanal_raw ? htmlspecialchars(date('d/m/Y', strtotime($data_inicio_semanal_raw))) : 'N/A';
-                                    $data_fim_semanal = $data_fim_semanal_raw ? htmlspecialchars(date('d/m/Y', strtotime($data_fim_semanal_raw))) : 'N/A';
-
-
-                                    $tipo_reserva_nome = strtoupper($dados_reserva['res_tipo'] ?? '');
-                                    ?>
-
-                                    <div class="row g-3 mt-0">
-                                        <?php if ($tipo_reserva_nome !== 'FIXA'): ?>
-                                            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                <label>Data da Reserva</label>
-                                                <p><?= $res_data_formatada ?></p>
-                                                <hr>
-                                            </div>
-                                        <?php elseif ($tipo_reserva_nome === 'FIXA'): ?>
-                                            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                <label>Data Início</label>
-                                                <p><?= $data_inicio_semanal ?></p>
-                                                <hr>
-                                            </div>
-                                            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                <label>Data Fim</label>
-                                                <p><?= $data_fim_semanal ?></p>
-                                                <hr>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                            <label>Horário Inicial (Previsto)</label>
-                                            <p><?= $res_inicio_formatado ?></p>
-                                            <hr>
-                                        </div>
-                                        <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                            <label>Horário Final (Previsto)</label>
-                                            <p><?= $res_fim_formatado ?></p>
-                                            <hr>
-                                        </div>
-
-                                    </div>
-
-                                  <?php if ($tipo_reserva_nome === 'FIXA'): ?>
-    <div class="row g-3 mt-0">
-        <div class="col-12">
-            <label class="mb-2">Dias da Semana (Recorrência)</label><br>
-
-            <div class="check_item_container hstack gap-2 flex-wrap mt-2">
-                <?php
-                $map_dias = [
-                    '1' => 'SEGUNDA',
-                    '2' => 'TERÇA',
-                    '3' => 'QUARTA',
-                    '4' => 'QUINTA',
-                    '5' => 'SEXTA',
-                    '6' => 'SÁBADO',
-                    '7' => 'DOMINGO'
-                ];
-                $dias_selecionados_ids = explode(',', $dados_reserva['dias_semana_fixa'] ?? '');
                 
-                foreach ($map_dias as $id => $nome_dia):
-                    $is_selected = in_array($id, $dias_selecionados_ids);
-                    $checked_attr = $is_selected ? "checked" : "";
-                    ?>
-                    <input type="checkbox" class="btn-check check_formulario_check"
-                        id="dias_semana<?= $id ?>" value="<?= $id ?>"
-                        <?= $checked_attr ?>
-                        disabled>
-                    <label class="check_item check_formulario"
-                        for="dias_semana<?= $id ?>"><?= htmlspecialchars($nome_dia) ?></label>
-                <?php endforeach; ?>
             </div>
-            <hr class="mt-4">
-        </div>
-        </div>
-<?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
+            <?php endif; ?>
 
-                    </div>
-                </div>
-
-
-               <?php 
-                // CONDIÇÃO PARA EXIBIÇÃO DO ACCORDION DO PARECER TÉCNICO (SE PODE EDITAR E SE HOUVER PARECER)
-                if ($pode_editar && !empty($ocorrencia_atual['oco_parecer_tecnico'])): ?>
-                    <div class="accordion-item mb-4">
-                        <h2 class="accordion-header" id="flush-headingThree">
-                            <button class="accordion-button collapsed" style="background: var(--azul_alpha);" type="button"
-                                data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false"
-                                aria-controls="flush-collapseThree">
-                                <h3 class="ms-0 fs-16">Parecer Técnico (Histórico de Revisões)</h3> 
-                            </button>
-                        </h2>
-                        <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree"
-                            data-bs-parent="#accordionFlushExample">
-                            <div class="card">
-                                <div class="card-header ">
-                                    <div class="card-body">
-                                        <h5>Detalhes da Revisão Técnica:</h5>
-                                        <?php
-                                        $data_ac = $ocorrencia_atual; // Dados da ocorrência atual
-                                        
-                                        // Redefinição de variáveis necessárias para a exibição completa
-                                        $parecer_ac = nl2br(htmlspecialchars($data_ac['oco_parecer_tecnico'] ?? ''));
-                                        $carga_horaria_ac = $data_ac['oco_carga_horaria_calculada'] ?? null;
-                                        $editor_nome_ac = htmlspecialchars($data_ac['editor_nome'] ?? 'Admin');
-                                        $oco_tipo_ids_ac = $data_ac['oco_tipo_ocorrencia'] ?? '';
-                                        $data_edicao_ac = isset($data_ac['oco_data_edicao']) ? htmlspecialchars(date('d/m/Y H:i', strtotime($data_ac['oco_data_edicao']))) : 'N/A';
-                                        $inicio_realizado_ac = !empty($data_ac['oco_hora_inicio_realizado']) ? htmlspecialchars(date('H:i', strtotime($data_ac['oco_hora_inicio_realizado']))) : 'N/A';
-                                        $fim_realizado_ac = !empty($data_ac['oco_hora_fim_realizado']) ? htmlspecialchars(date('H:i', strtotime($data_ac['oco_hora_fim_realizado']))) : 'N/A';
-                                        
-                                        // Lógica dos Tipos de Ocorrência para o Accordion
-                                        $tipos_selecionados_html_ac = 'N/A';
-                                        if (!empty($oco_tipo_ids_ac) && !empty($tipos_ocorrencia_map)) {
-                                            $ids_array_ac = explode(',', $oco_tipo_ids_ac);
-                                            $nomes_tipos_ac = [];
-                                            foreach ($ids_array_ac as $id) {
-                                                $id = trim($id);
-                                                if (isset($tipos_ocorrencia_map[$id])) {
-                                                    $nomes_tipos_ac[] = '• ' . $tipos_ocorrencia_map[$id];
-                                                }
-                                            }
-                                            if (!empty($nomes_tipos_ac)) {
-                                                $tipos_selecionados_html_ac = implode('<br>', $nomes_tipos_ac);
-                                            }
-                                        }
-                                        ?>
-                                        
-                                        <div class="row g-3">
-                                            <div class="col-sm-12">
-                                                <label>Tipo(s) de Ocorrência:</label>
-                                                <p class="text-uppercase"><?= $tipos_selecionados_html_ac ?> </p>
-                                                <hr>
-                                            </div>
-                                        </div>
-                                        <div class="row g-3">
-                                            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                <label>Início Realizado:</label>
-                                                <p> <?= $inicio_realizado_ac ?> </p>
-                                                <hr>
-                                            </div>
-                                            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                <label>Término Realizado:</label>
-                                                <p> <?= $fim_realizado_ac ?> </p>
-                                                <hr>
-                                            </div>
-                                        </div>
-
-                                        <div class="row g-3">
-                                            <div class="col-sm-12">
-                                                <label>Parecer Técnico:</label>
-                                                <div class="p-3 bg-light border rounded">
-                                                    <p class="mb-0"> <?= ($parecer_ac ?: 'N/A') ?> </p>
-                                                </div>
-                                                <hr>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row g-3">
-                                            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                <label>Carga Horária Calculada:</label>
-                                                <p> <?= (($data_ac['oco_status'] == 2 && $carga_horaria_ac) ? htmlspecialchars(date('H:i', strtotime($carga_horaria_ac))) : 'N/A') ?>
-                                                </p>
-                                                <hr>
-                                            </div>
-                                            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                <label>Operador (Edição):</label>
-                                                <p> <?= $editor_nome_ac ?> </p>
-                                                <hr>
-                                            </div>
-                                            <div class="col-sm-6 col-xl-4 col-xxl-3">
-                                                <label>Data da Edição:</label>
-                                                <p> <?= $data_edicao_ac ?> </p>
-                                                <hr>
-                                            </div>
-                                        </div>
-                                        
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-            </div>
         </div>
     </div>
 
