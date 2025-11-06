@@ -24,7 +24,7 @@ if (empty($_SESSION['session_admin_logged_in'])) {
 
 <?php
 // =================================================================================
-// 1. CONTAGEM DA FILA 'SOLICITADO' (Status 7 OU 5 OU Status 2 SEM COORDENADOR) - ALTERADO
+// 1. CONTAGEM DA FILA 'SOLICITADO' (SAAP SEM COORDENADOR OU APROVADO/REPROVADO COORDENADOR)
 // Status 2 E SEM coordenador (SAAP) OU Status 5 ou 7 (Pendente de Reserva/SAAP)
 $query_solic_submetida = "SELECT 
     COUNT(s.solic_id) 
@@ -42,7 +42,7 @@ WHERE
             cc.coordenador_matricula IS NULL 
         )
         OR
-        ss.solic_sta_status IN (5, 7) -- Status 5 e 7 INCLUÍDOS
+        ss.solic_sta_status IN (5, 7)
     )";
 
 $stmt_solic_submetida = $conn->prepare($query_solic_submetida);
@@ -53,7 +53,7 @@ $count_solic_submetida = $stmt_solic_submetida->fetchColumn();
 // 2. CONTAGEM DA FILA 'PENDÊNCIAS COORDENADOR' (Status 2 ou 3 E COM COORDENADOR)
 // Status 2 ou 3 E COM coordenador (Coordenador)
 $query_pend_coord_total = "SELECT 
-  COUNT(DISTINCT s.solic_id)
+    COUNT(s.solic_id) 
 FROM 
     solicitacao s
 LEFT JOIN 
@@ -91,22 +91,33 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
   <title>RESERVM - Área do Administrador</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta content="RESERVM - Sistema de Gestão de Atividades de Extensão Bahiana" name="description" />
+  <!-- FAVICON -->
   <link rel="shortcut icon" href="../assets/img/favicon.png">
+  <!-- DATATABLE-->
   <link href="../assets/css/datatable/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
   <link href="../assets/css/datatable/responsive.bootstrap.min.css" rel="stylesheet" type="text/css" />
   <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+  <!-- BOOTSTRAP -->
   <link href="../assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+  <!-- SWEET ALERT -->
   <link href="../assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+  <!-- SELECT2 -->
   <link href="../assets/css/select2.min.css" rel="stylesheet" />
   <script src="../assets/js/371.jquery.min.js" crossorigin="anonymous"></script>
   <script src="../assets/js/select2.min.js"></script>
+  <!-- FLATPICKR -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+  <!-- ICONS -->
   <link href="../assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+  <!-- CUSTOM-->
   <link href="../assets/css/custom.min.css" rel="stylesheet" type="text/css" />
+  <!-- APP -->
   <link href="../assets/css/app.min.css" rel="stylesheet" type="text/css" />
+  <!-- FONT -->
   <link href="../assets/fontawesome/css/all.css" rel="stylesheet" type="text/css" />
+  <!-- STYLE -->
   <link href="../assets/css/style.css" rel="stylesheet" type="text/css" />
 
 
@@ -264,21 +275,62 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
           <ul class="navbar-nav" id="navbar-nav">
             <li class="menu-title"><span data-key="t-menu">Menu</span></li>
 
+            <!-- <li class="nav-item">
+              <a class="nav-link menu-link" href="solicitacoes.php"><span>Solicitações</span>
+                <?php
+                // QUANTIDADE DE SOLICITAÇÃO DE SUBMISSÃO PENDENTES
+                $query = "SELECT * FROM solicitacao_status WHERE solic_sta_status IN (2,3)";
+                $stmt = $conn->prepare($query, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
+                $stmt->execute();
+                $row_count = $stmt->rowCount();
+                ?>
+                <?php if ($row_count) { ?>
+                  <div class="cont_sub"><?= $row_count ?></div>
+                <?php } ?>
+              </a>
+            </li> -->
+
+
+
             <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
+              <!-- <a class="nav-link menu-link" href="#sidebarLanding" data-bs-toggle="collapse" role="button"
+                aria-expanded="false" aria-controls="sidebarLanding"><span data-key="t-landing">Solicitações</span>
+                <?php
+                //QUANTIDADE DE SOLICITAÇÃO DE SUBMISSÃO PENDENTES
+                $query = "SELECT * FROM solicitacao_status WHERE solic_sta_status IN (2, 3, 5, 7)";
+                $stmt = $conn->prepare($query, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
+                $stmt->execute();
+                $row_count = $stmt->rowCount();
+
+
+
+
+
+
+                ?>
+                <?php if ($row_count) { ?>
+                  <div class="cont_sub"><?= $row_count ?></div>
+                <?php } ?>
+              </a> -->
+
+
               <a class="nav-link menu-link" href="#sidebarLanding" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarLanding"><span data-key="t-landing">Solicitações</span>
                 <?php
-                // Contagem Solicitado (Status 2 S/ Coord + 5 + 7) - USADA ABAIXO
-                $count_solic_solicitado = $count_solic_submetida; // Variável já calculada
-                
-                // Contagem Pendências Coordenador (Status 2 C/ Coord + 3) - USADA ABAIXO
-                $count_pend_coord_real = $count_pend_coord_total; // Variável já calculada
-                
-                // Contagem Cancelamentos Pendentes (solcanc_status = 1)
-                $count_canc_pend = $count_canc_pend; // Variável já calculada
-                
-                // TOTAL GERAL DE PENDÊNCIAS (Solicitado + Pendências Coordenador + Cancelamento Pendente)
-                $row_count_total = $count_solic_solicitado + $count_pend_coord_real + $count_canc_pend;
+                // 1. CONTAGEM DE SOLICITAÇÕES PENDENTES DE ANÁLISE / RESERVA (Status 2, 3, 5, 7)
+                $query_solic_pend = "SELECT COUNT(*) FROM solicitacao_status WHERE solic_sta_status IN (2, 3, 5, 7)";
+                $stmt_solic_pend = $conn->prepare($query_solic_pend);
+                $stmt_solic_pend->execute();
+                $count_solic_pend = $stmt_solic_pend->fetchColumn();
+
+                // 2. CONTAGEM DE PEDIDOS DE CANCELAMENTO PENDENTES (Status 1 na tabela solicitacao_cancelamento)
+                $query_canc_pend = "SELECT COUNT(*) FROM solicitacao_cancelamento WHERE solcanc_status = 1"; // Assumindo 1 = Pendente
+                $stmt_canc_pend = $conn->prepare($query_canc_pend);
+                $stmt_canc_pend->execute();
+                $count_canc_pend = $stmt_canc_pend->fetchColumn();
+
+                // TOTAL GERAL DE PENDÊNCIAS
+                $row_count_total = $count_solic_pend + $count_canc_pend;
                 ?>
                 <?php if ($row_count_total > 0) { ?>
                   <div class="cont_sub"><?= $row_count_total ?></div>
@@ -294,7 +346,7 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
                   <li class="nav-item">
                     <a href="solicitacoes_submetidas.php" class="nav-link">Solicitado
                       <?php
-                      // REPETINDO A LÓGICA DO SOLICITADO (Status 5, 7 E Status 2 SEM Coordenador) - AJUSTADA!
+
                       $query = "SELECT 
     COUNT(s.solic_id) 
 FROM 
@@ -313,13 +365,13 @@ WHERE
             cc.coordenador_matricula IS NULL 
         )
         OR
-        ss.solic_sta_status IN (5, 7) -- Status 5 e 7 INCLUÍDOS
+        ss.solic_sta_status IN (5, 7)
     )";
 
                       $stmt = $conn->prepare($query, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
                       $stmt->execute();
 
-                      // A contagem é obtida da mesma forma
+                      // Altera como a contagem é obtida para queries com COUNT()
                       $row_count = $stmt->fetchColumn();
                       ?>
                       <?php if ($row_count) { ?>
@@ -333,24 +385,24 @@ WHERE
                   <li class="nav-item">
                     <a href="solicitacoes_emAnalise.php" class="nav-link">Pendências do Coordenador
                       <?php
-                      // CONSULTA PARA PENDÊNCIAS COORDENADOR (Status 2 ou 3 E COM Coordenador)
                       $query_pend_coord_real = "SELECT 
-    COUNT(DISTINCT s.solic_id)  /* <-- CORREÇÃO AQUI */
+    COUNT(s.solic_id) 
 FROM 
     solicitacao s
 LEFT JOIN 
     solicitacao_status ss ON ss.solic_sta_solic_id = s.solic_id
 INNER JOIN 
-    curso_coordenador cc ON cc.curs_id = s.solic_curso 
+    curso_coordenador cc ON cc.curs_id = s.solic_curso -- SOMENTE SE TIVER COORDENADOR
 WHERE 
-    ss.solic_sta_status IN (2, 3)";
+    ss.solic_sta_status IN (2, 3)"; // Status 2 (Solicitado) ou 3 (Em Análise Coordenador)
+                      
                       $stmt_pend_coord_real = $conn->prepare($query_pend_coord_real);
                       $stmt_pend_coord_real->execute();
 
                       $count_pend_coord_real = $stmt_pend_coord_real->fetchColumn();
 
                       ?>
-                      <?php if ($count_pend_coord_real) { // Usa a variável correta para o link ?>
+                      <?php if ($row_count) { ?>
                         <div class="cont_sub"><?= $count_pend_coord_real ?></div>
                       <?php } ?>
                     </a>
@@ -397,6 +449,8 @@ WHERE
 
 
             <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
+              <!-- <a class="nav-link menu-link" href="painel.php"><span>Disponibilidade</span></a> -->
+
               <a class="nav-link menu-link" href="#sidebarLanding" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarLanding"><span
                   data-key="t-landing">Disponibilidade</span></a>
@@ -417,6 +471,10 @@ WHERE
               <a class="nav-link menu-link" href="reservas_confirmadas.php"><span>Reservas Confirmadas</span></a>
             </li>
 
+            <!-- <li class="nav-item">
+              <a class="nav-link menu-link" href="reservas_canceladas.php"><span>Reservas Canceladas</span></a>
+            </li> -->
+
             <li class="nav-item">
               <a class="nav-link menu-link" href="programacao_diaria.php"><span>Programação Diária</span></a>
             </li>
@@ -432,6 +490,22 @@ WHERE
             <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
               <a class="nav-link menu-link" href="admin.php"><span>Administradores</span></a>
             </li>
+            <!-- <li class="nav-item">
+              <a class="nav-link menu-link" href="usuarios.php"><span>Ocorrências</span></a>
+            </li> -->
+
+            <!-- <li class="nav-item">
+              <a class="nav-link menu-link" href="usuarios.php"><span>Nova Solicitação</span></a>
+            </li> -->
+
+            <!-- <li class="nav-item">
+              <a class="nav-link menu-link" href="usuarios.php"><span>Registro de Ocorrência</span></a>
+            </li> -->
+
+            <!-- <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
+              <a class="nav-link menu-link" href="admin.php"><span>Administração</span></a>
+            </li> -->
+
             <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
               <a class="nav-link menu-link" href="#sidebarLanding" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarLanding"><span data-key="t-landing">Cadastros</span></a>
@@ -458,6 +532,9 @@ WHERE
                   <li class="nav-item">
                     <a href="tipo_ocorrencia.php" class="nav-link">Tipos de Ocorrências</a>
                   </li>
+                  <!-- <li class="nav-item">
+                    <a href="publicidades.php" class="nav-link">Publicidades</a>
+                  </li> -->
                 </ul>
               </div>
             </li>

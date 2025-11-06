@@ -432,15 +432,28 @@
 
             <?php
             try {
-              $stmt = $conn->prepare("SELECT * FROM solicitacao
+              $stmt = $conn->prepare("SELECT DISTINCT solicitacao.solic_id, 
+                                                solicitacao.solic_codigo, 
+                                                solicitacao.solic_data_cad, 
+                                                solicitacao.solic_nome_atividade, 
+                                                solicitacao.solic_nome_comp_ativ,
+                                                solicitacao_status.solic_sta_status, 
+                                                status_solicitacao.stsolic_status,
+                                                componente_curricular.compc_componente,
+                                                cursos.curs_curso,
+                                                usuarios.user_nome,
+                                                admin.admin_nome
+                                      FROM solicitacao
                                       LEFT JOIN solicitacao_status ON solicitacao_status.solic_sta_solic_id = solicitacao.solic_id
                                       LEFT JOIN status_solicitacao ON status_solicitacao.stsolic_id = solicitacao_status.solic_sta_status
                                       LEFT JOIN componente_curricular ON componente_curricular.compc_id = solicitacao.solic_comp_curric
                                       LEFT JOIN cursos ON cursos.curs_id = solicitacao.solic_curso
+                                                -- As tabelas abaixo não são essenciais para a listagem principal, mas foram mantidas
                                       LEFT JOIN conf_cursos_extensao_curricularizada ON conf_cursos_extensao_curricularizada.cexc_id = solicitacao.solic_nome_curso
                                       LEFT JOIN conf_semestre ON conf_semestre.cs_id = solicitacao.solic_semestre
                                       LEFT JOIN usuarios ON usuarios.user_id = solicitacao.solic_cad_por
                                       LEFT JOIN admin ON admin.admin_id = solicitacao.solic_cad_por
+                                      LEFT JOIN curso_coordenador ON curso_coordenador.curs_id = solicitacao.solic_curso -- Adicionado para filtro
                                       WHERE 
                                           -- FILA 1: Solicitações que JÁ estão em 'EM ANÁLISE PELO COORDENADOR' (Status 3)
                                           solicitacao_status.solic_sta_status = 3
@@ -450,7 +463,7 @@
                                               solicitacao_status.solic_sta_status = 2
                                               AND
                                               -- E que POSSUEM um Coordenador para pré-analisar (não nulo)
-                                              cursos.curs_matricula_prof IS NOT NULL
+                                          curso_coordenador.coordenador_matricula IS NOT NULL
                                           )
                                       ");
               $stmt->execute();

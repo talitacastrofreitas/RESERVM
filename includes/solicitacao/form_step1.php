@@ -163,10 +163,10 @@
 
       <div class="col-md-6" id="campo_solic_contato" style="display: none;">
         <div class="form_margem">
-          <label class="form-label">Telefone para contato <span>*</span></label>
+          <label class="form-label">Telefone para contato <!--<span>*</span>--></label>
           <input type="text" class="form-control cel_tel" name="solic_contato" id="cad_solic_contato"
             value="<?= $solic_contato ?>">
-          <div class="invalid-feedback">Este campo é obrigatório</div>
+          <!-- <div class="invalid-feedback">Este campo é obrigatório</div> -->
         </div>
       </div>
 
@@ -206,7 +206,12 @@
       } else if (tipoAtiv == '2') {
         // 2	ATIVIDADE ADMINISTRATIVA
         $('[id^="campo_"]').hide();
-        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+        // $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+
+
+        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp').find('input').prop('required', true);
         return;
       }
 
@@ -223,9 +228,16 @@
         $('#campo_solic_comp_curric').show().find('#cad_solic_comp_curric').prop('required', true);
         // 0	OUTRO
         if (compCurric == '0') {
-          $('#campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+          $('#campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+          $('##campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp').find('input').prop('required', true);
+
         } else if (compCurric) {
-          $('#campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+          // $('#campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+
+          $('#campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+          $('#campo_solic_nome_prof_resp').find('input').prop('required', true);
         }
       }
 
@@ -233,7 +245,12 @@
         // 8	EXTENSÃO CURRICULARIZADA
         $('#campo_solic_nome_curso').show().find('#cad_solic_nome_curso').prop('required', true);
         if (nomeCurso) {
-          $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+          // $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+
+
+          $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+          $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp').find('input').prop('required', true);
         }
       }
 
@@ -243,13 +260,23 @@
         // 19	PROGRAMA CANDEAL
         // 28	NIDD
         // 31	RESERVAS ADMINISTRATIVAS
-        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+        // $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+
+
+        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp').find('input').prop('required', true);
       }
 
       if ([11, 22].includes(parseInt(curso))) {
         // 11	LATO SENSU
         // 22	STRICTO SENSU
-        $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+        // $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+
+
+        $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+        $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp').find('input').prop('required', true);
       }
     }
 

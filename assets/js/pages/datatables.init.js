@@ -1124,6 +1124,76 @@ function initializeTables() {
     },
   });
 
+  // SOLICITAÇÕES DE CANCELAMENTO PENDENTES
+  new DataTable("#solic_canc_pendentes", {
+    // paging: false, // Desativa paginação
+    // searching: false, // Desativa barra de busca global
+    // ordering: false, // Desativa ordenação nas colunas (filtros)
+    // info: false, // Remove a informação de "Mostrando x de y"
+    lengthMenu: [
+      [10, 25, 50, 100],
+      [10, 25, 50, 100],
+    ],
+    order: [[6, "asc"]],
+    columnDefs: [
+      {
+        targets: -1, // Última coluna
+        orderable: false, // Desativa ordenação
+      },
+    ],
+    language: {
+      sProcessing: "Procurando...",
+      lengthMenu: "Mostrar _MENU_ registros",
+      zeroRecords: "Nenhum registro encontrado",
+      search: "",
+      info: "Mostrar _START_ até _END_ de _TOTAL_ registros",
+      infoEmpty: "",
+      infoFiltered: "(filtrado de _MAX_ registros totais)",
+      searchPlaceholder: "Busca",
+      paginate: {
+        first: "Primeiro",
+        last: "Último",
+        next: "Próximo",
+        previous: "Anterior",
+      },
+    },
+  });
+
+  // CANCELADAS USER
+  new DataTable("#tab_solic_canceladass", {
+    // paging: false, // Desativa paginação
+    // searching: false, // Desativa barra de busca global
+    // ordering: false, // Desativa ordenação nas colunas (filtros)
+    // info: false, // Remove a informação de "Mostrando x de y"
+    lengthMenu: [
+      [10, 25, 50, 100],
+      [10, 25, 50, 100],
+    ],
+    order: [[3, "asc"]],
+    columnDefs: [
+      {
+        // targets: -1, // Última coluna
+        orderable: false, // Desativa ordenação
+      },
+    ],
+    language: {
+      sProcessing: "Procurando...",
+      lengthMenu: "Mostrar _MENU_ registros",
+      zeroRecords: "Nenhum registro encontrado",
+      search: "",
+      info: "Mostrar _START_ até _END_ de _TOTAL_ registros",
+      infoEmpty: "",
+      infoFiltered: "(filtrado de _MAX_ registros totais)",
+      searchPlaceholder: "Busca",
+      paginate: {
+        first: "Primeiro",
+        last: "Último",
+        next: "Próximo",
+        previous: "Anterior",
+      },
+    },
+  });
+
   //
 }
 document.addEventListener("DOMContentLoaded", function () {

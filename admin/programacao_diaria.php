@@ -233,6 +233,36 @@ $turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'
                             //    LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
                             //    WHERE res_data = :data";
                         
+                            //                     $sql = "SELECT 
+                            //     reservas.res_hora_inicio, 
+                            //     reservas.res_hora_fim, 
+                            //     cursos.curs_curso, 
+                            //     conf_semestre.cs_semestre, 
+                            //     componente_curricular.compc_componente, 
+                            //     reservas.res_componente_atividade, 
+                            //     reservas.res_componente_atividade_nome, 
+                            //     reservas.res_nome_atividade, 
+                            //     reservas.res_modulo, 
+                            //     reservas.res_professor, 
+                            //     espaco.esp_nome_local_resumido,
+                            //     pavilhoes.pav_pavilhao, 
+                            //     andares.and_andar, 
+                            //     unidades.uni_unidade, 
+                            //     reservas.res_obs,
+                            //     reservas.res_solic_id AS solic_id   -- ✅ ADICIONA ESTA LINHA
+                            // FROM reservas
+                            // LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
+                            // LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
+                            // LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
+                            // INNER JOIN espaco ON espaco.esp_id = reservas.res_espaco_id
+                            // INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
+                            // LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
+                            // LEFT JOIN andares ON andares.and_id = espaco.esp_andar
+                            // LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
+                            // INNER JOIN solicitacao_status AS ss ON ss.solic_sta_solic_id = reservas.res_solic_id
+                            // WHERE reservas.res_data = :data
+                            //   AND ss.solic_sta_status = 4"; // NOVO FILTRO AQUI
+                        
                             $sql = "SELECT 
             reservas.res_hora_inicio, 
             reservas.res_hora_fim, 
@@ -249,8 +279,18 @@ $turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'
             andares.and_andar, 
             unidades.uni_unidade, 
             reservas.res_obs,
-            reservas.res_solic_id AS solic_id   -- ✅ ADICIONA ESTA LINHA
+            reservas.res_solic_id AS solic_id  
         FROM reservas
+        
+        -- NOVO JOIN: Pega o STATUS MAIS RECENTE da Solicitação-Mãe
+        INNER JOIN (
+            SELECT 
+                solic_sta_solic_id, 
+                solic_sta_status,
+                ROW_NUMBER() OVER (PARTITION BY solic_sta_solic_id ORDER BY solic_sta_data_cad DESC) AS rn
+            FROM solicitacao_status
+        ) AS ss ON ss.solic_sta_solic_id = reservas.res_solic_id AND ss.rn = 1 
+        
         LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
         LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
         LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
@@ -259,10 +299,15 @@ $turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'
         LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
         LEFT JOIN andares ON andares.and_id = espaco.esp_andar
         LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
-        INNER JOIN solicitacao_status AS ss ON ss.solic_sta_solic_id = reservas.res_solic_id
         WHERE reservas.res_data = :data
-          AND ss.solic_sta_status = 4"; // NOVO FILTRO AQUI
-                        
+          
+          -- CONDIÇÃO 1: Status ATUAL da solicitação-mãe deve ser Reservado (4)
+          AND ss.solic_sta_status = 4 
+          
+          -- CONDIÇÃO 2: A reserva individual NÃO pode ter sido cancelada (8 ou 9)
+          AND (reservas.res_status IS NULL OR reservas.res_status NOT IN (8, 9))
+          ";
+
                             // Filtro por unidade
                             if (!empty($unidadeFiltro)) {
                                 $sql .= " AND esp_unidade = :unidade";

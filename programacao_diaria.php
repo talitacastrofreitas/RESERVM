@@ -191,7 +191,7 @@ $turnoFiltro = $_SESSION['filtros_programacao_diaria']['turno'] ?? $_GET['turno'
                       WHERE user_id = :user_id 
                       AND ss.solic_sta_status = 4 
                       -- A condição original de res_status (cancelamento) não é mais necessária, mas mantida:
-                      AND (res_status IS NULL OR res_status NOT IN (8))
+                      AND (res_status IS NULL OR res_status NOT IN (8,9))
                       ";
 
               // Filtro por data (usando $dataFiltro da lógica inicial)

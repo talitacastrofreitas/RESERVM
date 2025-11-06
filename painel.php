@@ -99,37 +99,13 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
                   6 => 'bg_info_vermelho',
                   7 => 'bg_info_roxo',
                   8 => 'bg_info_vermelho',
+                  9 => 'bg_info_vermelho'
                 ];
 
                 $status_color = $status_colors[$solic_sta_status] ?? 'bg_info_padrao';
 
-                // DATE 
-                // --- LÓGICA DE VALIDAÇÃO DE 48 HORAS COM BASE NA NOVA CONSULTA ---
-                $link_disabled = true; // Assume que o botão será desabilitado
-                $classe_link = 'link_cinza_claro disabled';
-
-                // Primeiro, verifique se a solicitação pode ser cancelada (status 4)
-                if ($solic_sta_status == 4) {
-
-                  // Nova consulta para verificar se existe QUALQUER reserva com mais de 48h de antecedência
-                  $sql_reserva_habilita = $conn->prepare("
-            SELECT 1
-            FROM reservas
-            WHERE res_solic_id = :solic_id
-            AND (res_status NOT IN (7, 8) OR res_status IS NULL)
-            AND CAST(res_data AS DATETIME) + CAST(res_hora_inicio AS DATETIME) >= DATEADD(hour, 48, GETDATE())
-          ");
-                  $sql_reserva_habilita->execute([':solic_id' => $solic_id]);
-
-                  $reserva_existe = $sql_reserva_habilita->fetchColumn();
-
-                  // Se a consulta retornou pelo menos uma linha, habilita o botão
-                  if ($reserva_existe) {
-                    $link_disabled = false;
-                    $classe_link = 'link_vermelho';
-                  }
-                }
-
+                // Lógica de Cancelamento REMOVIDA
+                // $link_disabled e $classe_link não são mais necessários para o cancelamento
                 ?>
                 <tr role="button" data-href='nova_solicitacao.php?st=1&i=<?= htmlspecialchars($solic_id) ?>'>
 
@@ -161,20 +137,17 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
                                 class="fa-regular fa-clone me-2"></i> Duplicar</span></li>
                         <?php } ?>
 
-                        <li>
-                          <?php if ($solic_sta_status == 4) { ?>
-                            <a href="#" class="dropdown-item <?= $classe_link ?>" data-bs-toggle="modal"
-                              data-bs-target="#modal_cancelar_solicitacao" data-solic-id="<?= htmlspecialchars($solic_id) ?>"
-                              data-action="../router/web.php?r=SolicitarCancelamento">
-                              <i class="fa-solid fa-ban me-2"></i> Solicitar Cancelamento
-                            </a>
-                          <?php } ?>
-                        </li>
-
-                        <li><a
-                            href="router/web.php?r=Solic&acao=deletar&solic_id=<?= $solic_id ?>&solic_codigo=<?= $solic_codigo ?>"
-                            class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
-                              class="fa-regular fa-trash-can me-2"></i> Excluir</a></li>
+                        <?php
+                        // O botão Excluir só deve aparecer (e ser funcional) se o status for 1 ou 2.
+                        if (in_array($solic_sta_status, [1, 2])) { ?>
+                          <li><a
+                              href="router/web.php?r=Solic&acao=deletar&solic_id=<?= $solic_id ?>&solic_codigo=<?= $solic_codigo ?>"
+                              class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
+                                class="fa-regular fa-trash-can me-2"></i> Excluir</a></li>
+                        <?php } else { ?>
+                          <li><span class="dropdown-item edit-item-block-btn" title="Excluir" disabled><i
+                                class="fa-regular fa-trash-can me-2"></i> Excluir</span></li>
+                        <?php } ?>
                       </ul>
                     </div>
                   </td>
@@ -256,17 +229,3 @@ WHERE solicitacao.solic_cad_por = :solic_cad_por");
 
 <?php include 'includes/footer.php'; ?>
 <script src="assets/js/modal_dinamico.js"></script>
-
-<?php include 'includes/modal/modal_cancelar_solicitacao.php'; ?>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var cancelaSolicitacaoModal = document.getElementById('modal_cancelar_solicitacao');
-    cancelaSolicitacaoModal.addEventListener('show.bs.modal', function (event) {
-      var button = event.relatedTarget;
-      var solicId = button.getAttribute('data-solic-id');
-      var modalSolicIdInput = cancelaSolicitacaoModal.querySelector('#solic_id_cancelar');
-      modalSolicIdInput.value = solicId;
-    });
-  });
-</script>

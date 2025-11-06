@@ -2,6 +2,7 @@
 
 
 <?php include 'includes/nav/header_analise.php';
+
 // =====================================================================
 // 0. INICIALIZAÇÃO DE VARIÁVEIS CRÍTICAS (CORREÇÃO DE WARNINGS)
 // =====================================================================
@@ -129,19 +130,39 @@ $solic_id = $_GET['i'] ?? die("ID da Solicitação não fornecido.");
 
 
                           <?php
+
+
+                          //                           // Busca a matrícula do Coordenador (já está no escopo, mas repetindo a busca para segurança)
+//                           $sql_coord_matricula = $conn->prepare("SELECT curs_matricula_prof FROM cursos WHERE curs_id = :curs_id");
+//                           $sql_coord_matricula->execute([':curs_id' => $solic_curso]);
+//                           $coord_matricula = $sql_coord_matricula->fetchColumn();
+                          
+                          //                           $tem_coordenador = !empty($coord_matricula);
+//                           $status_atual = $solic_sta_status; // Status atual da solicitação (2, 3, 5, 7, etc.)
+                          
+                          //                           // Ação de Iniciar Análise (Status 2/5 -> 7) deve ser permitida se:
+// // 1. Status é SOLICITADO (2) E NÃO TEM Coordenador (Fila direta do SAAP)
+// // 2. Status é APROVADO PELO COORDENADOR (5) (Fila de Reserva do SAAP)
+//                           $permitir_iniciar_analise = (
+//                             ($status_atual == 2 && !$tem_coordenador) ||
+//                             ($status_atual == 5)
+//                           );
+                          
                           // Busca a matrícula do Coordenador (já está no escopo, mas repetindo a busca para segurança)
+// ALTERADO PARA USAR A TABELA curso_coordenador
                           $sql_coord_matricula = $conn->prepare("SELECT coordenador_matricula FROM curso_coordenador WHERE curs_id = :curs_id");
                           $sql_coord_matricula->execute([':curs_id' => $solic_curso]);
                           $coord_matricula = $sql_coord_matricula->fetchColumn();
 
-                          $tem_coordenador = !empty($coord_matricula);
+                          // A checagem verifica se existe qualquer matrícula na tabela de associação
+                          $tem_coordenador = !empty($coord_matricula); // true se encontrar 1 ou mais coordenadores
                           $status_atual = $solic_sta_status; // Status atual da solicitação (2, 3, 5, 7, etc.)
                           
                           // Ação de Iniciar Análise (Status 2/5 -> 7) deve ser permitida se:
 // 1. Status é SOLICITADO (2) E NÃO TEM Coordenador (Fila direta do SAAP)
 // 2. Status é APROVADO PELO COORDENADOR (5) (Fila de Reserva do SAAP)
                           $permitir_iniciar_analise = (
-                            ($status_atual == 2 && !$tem_coordenador) ||
+                            ($status_atual == 2 && !$tem_coordenador) || // AQUI USA A NOVA CHECAGEM
                             ($status_atual == 5)
                           );
 
@@ -1793,7 +1814,7 @@ ORDER BY reservas.res_data ASC;");
                               5 => 'bg_info_azul_escuro', // AGUARDANDO RESERVA
                               6 => 'bg_info_vermelho', // INDEFERIDO
                               7 => 'bg_info_roxo',   // EM ANÁLISE PELO COORDENADOR
-                              8 => 'bg_info_vermelho',    // CANCELADA]
+                              8 => 'bg_info_vermelho',    // CANCELADA
                               9 => 'bg_info_vermelho'    // CANCELADA
                             ];
                             $solic_status_color = $status_colors[$stsolic_id] ?? 'bg_info_cinza';
@@ -1866,6 +1887,7 @@ ORDER BY reservas.res_data ASC;");
                       <tbody>
 
                         <?php
+
                         try {
                           $stmt = $conn->prepare("SELECT * FROM ocorrencias
                                                                              INNER JOIN reservas ON reservas.res_id = ocorrencias.oco_res_id
@@ -1917,14 +1939,22 @@ ORDER BY reservas.res_data ASC;");
 
                             extract($row);
 
-                       $pode_editar_operador = false;
 
-                            $oco_status_linha = $row['oco_status']; // Mantido para caso use em outro lugar, mas ignorado na checagem
+                            // GARANTIR INICIALIZAÇÃO DA VARIÁVEL DE EDIÇÃO
+                            $pode_editar_operador = false; // Flag específica para o operador
+                        
+                            // Assumindo que:
+// $oco_status, $oco_data_cad e $oco_user_id (dados da ocorrência) estão disponíveis via extract($row);
+// $perfil_id e $user_id (dados do usuário logado) estão definidos no topo do arquivo.
+                        
+                            // Acesso seguro aos dados da ocorrência para esta linha
+                            $oco_status_linha = $row['oco_status']; // Acessa diretamente do array $row
                             $oco_user_id_linha = $row['oco_user_id'];
                             $oco_data_cad_linha = $row['oco_data_cad'];
 
-                            // A checagem inicial agora é apenas sobre o perfil
-                            if ((int) $perfil_id === $PERFIL_OPERADOR) {
+
+                            // O operador só pode editar se o status for 1 (Pendente)
+                            if ((int) $perfil_id === $PERFIL_OPERADOR && $oco_status_linha == 1) {
 
                               // Calcula diferença de tempo
                               $oco_data_criacao = new DateTime($oco_data_cad_linha);
@@ -1941,23 +1971,32 @@ ORDER BY reservas.res_data ASC;");
                                 $edicao_cria_versao = false;
                               }
                             }
-
                             ?>
+
                             <tr>
-                              <th scope="row" class="text-bolder"><?= $oco_codigo ?></th>
-                              <td scope="row" class="text-uppercase"><?= $tipos_formatados ?></td>
-                              <td scope="row" class="text-uppercase"><?= $esp_nome_local ?></td>
+                              <th scope="row" class="text-bolder">
+                                <?= $oco_codigo ?>
+                              </th>
+                              <td scope="row" class="text-uppercase">
+                                <?= $tipos_formatados ?>
+                              </td>
+                              <td scope="row" class="text-uppercase">
+                                <?= $esp_nome_local ?>
+                              </td>
                               <td scope="row" nowrap="nowrap" class="text-uppercase">
                                 <?= $and_andar ?>
                               </td>
                               <td scope="row" nowrap="nowrap" class="text-uppercase">
                                 <?= $pav_pavilhao ?>
                               </td>
-                              <td scope="row" class="text-uppercase"><?= $uni_unidade ?></td>
-                              <td scope="row" class="text-uppercase"><?= $tipesp_tipo_espaco ?>
+                              <td scope="row" class="text-uppercase">
+                                <?= $uni_unidade ?>
                               </td>
-                              <th scope="row" nowrap="nowrap" class="text-bolder"><span
-                                  class="hide_data"><?= date('Ymd', strtotime($res_data)) ?></span><?= htmlspecialchars(date('d/m/Y', strtotime($res_data))) ?>
+                              <td scope="row" class="text-uppercase">
+                                <?= $tipesp_tipo_espaco ?>
+                              </td>
+                              <th scope="row" nowrap="nowrap" class="text-bolder"><span class=" hide_data">
+                                  <?= date('Ymd', strtotime($res_data)) ?></span><?= htmlspecialchars(date('d/m/Y', strtotime($res_data))) ?>
                               </th>
                               <th scope="row" nowrap="nowrap" class="text-bolder"><span
                                   class="hide_data"><?= date('iH', strtotime($oco_hora_inicio_realizado)) ?></span><?= date('H:i', strtotime($oco_hora_inicio_realizado)) ?>
@@ -1966,17 +2005,19 @@ ORDER BY reservas.res_data ASC;");
                                   class="hide_data"><?= date('iH', strtotime($oco_hora_fim_realizado)) ?></span><?= date('H:i', strtotime($oco_hora_fim_realizado)) ?>
                               </th>
                               <td scope="row" class="text-uppercase"><?= $admin_nome ?></td>
-                              <td scope="row" nowrap="nowrap" class="text-bolder"><span
-                                  class="hide_data"><?= date('Ymd', strtotime($oco_data_cad)) ?></span><?= date('d/m/Y H:i', strtotime($oco_data_cad)) ?>
+                              <td scope="row" nowrap="nowrap" class="text-bolder"><span class="hide_data">
+                                  <?= date('Ymd', strtotime($oco_data_cad)) ?></span>
+                                <?= date('d/m/Y H:i', strtotime($oco_data_cad)) ?>
                               </td>
                               <td class="text-end">
                                 <div class="dropdown dropdown drop_tabela d-inline-block">
-                                  <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button"
+                                  <button class=" btn btn_soft_verde_musgo btn-sm dropdown" type="button"
                                     data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="ri-more-fill align-middle"></i>
                                   </button>
                                   <ul class="dropdown-menu dropdown-menu-end">
                                     <?php
+                                    // Se for Admin OU Operador com permissão ($pode_editar_operador é true se a regra de 24h foi atendida)
                                     if ($pode_editar_operador || (int) $perfil_id === $PERFIL_ADMIN):
                                       ?>
                                       <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal"
@@ -1999,7 +2040,8 @@ ORDER BY reservas.res_data ASC;");
                                     <li><a href="../router/web.php?r=Ocorrenc&acao=deletar&oco_id=<?= $oco_id ?>"
                                         class="dropdown-item remove-item-btn del-btn" title="Excluir"><i
                                           class="fa-regular fa-trash-can me-2"></i>
-                                        Excluir</a></li>
+                                        Excluir
+                                      </a></li>
                                   </ul>
                                 </div>
                               </td>
@@ -2030,12 +2072,12 @@ ORDER BY reservas.res_data ASC;");
 
 <style>
   /* .progress-nav .nav .nav-link.active,
-    .progress-nav .nav .nav-link.done,
-    .progress-nav .nav .nav-link:focus,
-    .progress-nav .nav .nav-link:active {
-        border: 0 !important;
-        background-color: var(--verde_musgo) !important;
-    } */
+                        .progress-nav .nav .nav-link.done,
+                        .progress-nav .nav .nav-link:focus,
+                        .progress-nav .nav .nav-link:active {
+                        border: 0 !important;
+                        background-color: var(--verde_musgo) !important;
+                        } */
 
   .progress-nav .nav .nav-link {
     width: 100% !important;
@@ -2047,8 +2089,8 @@ ORDER BY reservas.res_data ASC;");
   }
 
   /* .progress-bar {
-        background-color: var(--verde_musgo) !important;
-    } */
+                        background-color: var(--verde_musgo) !important;
+                        } */
 
   .progress,
   .progress-stacked {
@@ -2528,47 +2570,40 @@ ORDER BY reservas.res_data ASC;");
     });
 
     btnEditar.addEventListener('click', function () {
-      const checkboxesSelecionados = document.querySelectorAll('.checkbox:checked');
-      const idsSelecionados = Array.from(checkboxesSelecionados).map(cb => cb.value).join(',');
+      const checkboxes = document.querySelectorAll('.checkbox:checked');
+      const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
+      const primeiraLinha = checkboxes[0].closest('tr');
+      const button = primeiraLinha.querySelector('a[data-bs-toggle="modal"]');
+      const modal = document.getElementById('modal_edit_espaco');
 
-      // if (idsSelecionados) {
-      //   const primeiraLinha = checkboxesSelecionados[0].closest('tr');
-      //   const button = primeiraLinha.querySelector('a[data-bs-toggle="modal"]');
+      if (ids && button && modal) {
+        preencherModalEdicao(button);
 
-      if (idsSelecionados) {
-        const primeiraLinha = checkboxesSelecionados[0].closest('tr');
-        const button = primeiraLinha.querySelector('a[data-bs-toggle="modal"]');
+        // PREENCHE OS HIDDEN CORRETAMENTE
+        modal.querySelector('input[name="ids_reservas"]').value = ids;
+        modal.querySelector('input[name="res_solic_id"]').value = '<?= $_GET['i'] ?>';
+        modal.querySelector('input[name="res_tipo_reserva"]').value = button.getAttribute('data-bs-res_tipo_reserva');
+        modal.querySelector('input[name="acao"]').value = 'editar_massa';
 
-        const modalEdit = document.getElementById('modal_edit_espaco');
+        // VISIBILIDADE CORRETA
+        const tipo = button.getAttribute('data-bs-res_tipo_reserva');
+        const colUnica = modal.querySelector('#edit_data_reserva')?.closest('.col-6');
+        const colInicio = modal.querySelector('#edit_data_inicio_semanal')?.closest('.col-6');
+        const colFim = modal.querySelector('#edit_data_fim_semanal')?.closest('.col-6');
 
-        // if (button) {
-        //   preencherModalEdicao(button);
-
-        //   modalEdit.querySelector('.res_id').value = idsSelecionados;
-
-        if (button && modalEdit) {
-          preencherModalEdicao(button);
-          modalEdit.querySelector('.res_id').value = idsSelecionados;
-
-
-          const tipoReserva = button.getAttribute('data-bs-res_tipo_reserva');
-          if (tipoReserva === "2") {
-            modalEdit.querySelector('#edit_data_inicio_semanal').closest('.col-6').style.display = 'none';
-            modalEdit.querySelector('#edit_data_fim_semanal').closest('.col-6').style.display = 'none';
-          } else {
-            modalEdit.querySelector('#edit_data_reserva').closest('.col-6').style.display = 'none';
-          }
-
-          // const myModal = new bootstrap.Modal(modalEdit);
-          // myModal.show();
-
-          // Por esta nova lógica:
-          const myModalInstance = bootstrap.Modal.getInstance(modalEdit) || new bootstrap.Modal(modalEdit);
-          myModalInstance.show();
+        if (tipo === "2") {
+          if (colUnica) colUnica.style.display = 'none';
+          if (colInicio) colInicio.style.display = 'block';
+          if (colFim) colFim.style.display = 'block';
+        } else {
+          if (colUnica) colUnica.style.display = 'block';
+          if (colInicio) colInicio.style.display = 'none';
+          if (colFim) colFim.style.display = 'none';
         }
+
+        bootstrap.Modal.getOrCreateInstance(modal).show();
       }
     });
-
     formExcluirSelecionados.addEventListener('submit', function (e) {
       e.preventDefault();
       Swal.fire({

@@ -34,7 +34,9 @@ if (isset($_GET['i'])) {
       4 => 'tag_header_verde ',
       5 => 'tag_header_azul',
       6 => 'tag_header_vermelho',
-      7 => 'tag_header_roxo'
+      7 => 'tag_header_roxo',
+      8 => 'tag_header_vermelho',
+      9 => 'tag_header_vermelho'
     ];
 
     $tag_header_color = $status_colors[$solic_sta_status] ?? ''; // Usa '' como padrão se não existir

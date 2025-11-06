@@ -145,11 +145,11 @@ $oco_status = $ocorrencia_atual['oco_status'] ?? 0;
 // Lógica de status para o badge principal
 $status_badge_html = '';
 if ($oco_status == 2) {
-    $status_badge_html = '<span class="badge bg-success" style="font-size: 9.9px">VALIDADA</span>';
+    $status_badge_html = '<div class="botao tag_header_verde my-md-0 my-3">VALIDADA</div>';
 } elseif ($oco_status == 3) {
-    $status_badge_html = '<span class="badge bg-danger" style="font-size: 9.9px">REJEITADA</span>';
+    $status_badge_html = '<div class="botao tag_header_vermelho my-md-0 my-3">REJEITADA</div>';
 } else {
-    $status_badge_html = '<span class="badge bg-warning text-dark " style="font-size: 9.9px">PENDENTE</span>';
+    $status_badge_html = '<div class="botao tag_header_laranja my-md-0 my-3">PENDENTE</div>';
 }
 
 // Lógica para determinar se a seção de Admin deve ser exibida
@@ -253,30 +253,32 @@ function renderOcorrenciaCard($data, $is_admin_card, $tipos_map = [])
         </div>
 
         <div class="row">
-            <div class="col-sm-12 col-xl-6">
-                <label class="mb-1 text-muted">Observações</label>
-                <p class="mb-0"><?= ($obs ?? 'N/A') ?></p>
-                <hr>
-            </div>
-            <?php 
+            <?php
             // Carga Horária (6 colunas) APENAS se a ocorrência foi VALIDADA (status 2) E não possui Parecer Técnico.
-            if ($ocorrencia_atual['oco_status'] == 2 && empty($ocorrencia_atual['oco_parecer_tecnico'])): 
-            ?>
+            if ($ocorrencia_atual['oco_status'] == 2 && empty($ocorrencia_atual['oco_parecer_tecnico'])):
+                ?>
                 <div class="col-sm-12 col-xl-6">
                     <label class="mb-1 text-muted">Carga Horária Calculada</label>
-                    <p class="mb-0 fw-medium"> 
+                    <p class="mb-0 fw-medium">
                         <?= (($ocorrencia_atual['oco_status'] == 2 && $ocorrencia_atual['oco_carga_horaria_calculada']) ? htmlspecialchars(date('H:i', strtotime($ocorrencia_atual['oco_carga_horaria_calculada']))) : 'N/A') ?>
                     </p>
                     <hr>
                 </div>
             <?php endif; ?>
+
+            <div class="col-12">
+                <label class="mb-1 text-muted">Observações</label>
+                <p class="mb-0"><?= ($obs ?? 'N/A') ?></p>
+                <hr>
+            </div>
+
         </div>
 
         <?php
     else:
         // LAYOUT DO ADMIN (Este bloco está vazio, pois o conteúdo foi movido para o Accordion)
         ?>
-        
+
         <?php
     endif;
 }
@@ -325,6 +327,12 @@ if (!$ocorrencia_atual || $erro_busca_sql):
                         <li class="breadcrumb-item active">Análise</li>
                     </ol>
                 </div>
+
+
+            </div>
+
+            <div class="d-flex justify-content-end mb-3">
+                <?= $status_badge_html ?>
             </div>
         </div>
     </div>
@@ -337,9 +345,9 @@ if (!$ocorrencia_atual || $erro_busca_sql):
                         <h5 class="card-title mb-0">Dados da ocorrência</h5>
                         <div class="d-flex justify-content-end ">
 
-                            <?php 
-                                // Determina qual conjunto de dados deve preencher o modal
-                                $dados_para_o_modal = !empty($ocorrencia_atual['oco_parecer_tecnico']) ? $ocorrencia_atual : $versao_original_absoluta;
+                            <?php
+                            // Determina qual conjunto de dados deve preencher o modal
+                            $dados_para_o_modal = !empty($ocorrencia_atual['oco_parecer_tecnico']) ? $ocorrencia_atual : $versao_original_absoluta;
                             ?>
                             <?php if ($pode_editar && $ocorrencia_atual['oco_status'] == 1): ?>
                                 <form id="form_validar_ocorrencia" method="POST" action="../router/web.php?r=Ocorrenc"
@@ -379,19 +387,16 @@ if (!$ocorrencia_atual || $erro_busca_sql):
 
                 <div class="card-body">
 
-                    <div class="d-flex justify-content-end">
-                        <?= $status_badge_html ?>
-                    </div>
-
-
                     <?php renderOcorrenciaCard($dados_operador_para_exibir, false, $tipos_ocorrencia_map); ?>
 
-                    <hr class="mt-4 mb-3" />
+
                 </div>
             </div>
+        </div>
 
+
+        <div class="col-lg-12">
             <div class="card card_dados_info">
-
                 <div class="card-header " style="background: var(--roxo_alpha);">
                     <div class="col-12 tit_nova_solicitacao">
                         <h3 class="m-0 fs-16" style="color: var(--preto);">Dados da Reserva</h3>
@@ -553,13 +558,15 @@ if (!$ocorrencia_atual || $erro_busca_sql):
                                 </div>
                             </div>
                         <?php endif; ?>
+                    </div>
                 </div>
             </div>
+        </div>
 
-
-            <?php 
-            // CONDIÇÃO PARA EXIBIÇÃO DO ACCORDION DO PARECER TÉCNICO (SE PODE EDITAR E SE HOUVER PARECER)
-            if ($pode_editar && !empty($ocorrencia_atual['oco_parecer_tecnico'])): ?>
+        <?php
+        // CONDIÇÃO PARA EXIBIÇÃO DO ACCORDION DO PARECER TÉCNICO (SE PODE EDITAR E SE HOUVER PARECER)
+        if ($pode_editar && !empty($ocorrencia_atual['oco_parecer_tecnico'])): ?>
+            <div class="col-lg-12">
                 <div class="card card_dados_info mb-4">
                     <div class="card-header " style="background: var(--azul_alpha);">
                         <div class="col-12 tit_nova_solicitacao">
@@ -568,10 +575,10 @@ if (!$ocorrencia_atual || $erro_busca_sql):
                     </div>
 
                     <div class="card-body p-4">
-                        <h5>Detalhes da Revisão Técnica:</h5>
+                        <!-- <h5>Detalhes da Revisão Técnica:</h5> -->
                         <?php
                         $data_ac = $ocorrencia_atual; // Dados da ocorrência atual
-        
+                
                         // Redefinição de variáveis necessárias para a exibição completa
                         $parecer_ac = nl2br(htmlspecialchars($data_ac['oco_parecer_tecnico'] ?? ''));
                         $carga_horaria_ac = $data_ac['oco_carga_horaria_calculada'] ?? null;
@@ -580,7 +587,7 @@ if (!$ocorrencia_atual || $erro_busca_sql):
                         $data_edicao_ac = isset($data_ac['oco_data_edicao']) ? htmlspecialchars(date('d/m/Y H:i', strtotime($data_ac['oco_data_edicao']))) : 'N/A';
                         $inicio_realizado_ac = !empty($data_ac['oco_hora_inicio_realizado']) ? htmlspecialchars(date('H:i', strtotime($data_ac['oco_hora_inicio_realizado']))) : 'N/A';
                         $fim_realizado_ac = !empty($data_ac['oco_hora_fim_realizado']) ? htmlspecialchars(date('H:i', strtotime($data_ac['oco_hora_fim_realizado']))) : 'N/A';
-                        
+
                         // Lógica dos Tipos de Ocorrência para o Accordion
                         $tipos_selecionados_html_ac = 'N/A';
                         if (!empty($oco_tipo_ids_ac) && !empty($tipos_ocorrencia_map)) {
@@ -617,7 +624,6 @@ if (!$ocorrencia_atual || $erro_busca_sql):
                                 <hr>
                             </div>
 
-
                             <div class="col-sm-6 col-xl-4 col-xxl-3">
                                 <label class="text-muted">Início Realizado</label>
                                 <p> <?= $inicio_realizado_ac ?> </p>
@@ -634,7 +640,7 @@ if (!$ocorrencia_atual || $erro_busca_sql):
 
 
                         <div class="row g-3">
-                            <div class="col-sm-6 col-xl-4 col-xxl-3">
+                            <div class="col-sm-12 col-xl-6">
                                 <label class="text-muted">Carga Horária Calculada</label>
                                 <p> <?= (($data_ac['oco_status'] == 2 && $carga_horaria_ac) ? htmlspecialchars(date('H:i', strtotime($carga_horaria_ac))) : 'N/A') ?>
                                 </p>
@@ -656,12 +662,14 @@ if (!$ocorrencia_atual || $erro_busca_sql):
 
                     </div>
                 </div>
-                
             </div>
-            <?php endif; ?>
+
 
         </div>
-    </div>
+
+    <?php endif; ?>
+
+
 
 
 <?php endif; // FIM DO IF/ELSE PRINCIPAL ?>
@@ -697,9 +705,9 @@ if (!$ocorrencia_atual || $erro_busca_sql):
                         html: 'Tem certeza que deseja <strong>VALIDAR</strong> esta ocorrência? Isso calculará a carga horária com base nos horários registrados e atualizará o status.',
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Sim, Validar!',
+                        confirmButtonColor: '#0461AD',
+                        cancelButtonColor: '#C4453E',
+                        confirmButtonText: 'Confirmar',
                         cancelButtonText: 'Cancelar'
                     }).then((result) => {
                         if (result.isConfirmed) {

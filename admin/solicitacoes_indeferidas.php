@@ -465,6 +465,8 @@
                 $ultimoNome = end($partesNome);
 
                 ?>
+
+
                 <tr role="button" data-href='solicitacao_analise.php?i=<?= $solic_id ?>'>
                   <th scope="row"><?= $solic_codigo ?></th>
                   <td scope="row"><?= $curs_curso ?></td>

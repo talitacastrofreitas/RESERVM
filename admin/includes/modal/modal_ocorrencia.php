@@ -449,7 +449,7 @@
             <div class="col-lg-12">
               <div class="hstack gap-3 align-items-center justify-content-end mt-2">
                 <button type="button" class="btn botao btn-light waves-effect" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn botao botao_verde waves-effect">Salvar e Aplicar</button>
+                <button type="submit" class="btn botao botao_verde waves-effect">Salvar</button>
               </div>
             </div>
 

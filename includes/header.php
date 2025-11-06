@@ -206,6 +206,10 @@ WHERE u.user_id = :user_id
               <a class="nav-link menu-link" href="reservas_confirmadas.php"><span>Minhas reservas</span></a>
             </li>
 
+            <li class="nav-item">
+              <a class="nav-link menu-link" href="canceladas.php"><span>Canceladas</span></a>
+            </li>
+
             <?php if ($is_coordenador_flag) { ?>
               <li class="nav-item">
                 <a class="nav-link menu-link" href="aprovacoes.php"><span>Aprovações</span>

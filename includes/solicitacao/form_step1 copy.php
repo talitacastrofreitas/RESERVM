@@ -4,8 +4,8 @@
 
     <div class="row grid gx-3">
 
-      <input type="hidden" class="form-control" name="solic_acao" value="cadastrar_1" required>
-      <input type="hidden" class="form-control" name="solic_etapa" value="1" required>
+      <input type="hidden" class="form-control" name="solic_acao" value="atualizar_1" required>
+      <input type="hidden" class="form-control" name="solic_id" value="<?= $_GET['i'] ?>" required>
 
       <div class="col-12">
         <div class="form_margem">
@@ -14,12 +14,11 @@
             $sql->execute();
             $result = $sql->fetchAll(PDO::FETCH_ASSOC);
           } catch (PDOException $e) {
-            // echo "Erro: " . $e->getMessage();
             echo "Erro ao tentar recuperar os dados";
           } ?>
           <label class="form-label">Curso <span>*</span></label>
           <select class="form-select text-uppercase" name="solic_curso" id="cad_solic_curso" required>
-            <option value="" disabled <?= (empty($solic_curso) ? 'selected' : '') ?>>-- Selecione um Curso --</option>
+            <option value="" disabled <?= (empty($solic_curso)) ? 'selected' : '' ?>>-- Selecione um Curso --</option>
             <?php foreach ($result as $res): ?>
               <option value="<?= htmlspecialchars($res['curs_id']) ?>" <?= (!empty($solic_curso) && $solic_curso == $res['curs_id']) ? 'selected' : '' ?>>
                 <?= htmlspecialchars($res['curs_curso']) ?>
@@ -28,6 +27,25 @@
           </select>
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
+        <script>
+          const cad_solic_tipo_ativ = document.getElementById("cad_solic_tipo_ativ");
+          // const campo_solic_curso = document.getElementById("campo_solic_curso");
+
+          cad_solic_tipo_ativ.addEventListener("change", function () {
+            if (cad_solic_tipo_ativ.value === "1") {
+              campo_solic_curso.style.display = "block";
+              document.getElementById("cad_solic_curso").required = true;
+            } else {
+              campo_solic_curso.style.display = "none";
+              document.getElementById("cad_solic_curso").required = false;
+            }
+          });
+
+          if (cad_solic_tipo_ativ.value === "1") {
+            campo_solic_curso.style.display = "block";
+            document.getElementById("cad_solic_curso").required = true;
+          }
+        </script>
       </div>
 
       <div class="col-12" id="campo_solic_comp_curric" style="display: none;">
@@ -35,10 +53,35 @@
           <label class="form-label">Componente Curricular <span>*</span></label>
           <div class="label_info label_info_verde mt-0">Os componentes curriculares estão ordenados por semestre e ordem
             alfabética.</div>
-          <select class="form-select text-uppercase" name="solic_comp_curric" id="cad_solic_comp_curric">
+          <select class="form-select text-uppercase" name="solic_comp_curric" id="cad_solic_comp_curric"
+            data-valor="<?= $compc_id ?>">
+            <option value="<?= $compc_id ?>"><?= $compc_componente ?></option>
           </select>
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
+        <script>
+          $(document).ready(function () {
+            // Inicializa o select2
+            $('#cad_solic_curso').select2();
+
+            // Função para verificar e exibir o campo oculto se necessário
+            function verificarSelecao() {
+              if ($('#cad_solic_curso').val() == "2") { // Ajuste para o valor que deve exibir o campo
+                $('#campo_solic_comp_curric').show();
+              } else {
+                $('#campo_oculto').hide();
+              }
+            }
+
+            // Verifica na inicialização
+            verificarSelecao();
+
+            // Adiciona o evento de mudança
+            $('#cad_solic_curso').on('change', function () {
+              verificarSelecao();
+            });
+          });
+        </script>
       </div>
 
       <div class="col-md-6" id="campo_solic_nome_curso" style="display: none;">
@@ -52,7 +95,7 @@
           } ?>
           <label class="form-label">Nome do Curso <span>*</span></label>
           <select class="form-select text-uppercase" name="solic_nome_curso" id="cad_solic_nome_curso">
-            <option selected disabled value=""></option>
+            <option selected value="<?= $cexc_id ?>"><?= $cexc_curso ?></option>
             <?php foreach ($result as $res): ?>
               <option value="<?= $res['cexc_id'] ?>"><?= $res['cexc_curso'] ?></option>
             <?php endforeach; ?>
@@ -65,7 +108,7 @@
         <div class="form_margem">
           <label class="form-label">Nome do Curso <span>*</span></label>
           <input type="text" class="form-control text-uppercase" name="solic_nome_curso_text"
-            id="cad_solic_nome_curso_text" maxlength="200">
+            id="cad_solic_nome_curso_text" value="<?= $solic_nome_curso_text ?>" maxlength="200">
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
       </div>
@@ -74,7 +117,7 @@
         <div class="form_margem">
           <label class="form-label">Nome da Atividade <span>*</span></label>
           <input type="text" class="form-control text-uppercase" name="solic_nome_atividade"
-            id="cad_solic_nome_atividade" maxlength="200">
+            id="cad_solic_nome_atividade" value="<?= $solic_nome_atividade ?>" maxlength="200">
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
       </div>
@@ -83,7 +126,7 @@
         <div class="form_margem">
           <label class="form-label">Nome do Componente/Atividade <span>*</span></label>
           <input type="text" class="form-control text-uppercase" name="solic_nome_comp_ativ"
-            id="cad_solic_nome_comp_ativ" maxlength="200">
+            id="cad_solic_nome_comp_ativ" value="<?= $solic_nome_comp_ativ ?>" maxlength="200">
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
       </div>
@@ -91,15 +134,16 @@
       <div class="col-md-6" id="campo_solic_semestre" style="display: none;">
         <div class="form_margem">
           <?php try {
-            $sql = $conn->prepare("SELECT * FROM conf_semestre ORDER BY cs_id ASC");
+            $sql = $conn->prepare("SELECT cs_id, cs_semestre FROM conf_semestre ORDER BY cs_id ASC");
             $sql->execute();
             $result = $sql->fetchAll(PDO::FETCH_ASSOC);
           } catch (PDOException $e) {
+            // echo "Erro: " . $e->getMessage();
             echo "Erro ao tentar recuperar os dados";
           } ?>
           <label class="form-label">Semestre <span>*</span></label>
           <select class="form-select text-uppercase" name="solic_semestre" id="cad_solic_semestre">
-            <option selected disabled value=""></option>
+            <option selected value="<?= $cs_id ?>"><?= $cs_semestre ?></option>
             <?php foreach ($result as $res): ?>
               <option value="<?= $res['cs_id'] ?>"><?= $res['cs_semestre'] ?></option>
             <?php endforeach; ?>
@@ -112,24 +156,34 @@
         <div class="form_margem">
           <label class="form-label">Nome do Professor/Responsável <span>*</span></label>
           <input type="text" class="form-control text-uppercase" name="solic_nome_prof_resp"
-            id="cad_solic_nome_prof_resp" maxlength="200">
+            id="cad_solic_nome_prof_resp" value="<?= $solic_nome_prof_resp ?>" maxlength="200">
           <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
       </div>
 
       <div class="col-md-6" id="campo_solic_contato" style="display: none;">
         <div class="form_margem">
-          <label class="form-label">Telefone para contato <!--<span>*</span>--></label>
-          <input type="text" class="form-control cel_tel" name="solic_contato" id="cad_solic_contato">
-          <!-- <div class="invalid-feedback">Este campo é obrigatório</div> -->
+          <label class="form-label">Telefone para contato <span>*</span></label>
+          <input type="text" class="form-control cel_tel" name="solic_contato" id="cad_solic_contato"
+            value="<?= $solic_contato ?>">
+          <div class="invalid-feedback">Este campo é obrigatório</div>
         </div>
       </div>
 
       <div class="col-lg-12">
         <div class="hstack gap-3 align-items-center justify-content-end mt-4">
           <p class="label_asterisco me-auto my-0"><span>*</span> Campo obrigatório</p>
-          <button type="submit" class="btn botao_azul_escuro btn-label right ms-auto nexttab nexttab waves-effect"><i
-              class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Próximo</button>
+
+          <?php
+          $sta_solic = array(3, 4, 5, 6, 7, 8);
+          if (in_array($solic_sta_status, $sta_solic)) {
+            ?><a class="btn botao_disabled btn-label right ms-auto nexttab nexttab waves-effect"><i
+                class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Próximo</a>
+          <?php } else { ?>
+            <button type="submit" class="btn botao_azul_escuro btn-label right ms-auto nexttab nexttab waves-effect"><i
+                class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Próximo</button>
+          <?php } ?>
+
         </div>
       </div>
 
@@ -152,12 +206,7 @@
       } else if (tipoAtiv == '2') {
         // 2	ATIVIDADE ADMINISTRATIVA
         $('[id^="campo_"]').hide();
-        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
-
-        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp').find('input').prop('required', true);
-
-
-
+        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
         return;
       }
 
@@ -174,16 +223,9 @@
         $('#campo_solic_comp_curric').show().find('#cad_solic_comp_curric').prop('required', true);
         // 0	OUTRO
         if (compCurric == '0') {
-
-
-          $('#campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
-
-          $('#campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp').find('input').prop('required', true);
+          $('#campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
         } else if (compCurric) {
-
-          $('#campo_solic_nome_prof_resp, #campo_solic_contato').show();
-
-          $('#campo_solic_nome_prof_resp').find('input').prop('required', true);
+          $('#campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
         }
       }
 
@@ -191,11 +233,7 @@
         // 8	EXTENSÃO CURRICULARIZADA
         $('#campo_solic_nome_curso').show().find('#cad_solic_nome_curso').prop('required', true);
         if (nomeCurso) {
-
-          $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
-
-          $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp').find('input').prop('required', true);
-
+          $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
         }
       }
 
@@ -205,17 +243,13 @@
         // 19	PROGRAMA CANDEAL
         // 28	NIDD
         // 31	RESERVAS ADMINISTRATIVAS
-        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
-
-        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp').find('input').prop('required', true);
-
+        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
       }
 
       if ([11, 22].includes(parseInt(curso))) {
         // 11	LATO SENSU
         // 22	STRICTO SENSU
-        $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
-        $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp').find('input').prop('required', true);
+        $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
       }
     }
 
@@ -230,9 +264,7 @@
 
 <script>
   $(document).ready(function () {
-    // Quando o curso for alterado
-    $('#cad_solic_curso').change(function () {
-      var cursoId = $(this).val();
+    function carregarComponentes(cursoId, componenteSelecionado) {
       if (cursoId !== "") {
         $.ajax({
           url: 'buscar_componentes.php',
@@ -242,11 +274,30 @@
           },
           success: function (data) {
             $('#cad_solic_comp_curric').html(data);
+
+            // Se houver um componente já selecionado, definir ele no select
+            if (componenteSelecionado) {
+              $('#cad_solic_comp_curric').val(componenteSelecionado).trigger('change');
+            }
           }
         });
       } else {
         $('#cad_solic_comp_curric').html('<option value="">Selecione um componente</option>');
       }
+    }
+
+    // Evento quando o curso for alterado manualmente pelo usuário
+    $('#cad_solic_curso').change(function () {
+      var cursoId = $(this).val();
+      carregarComponentes(cursoId, null);
     });
+
+    // Verificar se já existem valores pré-selecionados ao carregar a página
+    var cursoSelecionado = $('#cad_solic_curso').val();
+    var componenteSelecionado = $('#cad_solic_comp_curric').data('valor'); // Defina esse valor no HTML
+
+    if (cursoSelecionado) {
+      carregarComponentes(cursoSelecionado, componenteSelecionado);
+    }
   });
 </script>

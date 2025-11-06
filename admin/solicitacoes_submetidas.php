@@ -421,9 +421,9 @@
               $stmt = $conn->prepare("SELECT * FROM solicitacao
     LEFT JOIN solicitacao_status ON solicitacao_status.solic_sta_solic_id = solicitacao.solic_id
     LEFT JOIN status_solicitacao ON status_solicitacao.stsolic_id = solicitacao_status.solic_sta_status
-    --INNER JOIN conf_tipo_atividade ON conf_tipo_atividade.cta_id = solicitacao.solic_tipo_ativ
     LEFT JOIN componente_curricular ON componente_curricular.compc_id = solicitacao.solic_comp_curric
     LEFT JOIN cursos ON cursos.curs_id = solicitacao.solic_curso
+    LEFT JOIN curso_coordenador ON curso_coordenador.curs_id = solicitacao.solic_curso -- ADICIONADO NOVO JOIN
     LEFT JOIN conf_cursos_extensao_curricularizada ON conf_cursos_extensao_curricularizada.cexc_id = solicitacao.solic_nome_curso
     LEFT JOIN conf_semestre ON conf_semestre.cs_id = solicitacao.solic_semestre
     LEFT JOIN usuarios ON usuarios.user_id = solicitacao.solic_cad_por
@@ -431,9 +431,13 @@
     WHERE 
         (
             -- FILA 1: Solicitado (2) E sem Coordenador (Nova pendência SAAP)
-            (solicitacao_status.solic_sta_status = 2 AND cursos.curs_matricula_prof IS NULL)
+            (
+                solicitacao_status.solic_sta_status = 2 
+                AND 
+                curso_coordenador.coordenador_matricula IS NULL -- ALTERAÇÃO AQUI
+            )
             OR
-            -- FILA 2: Aprovado pelo Coordenador (5) (Pendência de Reserva SAAP)
+            -- FILA 2: Aprovado pelo Coordenador (5) ou Recusado pelo Coordenador (7) (Pendência de Reserva/Processamento SAAP)
             solicitacao_status.solic_sta_status IN (5, 7)
         )
 ");
@@ -675,9 +679,9 @@
 
             <div class="col-md-6" id="campo_solic_contato" style="display: none;">
               <div class="mb-3">
-                <label class="form-label">Telefone para contato <span>*</span></label>
+                <label class="form-label">Telefone para contato <!--<span>*</span>--></label>
                 <input type="text" class="form-control cel_tel" name="solic_contato" id="cad_solic_contato">
-                <div class="invalid-feedback">Este campo é obrigatório</div>
+                <!-- <div class="invalid-feedback">Este campo é obrigatório</div> -->
               </div>
             </div>
 
@@ -711,7 +715,13 @@
       } else if (tipoAtiv == '2') {
         // 2	ATIVIDADE ADMINISTRATIVA
         $('[id^="campo_"]').hide();
-        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+        // $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+
+
+
+        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp').find('input').prop('required', true);
         return;
       }
 
@@ -728,9 +738,21 @@
         $('#campo_solic_comp_curric').show().find('#cad_solic_comp_curric').prop('required', true);
         // 0	OUTRO
         if (compCurric == '0') {
-          $('#campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+          // $('#campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+
+
+          $('#campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+          $('#campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp').find('input').prop('required', true);
+
+
         } else if (compCurric) {
-          $('#campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+          $('#campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+          $('#campo_solic_nome_prof_resp').find('input').prop('required', true);
+
+
+          // $('#campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
         }
       }
 
@@ -738,7 +760,11 @@
         // 8	EXTENSÃO CURRICULARIZADA
         $('#campo_solic_nome_curso').show().find('#cad_solic_nome_curso').prop('required', true);
         if (nomeCurso) {
-          $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+          // $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+
+          $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+          $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp').find('input').prop('required', true);
         }
       }
 
@@ -748,13 +774,23 @@
         // 19	PROGRAMA CANDEAL
         // 28	NIDD
         // 31	RESERVAS ADMINISTRATIVAS
-        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+        // $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
+
+        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+        $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp').find('input').prop('required', true);
       }
 
       if ([11, 22].includes(parseInt(curso))) {
         // 11	LATO SENSU
         // 22	STRICTO SENSU
-        $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+
+        // $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
+
+
+        $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
+
+        $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp').find('input').prop('required', true);
       }
     }
 

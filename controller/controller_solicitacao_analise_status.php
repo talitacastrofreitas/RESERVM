@@ -114,7 +114,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 include '../includes/email/email_header.php';
 
                 $email_conteudo .= "
-                <tr style='background-color: #ffffff; text-align: center; color: #515050;   display: flex; justify-content: center; padding:10px 50px 0 50px; line-height: 23px;'>
+                <tr style='background-color: #ffffff; text-align: center; color: #515050;   display: flex; justify-content: center; padding:10px 50px 0 50px; line-height: 23px;'>
                     <td align='center' width='800px' style='padding: 2em 2rem; display: inline-block;'>
                         <p style='font-size: 1.188rem; font-weight: 500; margin: 0px 0px 20px 0px;'>
                             <strong>SOLICITAÇÃO APROVADA</strong>
@@ -178,7 +178,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             //     // Corpo do Solicitante (Mensagem genérica)
             //     $email_conteudo .= "
             //     <tr style='background-color: #ffffff; text-align: center; color: #515050; display: flex; justify-content: center; padding:10px 50px 0 50px; line-height: 23px;'>
-            //         <td style='padding: 2em 2rem; display: inline-block;  width:100%;'>
+            //         <td style='padding: 2em 2rem; display: inline-block;  width:100%;'>
             //             <p style='font-size: 1.188rem; font-weight: 500; margin: 0px 0px 20px 0px;'>
             //                 <strong>SOLICITAÇÃO INDEFERIDA</strong>
             //             </p>

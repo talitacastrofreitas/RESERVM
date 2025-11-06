@@ -112,11 +112,42 @@
                   return sprintf('%02d:%02d', $h, $m);
                 }
 
+                // $stmt = $conn->prepare("SELECT solic_id, res_id, res_espaco_id, res_data, week_dias, res_mes, res_ano, res_hora_inicio, res_hora_fim, res_turno, res_tipo_aula, res_tipo_reserva, res_recursos, res_recursos_add, res_codigo, cta_tipo_aula, curs_curso, cs_semestre,res_componente_atividade, compc_componente, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, res_titulo_aula, res_obs, res_quant_pessoas, ctr_tipo_reserva, esp_codigo, esp_nome_local, and_andar, pav_pavilhao, uni_unidade, tipesp_tipo_espaco, esp_quant_maxima, admin_nome, solic_data_cad, res_data_cad, solic_codigo, oco_codigo, oco_hora_inicio_realizado,oco_hora_fim_realizado 
+                //                         FROM reservas
+                //                         INNER JOIN solicitacao ON solicitacao.solic_id = reservas.res_solic_id
+                //                         -- NOVO JOIN PARA FILTRAR PELO STATUS PRINCIPAL DA SOLICITAÇÃO (RESERVADO = 4)
+                //                         INNER JOIN solicitacao_status AS ss ON ss.solic_sta_solic_id = solicitacao.solic_id
+                //                         INNER JOIN conf_dias_semana ON conf_dias_semana.week_id = reservas.res_dia_semana
+                //                         LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
+                //                         LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
+                //                         LEFT JOIN componente_curricular ON componente_curricular.compc_id = reservas.res_componente_atividade
+                //                         INNER JOIN conf_tipo_reserva ON conf_tipo_reserva.ctr_id = reservas.res_tipo_reserva
+                //                         INNER JOIN conf_tipo_aula ON conf_tipo_aula.cta_id = reservas.res_tipo_aula
+                //                         INNER JOIN espaco ON espaco.esp_id = reservas.res_espaco_id
+                //                         INNER JOIN tipo_espaco ON tipo_espaco.tipesp_id = espaco.esp_tipo_espaco
+                //                         LEFT JOIN pavilhoes ON pavilhoes.pav_id = espaco.esp_pavilhao
+                //                         LEFT JOIN andares ON andares.and_id = espaco.esp_andar
+                //                         LEFT JOIN unidades ON unidades.uni_id = espaco.esp_unidade
+                //                         LEFT JOIN recursos ON ',' + ISNULL(reservas.res_recursos_add, '') + ',' LIKE '%,' + CAST(recursos.rec_id AS VARCHAR) + ',%'
+                //                         INNER JOIN admin ON admin.admin_id = reservas.res_user_id
+                //                         LEFT JOIN ocorrencias ON ocorrencias.oco_res_id = reservas.res_id
+                //                         -- REMOVIDO o ':solic_id' e FILTRO ADICIONADO:
+                //                         WHERE ss.solic_sta_status = 4
+                //                         ORDER BY reservas.res_data ASC");
+              
                 $stmt = $conn->prepare("SELECT solic_id, res_id, res_espaco_id, res_data, week_dias, res_mes, res_ano, res_hora_inicio, res_hora_fim, res_turno, res_tipo_aula, res_tipo_reserva, res_recursos, res_recursos_add, res_codigo, cta_tipo_aula, curs_curso, cs_semestre,res_componente_atividade, compc_componente, res_componente_atividade_nome, res_nome_atividade, res_modulo, res_professor, res_titulo_aula, res_obs, res_quant_pessoas, ctr_tipo_reserva, esp_codigo, esp_nome_local, and_andar, pav_pavilhao, uni_unidade, tipesp_tipo_espaco, esp_quant_maxima, admin_nome, solic_data_cad, res_data_cad, solic_codigo, oco_codigo, oco_hora_inicio_realizado,oco_hora_fim_realizado 
                                         FROM reservas
                                         INNER JOIN solicitacao ON solicitacao.solic_id = reservas.res_solic_id
-                                        -- NOVO JOIN PARA FILTRAR PELO STATUS PRINCIPAL DA SOLICITAÇÃO (RESERVADO = 4)
-                                        INNER JOIN solicitacao_status AS ss ON ss.solic_sta_solic_id = solicitacao.solic_id
+                                        
+                                        -- [CORREÇÃO 1] JUNTA COM STATUS ATUAL (ROW_NUMBER)
+                                        INNER JOIN (
+                                            SELECT 
+                                                solic_sta_solic_id, 
+                                                solic_sta_status,
+                                                ROW_NUMBER() OVER (PARTITION BY solic_sta_solic_id ORDER BY solic_sta_data_cad DESC) AS rn
+                                            FROM solicitacao_status
+                                        ) AS ss ON ss.solic_sta_solic_id = solicitacao.solic_id AND ss.rn = 1 
+                                        
                                         INNER JOIN conf_dias_semana ON conf_dias_semana.week_id = reservas.res_dia_semana
                                         LEFT JOIN cursos ON cursos.curs_id = reservas.res_curso
                                         LEFT JOIN conf_semestre ON conf_semestre.cs_id = reservas.res_semestre
@@ -131,8 +162,12 @@
                                         LEFT JOIN recursos ON ',' + ISNULL(reservas.res_recursos_add, '') + ',' LIKE '%,' + CAST(recursos.rec_id AS VARCHAR) + ',%'
                                         INNER JOIN admin ON admin.admin_id = reservas.res_user_id
                                         LEFT JOIN ocorrencias ON ocorrencias.oco_res_id = reservas.res_id
-                                        -- REMOVIDO o ':solic_id' e FILTRO ADICIONADO:
+                                        
                                         WHERE ss.solic_sta_status = 4
+                                        
+                                        -- [CORREÇÃO 2] FILTRO DE CANCELAMENTO DA RESERVA INDIVIDUAL
+                                        AND (reservas.res_status IS NULL OR reservas.res_status NOT IN (8, 9))
+                                        
                                         ORDER BY reservas.res_data ASC");
                 $stmt->execute();
                 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {

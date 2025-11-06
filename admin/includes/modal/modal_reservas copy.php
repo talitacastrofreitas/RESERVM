@@ -28,7 +28,8 @@ $stmt = $conn->prepare("SELECT
     solic_ap_aula_pratica, solic_at_aula_teorica,
     solic_ap_tipo_reserva, solic_at_tipo_reserva,
     solic_ap_data_inicio, solic_ap_data_fim, 
-    solic_at_data_inicio, solic_at_data_fim
+    solic_at_data_inicio, solic_at_data_fim,
+      solic_ap_quant_particip, solic_at_quant_particip
     FROM solicitacao WHERE solic_id = ?");
 $stmt->execute([$solicId]);
 $solicitacao_dados = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -36,12 +37,17 @@ $solicitacao_dados = $stmt->fetch(PDO::FETCH_ASSOC);
 // 3. Extrair variáveis
 $solic_ap_aula_pratica = $solicitacao_dados['solic_ap_aula_pratica'] ?? 0;
 $solic_at_aula_teorica = $solicitacao_dados['solic_at_aula_teorica'] ?? 0;
+
+$solic_ap_quant_particip = $solicitacao_dados['solic_ap_quant_particip'] ?? 0; // Novo
+$solic_at_quant_particip = $solicitacao_dados['solic_at_quant_particip'] ?? 0; // Novo
+
 $solic_ap_tipo_reserva = $solicitacao_dados['solic_ap_tipo_reserva'] ?? 0;
 $solic_at_tipo_reserva = $solicitacao_dados['solic_at_tipo_reserva'] ?? 0;
 $solic_ap_data_inicio = $solicitacao_dados['solic_ap_data_inicio'] ?? '';
 $solic_ap_data_fim = $solicitacao_dados['solic_ap_data_fim'] ?? '';
 $solic_at_data_inicio = $solicitacao_dados['solic_at_data_inicio'] ?? '';
 $solic_at_data_fim = $solicitacao_dados['solic_at_data_fim'] ?? '';
+
 
 // Nº DE PESSOAS
 $quant_pessoas_reserva = '';
@@ -69,6 +75,8 @@ if ($ap_only) {
 if (empty($quant_pessoas_reserva) || $quant_pessoas_reserva == 0) {
     $quant_pessoas_reserva = '';
 }
+
+
 
 // 4. Lógica de Pré-preenchimento Condicional
 $data_inicio_reserva = '';
@@ -107,8 +115,9 @@ if ($ap_is_sole_fixed) {
             <form id="form_reserva" class="needs-validation" action="../router/web.php?r=Reserv" method="POST"
                 novalidate>
 
-                <input type="hidden" class="form-control" name="res_solic_id" value="<?= $_GET['i'] ?>" required>
                 <input type="hidden" class="form-control" name="acao" value="cadastrar" required>
+                <input type="hidden" class="form-control" name="res_solic_id" value="<?= $_GET['i'] ?>" required>
+
 
                 <div class="etapa" id="etapa1">
                     <div class="modal-body">
@@ -302,21 +311,33 @@ if ($ap_is_sole_fixed) {
                             </script>
 
                             <div class="col-xl-3">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT * FROM andares ORDER BY and_andar");
+                                <?php
+
+                                $id_tipo_espaco_atual = $dados_do_espaco['esp_tipo_espaco'] ?? null;
+
+                                // PASSO 2: CONSULTAR TODOS OS TIPOS DE SALA
+                                try {
+                                    $sql = $conn->prepare("SELECT tipesp_id, tipesp_tipo_espaco FROM tipo_espaco ORDER BY tipesp_tipo_espaco");
                                     $sql->execute();
                                     $result = $sql->fetchAll(PDO::FETCH_ASSOC);
                                 } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar o perfil";
+                                    echo "Erro ao tentar recuperar os Tipos de Sala: " . $e->getMessage();
                                 } ?>
+
                                 <label class="form-label">Tipo de Sala</label>
                                 <select class="form-select text-uppercase" id="cad_reserva_tipo_sala" disabled>
-                                    <option selected value=""></option>
-                                    <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['and_id'] ?>"><?= $res['and_andar'] ?></option>
+
+                                    <?php foreach ($result as $res):
+
+                                        $selected = ($res['tipesp_id'] == $id_tipo_espaco_atual) ? 'selected' : '';
+                                        ?>
+                                        <option value="<?= $res['tipesp_id'] ?>" <?= $selected ?>>
+                                            <?= $res['tipesp_tipo_espaco'] ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
+
 
                             <div class="col-xl-3">
                                 <?php try {
@@ -375,7 +396,6 @@ if ($ap_is_sole_fixed) {
                                 <div class="invalid-feedback">Este campo é obrigatório</div>
                             </div> -->
 
-
                             <div class="col-xl-3">
                                 <label class="form-label">Nº Pessoas <span>*</span></label>
                                 <input type="text" class="form-control" id="cad_reserva_quant_pessoas"
@@ -383,7 +403,6 @@ if ($ap_is_sole_fixed) {
                                     value="<?= htmlspecialchars($quant_pessoas_reserva) ?>" required>
                                 <div class="invalid-feedback">Este campo é obrigatório</div>
                             </div>
-
 
                             <div class="col-xl-3">
                                 <label class="form-label">Recursos Audiovisuais <span>*</span></label>
@@ -1201,15 +1220,6 @@ if ($ap_is_sole_fixed) {
 </div>
 
 
-
-
-
-
-
-
-
-
-
 <!-- MODAL DE EDIÇÃO -->
 
 <div class="modal fade modal_padrao" id="modal_edit_espaco" aria-hidden="true" tabindex="-1">
@@ -1229,75 +1239,79 @@ if ($ap_is_sole_fixed) {
                 <input type="hidden" class="form-control res_id" name="res_id" required>
                 <input type="hidden" class="form-control" name="acao" value="atualizar" required>
 
-                <div class="etapa" id="EditEtapa1">
-                    <div class="modal-body">
 
-                        <div id="custom-progress-bar" class="progress-nav mb-5 mt-2">
-                            <div class="progress" style="height: 1px;">
-                                <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
-                                    aria-valuemin="0" aria-valuemax="0">
-                                </div>
+                <div class=" etapa" id="EditEtapa1">
+                <div class="modal-body">
+
+                    <div id="custom-progress-bar" class="progress-nav mb-5 mt-2">
+                        <div class="progress" style="height: 1px;">
+                            <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
+                                aria-valuemin="0" aria-valuemax="0">
                             </div>
-
-                            <ul class="nav nav-pills progress-bar-tab custom-nav" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded-pill active" data-progressbar="custom-progress-bar"
-                                        id="pills-gen-info-tab" data-bs-toggle="pill" data-bs-target="#pills-gen-info"
-                                        role="tab" aria-controls="pills-gen-info" aria-selected="false"
-                                        data-position="0" tabindex="-1" disabled>Local</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar"
-                                        id="pills-info-desc-tab" data-bs-toggle="pill" data-bs-target="#pills-info-desc"
-                                        role="tab" aria-controls="pills-info-desc" aria-selected="false"
-                                        data-position="1" tabindex="-1" disabled>Atividade</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar"
-                                        id="pills-success-tab" data-bs-toggle="pill" data-bs-target="#pills-success"
-                                        role="tab" aria-controls="pills-success" aria-selected="true" data-position="2"
-                                        disabled>Período</button>
-                                </li>
-                            </ul>
                         </div>
 
-                        <div class="row g-3">
+                        <ul class="nav nav-pills progress-bar-tab custom-nav" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-pill active" data-progressbar="custom-progress-bar"
+                                    id="pills-gen-info-tab" data-bs-toggle="pill" data-bs-target="#pills-gen-info"
+                                    role="tab" aria-controls="pills-gen-info" aria-selected="false" data-position="0"
+                                    tabindex="-1" disabled>Local</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar"
+                                    id="pills-info-desc-tab" data-bs-toggle="pill" data-bs-target="#pills-info-desc"
+                                    role="tab" aria-controls="pills-info-desc" aria-selected="false" data-position="1"
+                                    tabindex="-1" disabled>Atividade</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar"
+                                    id="pills-success-tab" data-bs-toggle="pill" data-bs-target="#pills-success"
+                                    role="tab" aria-controls="pills-success" aria-selected="true" data-position="2"
+                                    disabled>Período</button>
+                            </li>
+                        </ul>
+                    </div>
 
-                            <div class="col-xl-3">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT * FROM unidades");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar o perfil";
-                                } ?>
+                    <div class="row g-3">
+
+                        <div class="col-xl-3">
+                            <?php try {
+                                $sql = $conn->prepare("SELECT * FROM unidades");
+                                $sql->execute();
+                                $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+                            } catch (PDOException $e) {
+                                echo "Erro ao tentar recuperar o perfil";
+                            } ?>
                                 <label class="form-label">Campus</label>
                                 <select class="form-select text-uppercase res_campus" name="res_campus"
                                     id="edit_reserva_campus">
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['uni_id'] ?>"><?= $res['uni_unidade'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+                                <option value="<?= $res['uni_id'] ?>">
+                                    <?= $res['uni_unidade'] ?>
+                                </option>
+                            <?php endforeach; ?>
+                            </select>
+                            <div class="invalid-feedback">Este campo é obrigatório
+                        </div>
+                    </div>
 
-                            <div class="col-xl-9" id="camp_edit_reserv_local_cabula" style="display: none;">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT esp_id, esp_codigo, esp_nome_local FROM espaco WHERE esp_unidade = 1 ORDER BY esp_nome_local ASC");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar os dados";
-                                } ?>
+                    <div class="col-xl-9" id="camp_edit_reserv_local_cabula" style="display: none;">
+                        <?php try {
+                            $sql = $conn->prepare("SELECT esp_id, esp_codigo, esp_nome_local FROM espaco WHERE esp_unidade = 1 ORDER BY esp_nome_local ASC");
+                            $sql->execute();
+                            $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+                        } catch (PDOException $e) {
+                            echo "Erro ao tentar recuperar os dados";
+                        } ?>
                                 <label class="form-label">Local <span>*</span></label>
                                 <select class="form-select text-uppercase res_espaco_id_cabula"
                                     name="res_espaco_id_cabula" id="edit_reserva_local_cabula">
                                     <option selected disabled value=""></option>
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['esp_id'] ?>">
-                                            <?= $res['esp_codigo'] . ' - ' . $res['esp_nome_local'] ?>
-                                        </option>
-                                    <?php endforeach; ?>
+                            <option value="<?= $res['esp_id'] ?>">
+                                        <?= $res['esp_codigo'] . ' - ' . $res['esp_nome_local'] ?>
+                            </option>
+                        <?php endforeach; ?>
                                 </select>
                                 <div class="invalid-feedback">Este campo é obrigatório</div>
                             </div>
@@ -1315,10 +1329,10 @@ if ($ap_is_sole_fixed) {
                                     name="res_espaco_id_brotas" id="edit_reserva_local_brotas">
                                     <option selected disabled value=""></option>
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['esp_id'] ?>">
-                                            <?= $res['esp_codigo'] . ' - ' . $res['esp_nome_local'] ?>
-                                        </option>
-                                    <?php endforeach; ?>
+                            <option value="<?= $res['esp_id'] ?>">
+                                        <?= $res['esp_codigo'] . ' - ' . $res['esp_nome_local'] ?>
+                            </option>
+                        <?php endforeach; ?>
                                 </select>
                                 <div class="invalid-feedback">Este campo é obrigatório</div>
                             </div>
@@ -1335,493 +1349,508 @@ if ($ap_is_sole_fixed) {
                                 <select class="form-select text-uppercase" name="" id="edit_reserva_tipo_sala" disabled>
                                     <option selected value=""></option>
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['and_id'] ?>"><?= $res['and_andar'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                            <option value="<?= $res['and_id'] ?>">
+                                <?= $res['and_andar'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                        </select>
+                    </div>
 
-                            <div class="col-xl-3">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT * FROM andares ORDER BY and_andar");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar o perfil";
-                                } ?>
+                    <div class="col-xl-3">
+                        <?php try {
+                            $sql = $conn->prepare("SELECT * FROM andares ORDER BY and_andar");
+                            $sql->execute();
+                            $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+                        } catch (PDOException $e) {
+                            echo "Erro ao tentar recuperar o perfil";
+                        } ?>
                                 <label class="form-label">Andar</label>
                                 <select class="form-select text-uppercase" name="" id="edit_reserva_andar" disabled>
                                     <option selected value=""></option>
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['and_id'] ?>"><?= $res['and_andar'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                            <option value="<?= $res['and_id'] ?>">
+                                <?= $res['and_andar'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                        </select>
+                    </div>
 
-                            <div class="col-xl-3">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT * FROM pavilhoes ORDER BY pav_pavilhao");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar o perfil";
-                                } ?>
+                    <div class="col-xl-3">
+                        <?php try {
+                            $sql = $conn->prepare("SELECT * FROM pavilhoes ORDER BY pav_pavilhao");
+                            $sql->execute();
+                            $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+                        } catch (PDOException $e) {
+                            echo "Erro ao tentar recuperar o perfil";
+                        } ?>
                                 <label class="form-label">Pavilhão</label>
                                 <select class="form-select text-uppercase" name="" id="edit_reserva_pavilhao" disabled>
                                     <option selected value=""></option>
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['pav_id'] ?>"><?= $res['pav_pavilhao'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                            <option value="<?= $res['pav_id'] ?>">
+                                <?= $res['pav_pavilhao'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                        </select>
+                    </div>
 
-                            <div class="col-xl-3">
-                                <label class="form-label">Capac. Máxima</label>
-                                <input class="form-control" name="" id="edit_reserva_camp_maximo"
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');" disabled>
-                            </div>
+                    <div class="col-xl-3">
+                        <label class="form-label">Capac. Máxima</label>
+                        <input class="form-control" name="" id="edit_reserva_camp_maximo"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '');" disabled>
+                    </div>
 
-                            <div class="col-xl-3">
-                                <label class="form-label">Capac. Média</label>
-                                <input class="form-control" name="" id="edit_reserva_camp_media"
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');" disabled>
-                            </div>
+                    <div class="col-xl-3">
+                        <label class="form-label">Capac. Média</label>
+                        <input class="form-control" name="" id="edit_reserva_camp_media"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '');" disabled>
+                    </div>
 
-                            <div class="col-xl-3">
-                                <label class="form-label">Capac. Mínima</label>
-                                <input class="form-control" name="" id="edit_reserva_camp_minima"
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');" disabled>
-                            </div>
+                    <div class="col-xl-3">
+                        <label class="form-label">Capac. Mínima</label>
+                        <input class="form-control" name="" id="edit_reserva_camp_minima"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '');" disabled>
+                    </div>
 
-                            <script>
-                                function toggleLocalField(value) {
-                                    const cabula = document.getElementById('camp_edit_reserv_local_cabula');
-                                    const brotas = document.getElementById('camp_edit_reserv_local_brotas');
-                                    cabula.style.display = 'none';
-                                    brotas.style.display = 'none';
+                    <script>
+                        function toggleLocalField(value) {
+                            const cabula = document.getElementById('camp_edit_reserv_local_cabula');
+                            const brotas = document.getElementById('camp_edit_reserv_local_brotas');
+                            cabula.style.display = 'none';
+                            brotas.style.display = 'none';
 
-                                    if (value === '1') {
-                                        cabula.style.display = 'block';
-                                    } else if (value === '2') {
-                                        brotas.style.display = 'block';
-                                    }
-                                }
-                                function limparCamposDetalhes() {
-                                    $('#edit_reserva_local_cabula').val(null).trigger('change');
-                                    $('#edit_reserva_local_brotas').val(null).trigger('change');
-                                    document.getElementById("edit_reserva_tipo_sala").value = '';
-                                    document.getElementById("edit_reserva_andar").value = '';
-                                    document.getElementById("edit_reserva_pavilhao").value = '';
-                                    document.getElementById("edit_reserva_camp_maximo").value = '';
-                                    document.getElementById("edit_reserva_camp_media").value = '';
-                                    document.getElementById("edit_reserva_camp_minima").value = '';
-                                }
-                                document.getElementById('edit_reserva_campus').addEventListener('change', function () {
-                                    toggleLocalField(this.value);
-                                    limparCamposDetalhes();
-                                });
-                                function inicializarModalEdicao() {
-                                    const valorSelecionado = document.getElementById('edit_reserva_campus').value;
-                                    toggleLocalField(valorSelecionado);
-                                }
-                                const modal = document.getElementById('modal_edit_espaco');
-                                if (modal) {
-                                    modal.addEventListener('shown.bs.modal', function () {
-                                        inicializarModalEdicao();
-                                    });
-                                }
-                            </script>
+                            if (value === '1') {
+                                cabula.style.display = 'block';
+                            } else if (value === '2') {
+                                brotas.style.display = 'block';
+                            }
+                        }
+                        function limparCamposDetalhes() {
+                            $('#edit_reserva_local_cabula').val(null).trigger('change');
+                            $('#edit_reserva_local_brotas').val(null).trigger('change');
+                            document.getElementById("edit_reserva_tipo_sala").value = '';
+                            document.getElementById("edit_reserva_andar").value = '';
+                            document.getElementById("edit_reserva_pavilhao").value = '';
+                            document.getElementById("edit_reserva_camp_maximo").value = '';
+                            document.getElementById("edit_reserva_camp_media").value = '';
+                            document.getElementById("edit_reserva_camp_minima").value = '';
+                        }
+                        document.getElementById('edit_reserva_campus').addEventListener('change', function () {
+                            toggleLocalField(this.value);
+                            limparCamposDetalhes();
+                        });
+                        function inicializarModalEdicao() {
+                            const valorSelecionado = document.getElementById('edit_reserva_campus').value;
+                            toggleLocalField(valorSelecionado);
+                        }
+                        const modal = document.getElementById('modal_edit_espaco');
+                        if (modal) {
+                            modal.addEventListener('shown.bs.modal', function () {
+                                inicializarModalEdicao();
+                            });
+                        }
+                    </script>
 
-                            <div class="col-xl-3">
-                                <label class="form-label">Nº Pessoas <span>*</span></label>
-                                <input class="form-control text-uppercase res_quant_pessoas"
-                                    id="edit_reserva_quant_pessoas" name="res_quant_pessoas">
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+                    <div class="col-xl-3">
+                        <label class="form-label">Nº Pessoas <span>*</span></label>
+                        <input class="form-control text-uppercase res_quant_pessoas" id="edit_reserva_quant_pessoas"
+                            name="res_quant_pessoas">
+                        <div class="invalid-feedback">Este campo é obrigatório</div>
+                    </div>
 
-                            <div class="col-xl-3">
-                                <label class="form-label">Recursos Audiovisuais <span>*</span></label>
-                                <select class="form-select text-uppercase res_recursos" name="res_recursos"
-                                    id="edit_res_recursos" required>
-                                    <option value="NÃO">NÃO</option>
-                                    <option value="SIM">SIM</option>
-                                </select>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+                    <div class="col-xl-3">
+                        <label class="form-label">Recursos Audiovisuais <span>*</span></label>
+                        <select class="form-select text-uppercase res_recursos" name="res_recursos"
+                            id="edit_res_recursos" required>
+                            <option value="NÃO">NÃO</option>
+                            <option value="SIM">SIM</option>
+                        </select>
+                        <div class="invalid-feedback">Este campo é obrigatório</div>
+                    </div>
 
-                            <div class="col-xl-12" id="campo_edit_res_recursos_add" style="display: none;">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT rec_id, rec_recurso FROM recursos ORDER BY rec_recurso");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar o perfil";
-                                } ?>
+                    <div class="col-xl-12" id="campo_edit_res_recursos_add" style="display: none;">
+                        <?php try {
+                            $sql = $conn->prepare("SELECT rec_id, rec_recurso FROM recursos ORDER BY rec_recurso");
+                            $sql->execute();
+                            $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+                        } catch (PDOException $e) {
+                            echo "Erro ao tentar recuperar o perfil";
+                        } ?>
                                 <label class="form-label">Recursos Audiovisuais Adicionais <span>*</span></label>
                                 <select class="form-select text-uppercase res_recursos_add" name="res_recursos_add[]"
                                     multiple id="edit_res_recursos_add">
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['rec_id'] ?>"><?= $res['rec_recurso'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
-
-                            <script>
-                                $(document).ready(function () {
-                                    const edit_res_recursos = document.getElementById("edit_res_recursos");
-                                    const campo_edit_res_recursos_add = document.getElementById("campo_edit_res_recursos_add");
-                                    const select_add = document.getElementById("edit_res_recursos_add");
-
-                                    function toggleRecursosAdicionais() {
-                                        if (edit_res_recursos.value === "SIM") {
-                                            campo_edit_res_recursos_add.style.display = "block";
-                                            select_add.required = true;
-
-                                            $('#edit_res_recursos_add').select2({
-                                                placeholder: "Selecione as opções",
-                                                tags: false,
-                                                allowClear: true,
-                                                dropdownParent: $('#modal_edit_espaco'),
-                                                width: '100%'
-                                            });
-                                        } else {
-                                            campo_edit_res_recursos_add.style.display = "none";
-                                            select_add.required = false;
-                                        }
-                                    }
-                                    edit_res_recursos.addEventListener("change", toggleRecursosAdicionais);
-                                    $('#modal_edit_espaco').on('shown.bs.modal', function () {
-                                        toggleRecursosAdicionais();
-                                    });
-                                });
-                            </script>
-
-                            <div class="col-12">
-                                <label class="form-label">Observações</label>
-                                <textarea class="form-control res_obs" id="EditmeuTextarea" name="res_obs" rows="3"
-                                    cols="50" maxlength="200"></textarea>
-                                <p class="label_info text-end mt-1">Caracteres restantes: <span
-                                        id="EditContador">200</span></p>
-                                <script>
-                                    const EditmeuTextarea = document.getElementById('EditmeuTextarea');
-                                    const EditContador = document.getElementById('EditContador');
-                                    const Editlimite = 200;
-                                    EditmeuTextarea.addEventListener('input', function () {
-                                        const total = EditmeuTextarea.value.length;
-                                        EditContador.textContent = `${total} / ${Editlimite}`;
-                                    });
-                                </script>
-                            </div>
-
-                            <div class="col-lg-12">
-                                <div class="hstack gap-3 align-items-center justify-content-end mt-3">
-                                    <p class="label_asterisco m-0"><span>*</span> Campo obrigatório</p>
-                                    <button type="button"
-                                        class="btn botao_azul_escuro btn-label right ms-auto nexttab nexttab waves-effect"
-                                        id="btnEditProximo1" data-form="form_etapa1" data-next="#modal_cad_espaco2"><i
-                                            class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
-                                        Próximo</button>
-                                </div>
-                            </div>
-
-                        </div>
+                            <option value="<?= $res['rec_id'] ?>">
+                                <?= $res['rec_recurso'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                        </select>
+                        <div class="invalid-feedback">Este campo é obrigatório
                     </div>
                 </div>
 
-                <div class="etapa d-none" id="EditEtapa2">
-                    <div class="modal-body">
+                <script>
+                    $(document).ready(function () {
+                        const edit_res_recursos = document.getElementById("edit_res_recursos");
+                        const campo_edit_res_recursos_add = document.getElementById("campo_edit_res_recursos_add");
+                        const select_add = document.getElementById("edit_res_recursos_add");
 
-                        <div id="custom-progress-bar" class="progress-nav mb-5 mt-2">
-                            <div class="progress" style="height: 1px;">
-                                <div class="progress-bar" role="progressbar" style="width: 50%;" aria-valuenow="0"
-                                    aria-valuemin="0" aria-valuemax="0">
-                                </div>
-                            </div>
+                        function toggleRecursosAdicionais() {
+                            if (edit_res_recursos.value === "SIM") {
+                                campo_edit_res_recursos_add.style.display = "block";
+                                select_add.required = true;
 
-                            <ul class="nav nav-pills progress-bar-tab custom-nav" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded-pill done" data-progressbar="custom-progress-bar"
-                                        id="pills-gen-info-tab" data-bs-toggle="pill" data-bs-target="#pills-gen-info"
-                                        type="button" role="tab" aria-controls="pills-gen-info" aria-selected="false"
-                                        data-position="0" tabindex="-1" disabled>Local</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded-pill active" data-progressbar="custom-progress-bar"
-                                        id="pills-info-desc-tab" data-bs-toggle="pill" data-bs-target="#pills-info-desc"
-                                        type="button" role="tab" aria-controls="pills-info-desc" aria-selected="false"
-                                        data-position="1" tabindex="-1" disabled>Atividade</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar"
-                                        id="pills-success-tab" data-bs-toggle="pill" data-bs-target="#pills-success"
-                                        type="button" role="tab" aria-controls="pills-success" aria-selected="true"
-                                        data-position="2" disabled>Período</button>
-                                </li>
-                            </ul>
-                        </div>
+                                $('#edit_res_recursos_add').select2({
+                                    placeholder: "Selecione as opções",
+                                    tags: false,
+                                    allowClear: true,
+                                    dropdownParent: $('#modal_edit_espaco'),
+                                    width: '100%'
+                                });
+                            } else {
+                                campo_edit_res_recursos_add.style.display = "none";
+                                select_add.required = false;
+                            }
+                        }
+                        edit_res_recursos.addEventListener("change", toggleRecursosAdicionais);
+                        $('#modal_edit_espaco').on('shown.bs.modal', function () {
+                            toggleRecursosAdicionais();
+                        });
+                    });
+                </script>
 
-                        <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Observações</label>
+                    <textarea class="form-control res_obs" id="EditmeuTextarea" name="res_obs" rows="3" cols="50"
+                        maxlength="200"></textarea>
+                    <p class="label_info text-end mt-1">Caracteres restantes: <span id="EditContador">200</span></p>
+                    <script>
+                        const EditmeuTextarea = document.getElementById('EditmeuTextarea');
+                        const EditContador = document.getElementById('EditContador');
+                        const Editlimite = 200;
+                        EditmeuTextarea.addEventListener('input', function () {
+                            const total = EditmeuTextarea.value.length;
+                            EditContador.textContent = `${total} / ${Editlimite}`;
+                        });
+                    </script>
+                </div>
 
-                            <div class="col-sm">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT * FROM conf_tipo_aula ORDER BY cta_tipo_aula");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar o perfil";
-                                } ?>
+                <div class="col-lg-12">
+                    <div class="hstack gap-3 align-items-center justify-content-end mt-3">
+                        <p class="label_asterisco m-0"><span>*</span> Campo obrigatório</p>
+                        <button type="button"
+                            class="btn botao_azul_escuro btn-label right ms-auto nexttab nexttab waves-effect"
+                            id="btnEditProximo1" data-form="form_etapa1" data-next="#modal_cad_espaco2"><i
+                                class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                            Próximo</button>
+                    </div>
+                </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="etapa d-none" id="EditEtapa2">
+    <div class="modal-body">
+
+        <div id="custom-progress-bar" class="progress-nav mb-5 mt-2">
+            <div class="progress" style="height: 1px;">
+                <div class="progress-bar" role="progressbar" style="width: 50%;" aria-valuenow="0" aria-valuemin="0"
+                    aria-valuemax="0">
+                </div>
+            </div>
+
+            <ul class="nav nav-pills progress-bar-tab custom-nav" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill done" data-progressbar="custom-progress-bar"
+                        id="pills-gen-info-tab" data-bs-toggle="pill" data-bs-target="#pills-gen-info" type="button"
+                        role="tab" aria-controls="pills-gen-info" aria-selected="false" data-position="0" tabindex="-1"
+                        disabled>Local</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill active" data-progressbar="custom-progress-bar"
+                        id="pills-info-desc-tab" data-bs-toggle="pill" data-bs-target="#pills-info-desc" type="button"
+                        role="tab" aria-controls="pills-info-desc" aria-selected="false" data-position="1" tabindex="-1"
+                        disabled>Atividade</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar" id="pills-success-tab"
+                        data-bs-toggle="pill" data-bs-target="#pills-success" type="button" role="tab"
+                        aria-controls="pills-success" aria-selected="true" data-position="2" disabled>Período</button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="row g-3">
+
+            <div class="col-sm">
+                <?php try {
+                    $sql = $conn->prepare("SELECT * FROM conf_tipo_aula ORDER BY cta_tipo_aula");
+                    $sql->execute();
+                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+                } catch (PDOException $e) {
+                    echo "Erro ao tentar recuperar o perfil";
+                } ?>
                                 <label class="form-label">Tipo de Aula <span>*</span></label>
                                 <select class="form-select text-uppercase res_tipo_aula" name="res_tipo_aula">
                                     <option selected disabled value=""></option>
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['cta_id'] ?>"><?= $res['cta_tipo_aula'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+                    <option value="<?= $res['cta_id'] ?>">
+                        <?= $res['cta_tipo_aula'] ?>
+                    </option>
+                <?php endforeach; ?>
+                </select>
+                <div class="invalid-feedback">Este campo é obrigatório
+            </div>
+        </div>
 
-                            <div class="col-sm">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT curs_id, curs_curso FROM cursos WHERE curs_status != 0 ORDER BY curs_curso");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar os dados";
-                                } ?>
+        <div class="col-sm">
+            <?php try {
+                $sql = $conn->prepare("SELECT curs_id, curs_curso FROM cursos WHERE curs_status != 0 ORDER BY curs_curso");
+                $sql->execute();
+                $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                echo "Erro ao tentar recuperar os dados";
+            } ?>
                                 <label class="form-label">Curso <span>*</span></label>
                                 <select class="form-select text-uppercase res_curso" name="res_curso"
                                     id="edit_res_curso">
                                     <option selected disabled value=""></option>
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['curs_id'] ?>"><?= $res['curs_curso'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+                <option value="<?= $res['curs_id'] ?>">
+                    <?= $res['curs_curso'] ?>
+                </option>
+            <?php endforeach; ?>
+            </select>
+            <div class="invalid-feedback">Este campo é obrigatório
+        </div>
+    </div>
 
-                            <div class="col-sm" id="campo_edit_res_nome_curso" style="display: none;">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT cexc_id, cexc_curso FROM conf_cursos_extensao_curricularizada ORDER BY cexc_curso");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar os dados";
-                                } ?>
+    <div class="col-sm" id="campo_edit_res_nome_curso" style="display: none;">
+        <?php try {
+            $sql = $conn->prepare("SELECT cexc_id, cexc_curso FROM conf_cursos_extensao_curricularizada ORDER BY cexc_curso");
+            $sql->execute();
+            $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            echo "Erro ao tentar recuperar os dados";
+        } ?>
                                 <label class="form-label">Nome do Curso <span>*</span></label>
                                 <select class="form-select text-uppercase res_curso_extensao" name="res_curso_extensao"
                                     id="edit_res_curso_extensao">
                                     <option selected disabled value=""></option>
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['cexc_id'] ?>"><?= $res['cexc_curso'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+            <option value="<?= $res['cexc_id'] ?>">
+                <?= $res['cexc_curso'] ?>
+            </option>
+        <?php endforeach; ?>
+        </select>
+        <div class="invalid-feedback">Este campo é obrigatório
+    </div>
+</div>
 
-                            <div class="col-sm">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT cs_id, cs_semestre FROM conf_semestre ORDER BY cs_id");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar os dados";
-                                } ?>
+<div class="col-sm">
+    <?php try {
+        $sql = $conn->prepare("SELECT cs_id, cs_semestre FROM conf_semestre ORDER BY cs_id");
+        $sql->execute();
+        $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "Erro ao tentar recuperar os dados";
+    } ?>
                                 <label class="form-label">Semestre</label>
                                 <select class="form-select text-uppercase res_semestre" name="res_semestre">
-                                    <option selected value="<?= $solic_row['cs_id'] ?>"><?= $solic_row['cs_semestre'] ?>
-                                    </option>
-                                    <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['cs_id'] ?>"><?= $res['cs_semestre'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                                    <option selected value="<?= $solic_row['cs_id'] ?>">
+    <?= $solic_row['cs_semestre'] ?>
+    </option>
+    <?php foreach ($result as $res): ?>
+                                            <option value="<?= $res['cs_id'] ?>">
+        <?= $res['cs_semestre'] ?>
+        </option>
+    <?php endforeach; ?>
+    </select>
+</div>
 
-                            <div class="col-xl-12" id="campo_edit_res_componente_atividade" style="display: none;">
-                                <label class="form-label">Componente Curricular/Atividade <span>*</span></label>
-                                <select class="form-select text-uppercase res_componente_atividade"
-                                    name="res_componente_atividade" id="edit_res_componente_atividade">
-                                    <option selected disabled value=""></option>
-                                </select>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+<div class="col-xl-12" id="campo_edit_res_componente_atividade" style="display: none;">
+    <label class="form-label">Componente Curricular/Atividade <span>*</span></label>
+    <select class="form-select text-uppercase res_componente_atividade" name="res_componente_atividade"
+        id="edit_res_componente_atividade">
+        <option selected disabled value=""></option>
+    </select>
+    <div class="invalid-feedback">Este campo é obrigatório</div>
+</div>
 
-                            <div class="col-xl-12" id="campo_edit_res_componente_atividade_texto"
-                                style="display: none;">
-                                <label class="form-label">Componente Curricular/Atividade <span>*</span></label>
-                                <input type="text" class="form-control text-uppercase res_componente_atividade_nome"
-                                    name="res_componente_atividade_nome" maxlength="200"
-                                    id="edit_res_componente_atividade_nome">
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+<div class="col-xl-12" id="campo_edit_res_componente_atividade_texto" style="display: none;">
+    <label class="form-label">Componente Curricular/Atividade <span>*</span></label>
+    <input type="text" class="form-control text-uppercase res_componente_atividade_nome"
+        name="res_componente_atividade_nome" maxlength="200" id="edit_res_componente_atividade_nome">
+    <div class="invalid-feedback">Este campo é obrigatório</div>
+</div>
 
-                            <div class="col-xl-12" id="campo_edit_res_nome_atividade" style="display: none;">
-                                <label class="form-label">Nome da Atividade <span>*</span></label>
-                                <input type="text" class="form-control text-uppercase res_nome_atividade"
-                                    name="res_nome_atividade" maxlength="200" id="edit_res_nome_atividade">
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+<div class="col-xl-12" id="campo_edit_res_nome_atividade" style="display: none;">
+    <label class="form-label">Nome da Atividade <span>*</span></label>
+    <input type="text" class="form-control text-uppercase res_nome_atividade" name="res_nome_atividade" maxlength="200"
+        id="edit_res_nome_atividade">
+    <div class="invalid-feedback">Este campo é obrigatório</div>
+</div>
 
-                            <div class="col-xl-12" id="campo_edit_res_nome_curso_texto" style="display: none;">
-                                <label class="form-label">Nome do curso <span>*</span></label>
-                                <input type="text" class="form-control text-uppercase res_curso_nome"
-                                    name="res_curso_nome" id="edit_res_nome_curso" maxlength="200">
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+<div class="col-xl-12" id="campo_edit_res_nome_curso_texto" style="display: none;">
+    <label class="form-label">Nome do curso <span>*</span></label>
+    <input type="text" class="form-control text-uppercase res_curso_nome" name="res_curso_nome" id="edit_res_nome_curso"
+        maxlength="200">
+    <div class="invalid-feedback">Este campo é obrigatório</div>
+</div>
 
-                            <div class="col-xl-12">
-                                <label class="form-label">Módulo</label>
-                                <input type="text" class="form-control text-uppercase res_modulo" name="res_modulo"
-                                    maxlength="200">
-                            </div>
+<div class="col-xl-12">
+    <label class="form-label">Módulo</label>
+    <input type="text" class="form-control text-uppercase res_modulo" name="res_modulo" maxlength="200">
+</div>
 
-                            <div class="col-12">
-                                <label class="form-label">Título da Aula</label>
-                                <input type="text" class="form-control text-uppercase res_titulo_aula"
-                                    name="res_titulo_aula" maxlength="200">
-                            </div>
+<div class="col-12">
+    <label class="form-label">Título da Aula</label>
+    <input type="text" class="form-control text-uppercase res_titulo_aula" name="res_titulo_aula" maxlength="200">
+</div>
 
-                            <div class="col-xl-12">
-                                <label class="form-label">Professor(es)</label>
-                                <input type="text" class="form-control text-uppercase res_professor"
-                                    name="res_professor" maxlength="200">
-                            </div>
+<div class="col-xl-12">
+    <label class="form-label">Professor(es)</label>
+    <input type="text" class="form-control text-uppercase res_professor" name="res_professor" maxlength="200">
+</div>
 
-                            <script>
-                                const edit_res_curso = document.getElementById("edit_res_curso");
-                                const campo_edit_res_componente_atividade = document.getElementById("campo_edit_res_componente_atividade");
-                                const select_edit_res_componente_atividade = document.getElementById("edit_res_componente_atividade");
-                                const campo_edit_res_componente_atividade_texto = document.getElementById("campo_edit_res_componente_atividade_texto");
-                                const input_edit_res_componente_atividade_nome = document.getElementById("edit_res_componente_atividade_nome");
-                                const campo_edit_res_nome_curso = document.getElementById("campo_edit_res_nome_curso");
-                                const select_edit_res_curso_extensao = document.getElementById("edit_res_curso_extensao");
-                                const campo_edit_res_nome_curso_texto = document.getElementById("campo_edit_res_nome_curso_texto");
-                                const input_edit_res_nome_curso = document.getElementById("edit_res_nome_curso");
-                                const campo_edit_res_nome_atividade = document.getElementById("campo_edit_res_nome_atividade");
-                                const input_edit_res_nome_atividade = document.getElementById("edit_res_nome_atividade");
-                                function atualizarCamposEdicao() {
-                                    const valor = edit_res_curso.value;
-                                    campo_edit_res_nome_curso.style.display = "none";
-                                    campo_edit_res_nome_curso_texto.style.display = "none";
-                                    campo_edit_res_componente_atividade.style.display = "none";
-                                    campo_edit_res_componente_atividade_texto.style.display = "none";
-                                    campo_edit_res_nome_atividade.style.display = "none";
-                                    if (select_edit_res_componente_atividade) select_edit_res_componente_atividade.required = false;
-                                    if (input_edit_res_componente_atividade_nome) input_edit_res_componente_atividade_nome.required = false;
-                                    if (select_edit_res_curso_extensao) select_edit_res_curso_extensao.required = false;
-                                    if (input_edit_res_nome_curso) input_edit_res_nome_curso.required = false;
-                                    if (input_edit_res_nome_atividade) input_edit_res_nome_atividade.required = false;
+<script>
+    const edit_res_curso = document.getElementById("edit_res_curso");
+    const campo_edit_res_componente_atividade = document.getElementById("campo_edit_res_componente_atividade");
+    const select_edit_res_componente_atividade = document.getElementById("edit_res_componente_atividade");
+    const campo_edit_res_componente_atividade_texto = document.getElementById("campo_edit_res_componente_atividade_texto");
+    const input_edit_res_componente_atividade_nome = document.getElementById("edit_res_componente_atividade_nome");
+    const campo_edit_res_nome_curso = document.getElementById("campo_edit_res_nome_curso");
+    const select_edit_res_curso_extensao = document.getElementById("edit_res_curso_extensao");
+    const campo_edit_res_nome_curso_texto = document.getElementById("campo_edit_res_nome_curso_texto");
+    const input_edit_res_nome_curso = document.getElementById("edit_res_nome_curso");
+    const campo_edit_res_nome_atividade = document.getElementById("campo_edit_res_nome_atividade");
+    const input_edit_res_nome_atividade = document.getElementById("edit_res_nome_atividade");
+    function atualizarCamposEdicao() {
+        const valor = edit_res_curso.value;
+        campo_edit_res_nome_curso.style.display = "none";
+        campo_edit_res_nome_curso_texto.style.display = "none";
+        campo_edit_res_componente_atividade.style.display = "none";
+        campo_edit_res_componente_atividade_texto.style.display = "none";
+        campo_edit_res_nome_atividade.style.display = "none";
+        if (select_edit_res_componente_atividade) select_edit_res_componente_atividade.required = false;
+        if (input_edit_res_componente_atividade_nome) input_edit_res_componente_atividade_nome.required = false;
+        if (select_edit_res_curso_extensao) select_edit_res_curso_extensao.required = false;
+        if (input_edit_res_nome_curso) input_edit_res_nome_curso.required = false;
+        if (input_edit_res_nome_atividade) input_edit_res_nome_atividade.required = false;
 
-                                    if (["2", "5", "6", "9", "13", "14", "17", "18", "21"].includes(valor)) {
-                                        campo_edit_res_componente_atividade.style.display = "block";
-                                        select_edit_res_componente_atividade.required = true;
+        if (["2", "5", "6", "9", "13", "14", "17", "18", "21"].includes(valor)) {
+            campo_edit_res_componente_atividade.style.display = "block";
+            select_edit_res_componente_atividade.required = true;
 
-                                    } else if (["7", "10", "19", "28", "31"].includes(valor)) {
-                                        campo_edit_res_nome_atividade.style.display = "block";
-                                        input_edit_res_nome_atividade.required = true;
+        } else if (["7", "10", "19", "28", "31"].includes(valor)) {
+            campo_edit_res_nome_atividade.style.display = "block";
+            input_edit_res_nome_atividade.required = true;
 
-                                    } else if (valor === "8") {
-                                        campo_edit_res_nome_atividade.style.display = "block";
-                                        campo_edit_res_nome_curso.style.display = "block";
-                                        input_edit_res_nome_atividade.required = true;
-                                        select_edit_res_curso_extensao.required = true;
+        } else if (valor === "8") {
+            campo_edit_res_nome_atividade.style.display = "block";
+            campo_edit_res_nome_curso.style.display = "block";
+            input_edit_res_nome_atividade.required = true;
+            select_edit_res_curso_extensao.required = true;
 
-                                    } else if (["11", "22"].includes(valor)) {
-                                        campo_edit_res_componente_atividade_texto.style.display = "block";
-                                        campo_edit_res_nome_curso_texto.style.display = "block";
-                                        input_edit_res_componente_atividade_nome.required = true;
-                                        input_edit_res_nome_curso.required = true;
-                                    }
-                                }
-                                edit_res_curso.addEventListener("change", atualizarCamposEdicao);
-                                const modalEdit = document.getElementById('modal_edit_espaco');
-                                modalEdit.addEventListener('shown.bs.modal', atualizarCamposEdicao);
-                            </script>
+        } else if (["11", "22"].includes(valor)) {
+            campo_edit_res_componente_atividade_texto.style.display = "block";
+            campo_edit_res_nome_curso_texto.style.display = "block";
+            input_edit_res_componente_atividade_nome.required = true;
+            input_edit_res_nome_curso.required = true;
+        }
+    }
+    edit_res_curso.addEventListener("change", atualizarCamposEdicao);
+    const modalEdit = document.getElementById('modal_edit_espaco');
+    modalEdit.addEventListener('shown.bs.modal', atualizarCamposEdicao);
+</script>
 
-                            <div class="col-lg-12">
-                                <div class="hstack gap-3 align-items-center justify-content-between mt-2">
-                                    <button type="button" class="btn btn-light btn-label previestab waves-effect"
-                                        id="btnEditAnterior2">
-                                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Anterior
-                                    </button>
-                                    <button type="button"
-                                        class="btn botao_azul_escuro btn-label right ms-auto nexttab nexttab waves-effect"
-                                        id="btnEditProximo2">
-                                        <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
-                                        Próximo</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<div class="col-lg-12">
+    <div class="hstack gap-3 align-items-center justify-content-between mt-2">
+        <button type="button" class="btn btn-light btn-label previestab waves-effect" id="btnEditAnterior2">
+            <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Anterior
+        </button>
+        <button type="button" class="btn botao_azul_escuro btn-label right ms-auto nexttab nexttab waves-effect"
+            id="btnEditProximo2">
+            <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+            Próximo</button>
+    </div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="etapa d-none" id="EditEtapa3">
+    <div class="modal-body">
+
+        <div id="custom-progress-bar" class="progress-nav mb-5 mt-2">
+            <div class="progress" style="height: 1px;">
+                <div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="0" aria-valuemin="0"
+                    aria-valuemax="0">
                 </div>
+            </div>
 
-                <div class="etapa d-none" id="EditEtapa3">
-                    <div class="modal-body">
+            <ul class="nav nav-pills progress-bar-tab custom-nav" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill done" data-progressbar="custom-progress-bar"
+                        id="pills-gen-info-tab" data-bs-toggle="pill" data-bs-target="#pills-gen-info" type="button"
+                        role="tab" aria-controls="pills-gen-info" aria-selected="false" data-position="0" tabindex="-1"
+                        disabled>Local</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill done" data-progressbar="custom-progress-bar"
+                        id="pills-info-desc-tab" data-bs-toggle="pill" data-bs-target="#pills-info-desc" type="button"
+                        role="tab" aria-controls="pills-info-desc" aria-selected="false" data-position="1" tabindex="-1"
+                        disabled>Atividade</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill active" data-progressbar="custom-progress-bar"
+                        id="pills-success-tab" data-bs-toggle="pill" data-bs-target="#pills-success" type="button"
+                        role="tab" aria-controls="pills-success" aria-selected="true" data-position="2"
+                        disabled>Período</button>
+                </li>
+            </ul>
+        </div>
 
-                        <div id="custom-progress-bar" class="progress-nav mb-5 mt-2">
-                            <div class="progress" style="height: 1px;">
-                                <div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="0"
-                                    aria-valuemin="0" aria-valuemax="0">
-                                </div>
-                            </div>
+        <div class="row g-3">
 
-                            <ul class="nav nav-pills progress-bar-tab custom-nav" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded-pill done" data-progressbar="custom-progress-bar"
-                                        id="pills-gen-info-tab" data-bs-toggle="pill" data-bs-target="#pills-gen-info"
-                                        type="button" role="tab" aria-controls="pills-gen-info" aria-selected="false"
-                                        data-position="0" tabindex="-1" disabled>Local</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded-pill done" data-progressbar="custom-progress-bar"
-                                        id="pills-info-desc-tab" data-bs-toggle="pill" data-bs-target="#pills-info-desc"
-                                        type="button" role="tab" aria-controls="pills-info-desc" aria-selected="false"
-                                        data-position="1" tabindex="-1" disabled>Atividade</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded-pill active" data-progressbar="custom-progress-bar"
-                                        id="pills-success-tab" data-bs-toggle="pill" data-bs-target="#pills-success"
-                                        type="button" role="tab" aria-controls="pills-success" aria-selected="true"
-                                        data-position="2" disabled>Período</button>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="row g-3">
-
-                            <div class="col-xl-3">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT * FROM conf_tipo_reserva ORDER BY ctr_tipo_reserva");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar o perfil";
-                                } ?>
+            <div class="col-xl-3">
+                <?php try {
+                    $sql = $conn->prepare("SELECT * FROM conf_tipo_reserva ORDER BY ctr_tipo_reserva");
+                    $sql->execute();
+                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+                } catch (PDOException $e) {
+                    echo "Erro ao tentar recuperar o perfil";
+                } ?>
                                 <label class="form-label">Tipo de Reserva <span>*</span></label>
                                 <select class="form-select text-uppercase res_tipo_reserva" name="res_tipo_reserva"
                                     id="edit_tipo_reserva" required>
                                     <option selected disabled value=""></option>
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['ctr_id'] ?>"><?= $res['ctr_tipo_reserva'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+                    <option value="<?= $res['ctr_id'] ?>">
+                        <?= $res['ctr_tipo_reserva'] ?>
+                    </option>
+                <?php endforeach; ?>
+                </select>
+                <div class="invalid-feedback">Este campo é obrigatório
+            </div>
+        </div>
 
-                            <!-- <div class="col-xl-9 row g-3"> -->
-                            <div class="col-6 col-lg-4 col-xl-3 campo-diario-edit">
-                                <label class="form-label">Data da Reserva <span>*</span></label>
-                                <input type="text" class="form-control flatpickr-input res_data" name="res_data"
-                                    id="edit_data_reserva" onchange="preencherCamposEdit()">
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
-                            <div class="col-6 col-lg-4 col-xl-3 campo-diario-edit">
-                                <?php try {
-                                    $sql = $conn->prepare("SELECT week_id, week_dias FROM conf_dias_semana");
-                                    $sql->execute();
-                                    $result = $sql->fetchAll(PDO::FETCH_ASSOC);
-                                } catch (PDOException $e) {
-                                    echo "Erro ao tentar recuperar o perfil";
-                                } ?>
+        <!-- <div class="col-xl-9 row g-3"> -->
+        <div class="col-6 col-lg-4 col-xl-3 campo-diario-edit">
+            <label class="form-label">Data da Reserva <span>*</span></label>
+            <input type="text" class="form-control flatpickr-input res_data" name="res_data" id="edit_data_reserva"
+                onchange="preencherCamposEdit()">
+            <div class="invalid-feedback">Este campo é obrigatório</div>
+        </div>
+        <div class="col-6 col-lg-4 col-xl-3 campo-diario-edit">
+            <?php try {
+                $sql = $conn->prepare("SELECT week_id, week_dias FROM conf_dias_semana");
+                $sql->execute();
+                $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                echo "Erro ao tentar recuperar o perfil";
+            } ?>
                                 <div>
                                     <label class="form-label">Dia da semana</label>
                                     <!-- <input type="text" class="form-control text-uppercase" id="edit_diaSemanaId_reserva"
@@ -1829,10 +1858,10 @@ if ($ap_is_sole_fixed) {
                                     <select class="form-select text-uppercase res_dia_semana"
                                         id="edit_diaSemana_reserva" disabled>
                                         <?php foreach ($result as $res): ?>
-                                            <option value="<?= $res['week_id'] ?>">
-                                                <?= htmlspecialchars($res['week_dias']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
+                <option value="<?= $res['week_id'] ?>">
+                            <?= htmlspecialchars($res['week_dias']) ?>
+                </option>
+            <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>
@@ -1860,237 +1889,233 @@ if ($ap_is_sole_fixed) {
                                     name="res_dia_semana_fixa" id="edit_res_dia_semana_fixa">
                                     <option disabled value=""></option>
                                     <?php foreach ($result as $res): ?>
-                                        <option value="<?= $res['week_id'] ?>"><?= $res['week_dias'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
-                            <div class="col-6 col-lg-4 col-xl-3 campo-fixa-edit" style="display: none;">
-                                <label class="form-label">Data Início Repetição <span>*</span></label>
-                                <input type="text" class="form-control flatpickr-input" name="res_data_inicio_semanal"
-                                    id="edit_data_inicio_semanal">
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
-                            <div class="col-6 col-lg-4 col-xl-3 campo-fixa-edit" style="display: none;">
-                                <label class="form-label">Data Fim Repetição <span>*</span></label>
-                                <input type="text" class="form-control flatpickr-input" name="res_data_fim_semanal"
-                                    id="edit_data_fim_semanal">
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
-                            <!-- </div> -->
-                            <div class="col-6 col-lg-4 col-xl-3">
-                                <label class="form-label">Hora Início <span>*</span></label>
-                                <input type="time" class="form-control hora res_hora_inicio" id="edit_res_hora_inicio"
-                                    name="res_hora_inicio" required>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+                <option value="<?= $res['week_id'] ?>">
+                    <?= $res['week_dias'] ?>
+                </option>
+            <?php endforeach; ?>
+            </select>
+            <div class="invalid-feedback">Este campo é obrigatório
+        </div>
+    </div>
+    <div class="col-6 col-lg-4 col-xl-3 campo-fixa-edit" style="display: none;">
+        <label class="form-label">Data Início Repetição <span>*</span></label>
+        <input type="text" class="form-control flatpickr-input" name="res_data_inicio_semanal"
+            id="edit_data_inicio_semanal">
+        <div class="invalid-feedback">Este campo é obrigatório</div>
+    </div>
+    <div class="col-6 col-lg-4 col-xl-3 campo-fixa-edit" style="display: none;">
+        <label class="form-label">Data Fim Repetição <span>*</span></label>
+        <input type="text" class="form-control flatpickr-input" name="res_data_fim_semanal" id="edit_data_fim_semanal">
+        <div class="invalid-feedback">Este campo é obrigatório</div>
+    </div>
+    <!-- </div> -->
+    <div class="col-6 col-lg-4 col-xl-3">
+        <label class="form-label">Hora Início <span>*</span></label>
+        <input type="time" class="form-control hora res_hora_inicio" id="edit_res_hora_inicio" name="res_hora_inicio"
+            required>
+        <div class="invalid-feedback">Este campo é obrigatório</div>
+    </div>
 
-                            <div class="col-6 col-lg-4 col-xl-3">
-                                <label class="form-label">Hora Fim <span>*</span></label>
-                                <input type="time" class="form-control hora res_hora_fim" id="edit_res_hora_fim"
-                                    name="res_hora_fim" required>
-                                <div class="invalid-feedback">Este campo é obrigatório</div>
-                            </div>
+    <div class="col-6 col-lg-4 col-xl-3">
+        <label class="form-label">Hora Fim <span>*</span></label>
+        <input type="time" class="form-control hora res_hora_fim" id="edit_res_hora_fim" name="res_hora_fim" required>
+        <div class="invalid-feedback">Este campo é obrigatório</div>
+    </div>
 
-                            <div class="col-6 col-lg-4 col-xl-3">
-                                <label class="form-label">Turno</label>
-                                <input type="text" class="form-control text-uppercase res_turno" name="res_turno"
-                                    id="edit_turno" readonly>
-                            </div>
+    <div class="col-6 col-lg-4 col-xl-3">
+        <label class="form-label">Turno</label>
+        <input type="text" class="form-control text-uppercase res_turno" name="res_turno" id="edit_turno" readonly>
+    </div>
 
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function () {
-                                    const horaInicio = document.getElementById('edit_res_hora_inicio');
-                                    const horaFim = document.getElementById('edit_res_hora_fim');
-                                    function validarEditHoras() {
-                                        const inicio = horaInicio.value;
-                                        const fim = horaFim.value;
-                                        if (inicio && fim) {
-                                            if (inicio >= fim) {
-                                                Swal.fire({
-                                                    icon: 'warning',
-                                                    title: 'Horário inválido',
-                                                    text: 'A hora de início deve ser menor que a hora de fim.',
-                                                }).then(() => {
-                                                    horaInicio.value = '';
-                                                    horaFim.value = '';
-                                                    horaInicio.focus();
-                                                });
-                                            }
-                                        }
-                                    }
-                                    horaInicio.addEventListener('change', validarEditHoras);
-                                    horaFim.addEventListener('change', validarEditHoras);
-                                });
-                            </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const horaInicio = document.getElementById('edit_res_hora_inicio');
+            const horaFim = document.getElementById('edit_res_hora_fim');
+            function validarEditHoras() {
+                const inicio = horaInicio.value;
+                const fim = horaFim.value;
+                if (inicio && fim) {
+                    if (inicio >= fim) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Horário inválido',
+                            text: 'A hora de início deve ser menor que a hora de fim.',
+                        }).then(() => {
+                            horaInicio.value = '';
+                            horaFim.value = '';
+                            horaInicio.focus();
+                        });
+                    }
+                }
+            }
+            horaInicio.addEventListener('change', validarEditHoras);
+            horaFim.addEventListener('change', validarEditHoras);
+        });
+    </script>
 
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function () {
-                                    const form = document.getElementById("form_reserva_edit");
-                                    const inputEditHoraInicio = document.getElementById("edit_res_hora_inicio");
-                                    const inputEditHoraFim = document.getElementById("edit_res_hora_fim");
-                                    const edit_tipo_reserva = document.getElementById("edit_tipo_reserva");
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById("form_reserva_edit");
+            const inputEditHoraInicio = document.getElementById("edit_res_hora_inicio");
+            const inputEditHoraFim = document.getElementById("edit_res_hora_fim");
+            const edit_tipo_reserva = document.getElementById("edit_tipo_reserva");
 
-                                    const camposDiariaEdit = document.querySelectorAll('.campo-diario-edit');
-                                    const camposFixaEdit = document.querySelectorAll('.campo-fixa-edit');
-                                    const edit_data_reserva = document.getElementById("edit_data_reserva");
-                                    const edit_res_dia_semana_fixa = document.getElementById('edit_res_dia_semana_fixa');
-                                    const edit_data_inicio_semanal = document.getElementById('edit_data_inicio_semanal');
-                                    const edit_data_fim_semanal = document.getElementById('edit_data_fim_semanal');
+            const camposDiariaEdit = document.querySelectorAll('.campo-diario-edit');
+            const camposFixaEdit = document.querySelectorAll('.campo-fixa-edit');
+            const edit_data_reserva = document.getElementById("edit_data_reserva");
+            const edit_res_dia_semana_fixa = document.getElementById('edit_res_dia_semana_fixa');
+            const edit_data_inicio_semanal = document.getElementById('edit_data_inicio_semanal');
+            const edit_data_fim_semanal = document.getElementById('edit_data_fim_semanal');
 
-                                    [inputEditHoraInicio, inputEditHoraFim].forEach(input => {
-                                        flatpickr(input, {
-                                            allowInput: true,
-                                            enableTime: true,
-                                            noCalendar: true,
-                                            dateFormat: "H:i",
-                                            minTime: "<?= $limit_hora_inicio ?>",
-                                            maxTime: "<?= $limit_hora_fim ?>",
-                                            time_24hr: true,
+            [inputEditHoraInicio, inputEditHoraFim].forEach(input => {
+                flatpickr(input, {
+                    allowInput: true,
+                    enableTime: true,
+                    noCalendar: true,
+                    dateFormat: "H:i",
+                    minTime: "<?= $limit_hora_inicio ?>",
+                    maxTime: "<?= $limit_hora_fim ?>",
+                    time_24hr:  true,
                                             onChange: function (selectedDates, dateStr) {
-                                                if (dateStr) {
-                                                    input.classList.remove('is-invalid');
-                                                }
-                                            }
-                                        });
-                                        input.addEventListener('input', function () {
-                                            if (input.value.trim()) {
-                                                input.classList.remove('is-invalid');
-                                            }
-                                        });
-                                    });
+                    if (dateStr) {
+                        input.classList.remove('is-invalid');
+                    }
+                }
+            });
+            input.addEventListener('input', function () {
+                if (input.value.trim()) {
+                    input.classList.remove('is-invalid');
+                }
+            });
+        });
 
-                                    fetch('busca_datas_bloqueadas.php')
-                                        .then(response => response.json())
-                                        .then(datasBloqueadas => {
-                                            const fpInstanceEdit = flatpickr(edit_data_reserva, {
-                                                disable: datasBloqueadas,
-                                                dateFormat: "Y-m-d",
-                                                altInput: true,
-                                                altFormat: "d/m/Y",
-                                                locale: "pt",
-                                                allowInput: true,
-                                                onClose: function () {
-                                                    edit_data_reserva.classList.toggle('is-invalid', !edit_data_reserva.value.trim());
-                                                }
-                                            });
-                                            const fpInicioSemanalEdit = flatpickr(edit_data_inicio_semanal, {
-                                                dateFormat: "Y-m-d",
-                                                altInput: true,
-                                                altFormat: "d/m/Y",
-                                                locale: "pt"
-                                            });
-                                            const fpFimSemanalEdit = flatpickr(edit_data_fim_semanal, {
-                                                dateFormat: "Y-m-d",
-                                                altInput: true,
-                                                altFormat: "d/m/Y",
-                                                locale: "pt"
-                                            });
-                                            edit_data_reserva.addEventListener('input', function () {
-                                                const valor = this.value.trim();
-                                                const valido = !!Date.parse(valor);
-                                                this.classList.toggle('is-invalid', !valido);
-                                                if (fpInstanceEdit) {
-                                                    fpInstanceEdit.setDate(valor, true);
-                                                }
-                                            });
-                                            function toggleCamposDeDataEdit() {
-                                                if (edit_tipo_reserva.value === "2") { // Reserva Fixa (Semanal)
-                                                    camposFixaEdit.forEach(campo => campo.style.display = 'block');
-                                                    camposDiariaEdit.forEach(campo => campo.style.display = 'none');
-                                                    edit_res_dia_semana_fixa.required = true;
-                                                    edit_data_inicio_semanal.required = true;
-                                                    edit_data_fim_semanal.required = true;
-                                                    edit_data_reserva.required = false;
+        fetch('busca_datas_bloqueadas.php')
+            .then(response => response.json())
+            .then(datasBloqueadas => {
+                const fpInstanceEdit = flatpickr(edit_data_reserva, {
+                    disable: datasBloqueadas,
+                    dateFormat: "Y-m-d",
+                    altInput: true,
+                    altFormat: "d/m/Y",
+                    locale: "pt",
+                    allowInput: true,
+                    onClose: function () {
+                        edit_data_reserva.classList.toggle('is-invalid', !edit_data_reserva.value.trim());
+                    }
+                });
+                const fpInicioSemanalEdit = flatpickr(edit_data_inicio_semanal, {
+                    dateFormat: "Y-m-d",
+                    altInput: true,
+                    altFormat: "d/m/Y",
+                    locale: "pt"
+                });
+                const fpFimSemanalEdit = flatpickr(edit_data_fim_semanal, {
+                    dateFormat: "Y-m-d",
+                    altInput: true,
+                    altFormat: "d/m/Y",
+                    locale: "pt"
+                });
+                edit_data_reserva.addEventListener('input', function () {
+                    const valor = this.value.trim();
+                    const valido = !!Date.parse(valor);
+                    this.classList.toggle('is-invalid', !valido);
+                    if (fpInstanceEdit) {
+                        fpInstanceEdit.setDate(valor, true);
+                    }
+                });
+                function toggleCamposDeDataEdit() {
+                    if (edit_tipo_reserva.value === "2") { // Reserva Fixa (Semanal)
+                        camposFixaEdit.forEach(campo => campo.style.display = 'block');
+                        camposDiariaEdit.forEach(campo => campo.style.display = 'none');
+                        edit_res_dia_semana_fixa.required = true;
+                        edit_data_inicio_semanal.required = true;
+                        edit_data_fim_semanal.required = true;
+                        edit_data_reserva.required = false;
 
-                                                } else if (edit_tipo_reserva.value === "1") { // Reserva Esporádica (Diária)
-                                                    camposFixaEdit.forEach(campo => campo.style.display = 'none');
-                                                    camposDiariaEdit.forEach(campo => campo.style.display = 'block');
-                                                    edit_res_dia_semana_fixa.required = false;
-                                                    edit_data_inicio_semanal.required = false;
-                                                    edit_data_fim_semanal.required = false;
-                                                    edit_data_reserva.required = true;
-                                                }
-                                            }
-                                            edit_tipo_reserva.addEventListener("change", toggleCamposDeDataEdit);
-                                            document.getElementById('modal_edit_espaco').addEventListener('shown.bs.modal', toggleCamposDeDataEdit);
-                                            form.addEventListener("submit", function (event) {
-                                                let formValido = true;
-                                                const isTipoSemanal = edit_tipo_reserva.value === "2";
+                    } else if (edit_tipo_reserva.value === "1") { // Reserva Esporádica (Diária)
+                        camposFixaEdit.forEach(campo => campo.style.display = 'none');
+                        camposDiariaEdit.forEach(campo => campo.style.display = 'block');
+                        edit_res_dia_semana_fixa.required = false;
+                        edit_data_inicio_semanal.required = false;
+                        edit_data_fim_semanal.required = false;
+                        edit_data_reserva.required = true;
+                    }
+                }
+                edit_tipo_reserva.addEventListener("change", toggleCamposDeDataEdit);
+                document.getElementById('modal_edit_espaco').addEventListener('shown.bs.modal', toggleCamposDeDataEdit);
+                form.addEventListener("submit", function (event) {
+                    let formValido = true;
+                    const isTipoSemanal = edit_tipo_reserva.value === "2";
 
-                                                if (isTipoSemanal) {
-                                                    if (!edit_res_dia_semana_fixa.value.trim() || !edit_data_inicio_semanal.value.trim() || !edit_data_fim_semanal.value.trim()) {
-                                                        formValido = false;
-                                                    }
-                                                } else {
-                                                    if (!fpInstanceEdit.altInput.value.trim()) {
-                                                        formValido = false;
-                                                    }
-                                                }
-                                                if (!inputEditHoraInicio.value.trim()) {
-                                                    inputEditHoraInicio.classList.add('is-invalid');
-                                                    formValido = false;
-                                                }
-                                                if (!inputEditHoraFim.value.trim()) {
-                                                    inputEditHoraFim.classList.add('is-invalid');
-                                                    formValido = false;
-                                                }
-                                                if (!formValido) {
-                                                    event.preventDefault();
-                                                    event.stopPropagation();
-                                                    form.classList.add('was-validated');
-                                                    const firstInvalid = form.querySelector('.is-invalid');
-                                                    if (firstInvalid) {
-                                                        firstInvalid.scrollIntoView({
-                                                            behavior: 'smooth',
-                                                            block: 'center'
-                                                        });
-                                                    }
-                                                }
-                                            });
-                                        })
-                                        .catch(error => {
-                                            console.error('Erro ao carregar datas bloqueadas:', error);
-                                        });
+                    if (isTipoSemanal) {
+                        if (!edit_res_dia_semana_fixa.value.trim() || !edit_data_inicio_semanal.value.trim() || !edit_data_fim_semanal.value.trim()) {
+                            formValido = false;
+                        }
+                    } else {
+                        if (!fpInstanceEdit.altInput.value.trim()) {
+                            formValido = false;
+                        }
+                    }
+                    if (!inputEditHoraInicio.value.trim()) {
+                        inputEditHoraInicio.classList.add('is-invalid');
+                        formValido = false;
+                    }
+                    if (!inputEditHoraFim.value.trim()) {
+                        inputEditHoraFim.classList.add('is-invalid');
+                        formValido = false;
+                    }
+                    if (!formValido) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        form.classList.add('was-validated');
+                        const firstInvalid = form.querySelector('.is-invalid');
+                        if (firstInvalid) {
+                            firstInvalid.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Erro ao carregar datas bloqueadas:', error);
+            });
                                 });
-                            </script>
+    </script>
 
-                            <script>
-                                document.getElementById('edit_res_hora_inicio').addEventListener('change', function () {
-                                    const EdithoraInicio = this.value;
-                                    if (!EdithoraInicio) return;
-                                    const [hora, minuto] = EdithoraInicio.split(':').map(Number);
-                                    let turno = '';
-                                    if (hora >= 6 && hora < 12) {
-                                        turno = 'MANHÃ';
-                                    } else if (hora >= 12 && hora < 18) {
-                                        turno = 'TARDE';
-                                    } else {
-                                        turno = 'NOITE';
-                                    }
-                                    document.getElementById('edit_turno').value = turno;
-                                });
-                            </script>
-                            <div class="col-lg-12">
-                                <div class="hstack gap-3 align-items-center justify-content-between mt-2">
-                                    <button type="button" class="btn btn-light btn-label previestab waves-effect"
-                                        id="btnEditAnterior3">
-                                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Anterior
-                                    </button>
-                                    <button type="submit" class="btn botao botao_verde"
-                                        id="btnEditConcluir">Concluir</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </form>
+    <script>
+        document.getElementById('edit_res_hora_inicio').addEventListener('change', function () {
+            const EdithoraInicio = this.value;
+            if (!EdithoraInicio) return;
+            const [hora, minuto] = EdithoraInicio.split(':').map(Number);
+            let turno = '';
+            if (hora >= 6 && hora < 12) {
+                turno = 'MANHÃ';
+            } else if (hora >= 12 && hora < 18) {
+                turno = 'TARDE';
+            } else {
+                turno = 'NOITE';
+            }
+            document.getElementById('edit_turno').value = turno;
+        });
+    </script>
+    <div class="col-lg-12">
+        <div class="hstack gap-3 align-items-center justify-content-between mt-2">
+            <button type="button" class="btn btn-light btn-label previestab waves-effect" id="btnEditAnterior3">
+                <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Anterior
+            </button>
+            <button type="submit" class="btn botao botao_verde" id="btnEditConcluir">Concluir</button>
         </div>
     </div>
 </div>
+</div>
+</div>
 
-
+</form>
+</div>
+</div>
+</div>
 
 
 <script>
@@ -2174,8 +2199,6 @@ if ($ap_is_sole_fixed) {
     }
 </script>
 
-
-
 <script>
     function preencherCamposEdit() {
         const dataEditInputEdit = document.getElementById('edit_data_reserva').value;
@@ -2200,9 +2223,6 @@ if ($ap_is_sole_fixed) {
     }
 </script>
 
-
-
-
 <script>
     function preencherCamposEdit() {
         const dataEditInputEdit = document.getElementById('edit_data_reserva').value;
@@ -2222,10 +2242,6 @@ if ($ap_is_sole_fixed) {
         }
     }
 </script>
-
-
-
-
 
 <script>
     const modal_edit_espaco = document.getElementById('modal_edit_espaco');
@@ -2364,10 +2380,6 @@ if ($ap_is_sole_fixed) {
     }
 </script>
 
-
-
-
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const modalReserva = document.getElementById('modal_cad_espaco');
@@ -2396,7 +2408,6 @@ if ($ap_is_sole_fixed) {
         }
     });
 </script>
-
 
 <script>
     document.querySelector('#btnEditarSelecionados').addEventListener('click', function (event) {

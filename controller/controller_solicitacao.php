@@ -535,31 +535,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $stmt->execute();
 
       if ($result_etapa['solic_etapa'] != 3) {
-        $num_status = 2; // 2 = SOLICITADO (Status de entrada)
+        // $num_status = 2; // 2 = SOLICITADO (Status de entrada)
 
         // 1. Busca a matrícula do coordenador para o curso desta solicitação
-        $sql_coord = "SELECT c.curs_matricula_prof, c.curs_curso
-                              FROM solicitacao s
-                              JOIN cursos c ON c.curs_id = s.solic_curso
-                              WHERE s.solic_id = :solic_id";
-        $stmt_coord = $conn->prepare($sql_coord);
-        $stmt_coord->execute([':solic_id' => $solic_id]);
-        $course_info = $stmt_coord->fetch(PDO::FETCH_ASSOC);
+        $sql_coords = "SELECT cc.coordenador_matricula
+                       FROM curso_coordenador cc
+                       WHERE cc.curs_id = :solic_curso";
+        $stmt_coords = $conn->prepare($sql_coords);
+        $stmt_coords->execute([':solic_curso' => $solic_curso]);
+        // Coleta todas as matrículas em um array para fácil comparação
+        $coordenadores_matriculas = $stmt_coords->fetchAll(PDO::FETCH_COLUMN);
 
-        $matricula_coordenador = $course_info['curs_matricula_prof'] ?? null;
-        $course_name = $course_info['curs_curso'] ?? 'Curso Desconhecido';
+        // Busca o nome do curso para o e-mail
+        $stmt_course = $conn->prepare("SELECT curs_curso FROM cursos WHERE curs_id = :solic_curso");
+        $stmt_course->execute([':solic_curso' => $solic_curso]);
+        $course_name = $stmt_course->fetchColumn() ?? 'Curso Desconhecido';
+
+        // 2. Buscar a MATRÍCULA do solicitante logado
+        $stmt_user_matr = $conn->prepare("SELECT user_matricula FROM usuarios WHERE user_id = :user_id");
+        $stmt_user_matr->execute([':user_id' => $solic_user_id]);
+        $solicitante_matricula = $stmt_user_matr->fetchColumn();
+
+        // 3. Lógica para definir o status e roteamento
+
+        // NOVO: Verifica se o solicitante está no array de coordenadores
+        $is_solicitante_coordenador = in_array($solicitante_matricula, $coordenadores_matriculas);
+        $has_coordenador = count($coordenadores_matriculas) > 0;
 
         // 2. Define o destinatario do email de notificação 
-        if (!empty($matricula_coordenador)) {
+        if ($has_coordenador && !$is_solicitante_coordenador) {
+          $num_status = 2; // ROTEIA PARA APROVAÇÃO DO COORDENADOR (Status 2: Solicitado / Em Análise Coordenador)
           $email_subject = 'PENDÊNCIA: Análise de Solicitação - ' . htmlspecialchars($course_name);
           $is_pendente_coordenador = true;
           $pendencia_para = 'Coordenador do Curso de <strong>' . htmlspecialchars($course_name) . '</strong>';
           $link_destino = $url_sistema . "/admin/solicitacoes_emAnalise.php"; // Link para a fila do coordenador
         } else {
+          $num_status = 5; // ROTEIA DIRETO PARA ANÁLISE DO SAAP (Status 4: Em Análise SAAP - Pós Coordenador)
           $email_subject = 'PENDÊNCIA: Nova Solicitação para Análise (SAAP)';
           $is_pendente_coordenador = false;
           $pendencia_para = 'a Central de Análise (SAAP)';
           $link_destino = $url_sistema . "/admin/solicitacoes_submetidas.php"; // Link para a fila do SAAP
+
+          if ($is_solicitante_coordenador) {
+            // Insere o status de "Aprovação do Coordenador" automática (Status 3, usando o ID do solicitante)
+            $sql = "INSERT INTO solicitacao_analise_status (sta_an_solic_id, sta_an_status, sta_an_user_id, sta_an_data_cad, sta_an_data_upd) 
+                        VALUES (:sta_an_solic_id, 3, :sta_an_user_id, GETDATE(), GETDATE())";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([':sta_an_solic_id' => $solic_id, ':sta_an_user_id' => $solic_user_id]);
+          }
         }
 
         // 3. Atualiza o Status para 2 (SOLICITADO)
