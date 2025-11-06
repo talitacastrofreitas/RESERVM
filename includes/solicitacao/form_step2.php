@@ -80,7 +80,10 @@
               id="cad_reserva_local_brotas_mult">
               <?php foreach ($result as $res): ?>
                 <option value="<?= $res['esp_id'] ?>" <?= in_array($res['esp_id'], $espaco_b) ? 'selected' : '' ?>>
+
                   <?= $res['esp_codigo'] . ' - ' . $res['esp_nome_local'] . ' - ' . $res['and_andar'] . ' - ' . $res['pav_pavilhao']  ?>
+
+                
                 </option>
               <?php endforeach; ?>
             </select>
@@ -124,7 +127,9 @@
               id="cad_reserva_local_cabula_mult">
               <?php foreach ($result as $res): ?>
                 <option value="<?= $res['esp_id'] ?>" <?= in_array($res['esp_id'], $espaco_c) ? 'selected' : '' ?>>
+
                   <?= $res['esp_codigo'] . ' - ' . $res['esp_nome_local'] . ' - ' . $res['and_andar'] . ' - ' . $res['pav_pavilhao'] ?>
+
                 </option>
               <?php endforeach; ?>
             </select>

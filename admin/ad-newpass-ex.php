@@ -14,7 +14,10 @@ if (!$_GET['ad-ident'] || empty($_GET['ad-ident'])) {
 
 
 
+
 <form class="needs-validation" method="POST" action="controller/controller_acesso.php?func=upd_pass_ex"
+
+
   id="UserRegistro" novalidate>
 
   <input type="hidden" class="form-control" value="<?= $_GET['ad-ident'] ?>" name="cod" required>

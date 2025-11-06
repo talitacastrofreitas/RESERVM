@@ -44,6 +44,7 @@
   </script>
 <?php unset($_SESSION["msg"]);
 } ?>
+<<<<<<< HEAD
 <!-- ==============================================SENHAEXPIRADA -->
 <?php
 // Adicionar esta lógica para capturar e exibir a mensagem da URL
@@ -88,6 +89,8 @@ if (isset($_GET["sucesso"])) {
   }
 </script>
 <!-- ============================================== -->
+=======
+>>>>>>> 37aa9c8fd78f14fcc367b2475fb179438e032599
 
 <?php if (isset($_SESSION["erro"])) { ?>
   <script>
