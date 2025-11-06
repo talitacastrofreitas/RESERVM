@@ -14,7 +14,8 @@ if (!$_GET['ad-ident'] || empty($_GET['ad-ident'])) {
 
 
 
-<form class="needs-validation" method="POST" action="controller/controller_acesso.php?funcao=alterSenhaExpira" id="UserRegistro" novalidate>
+<form class="needs-validation" method="POST" action="controller/controller_acesso.php?func=alterSenhaExpira"
+  id="UserRegistro" novalidate>
 
   <input type="hidden" class="form-control" value="<?= $_GET['ad-ident'] ?>" name="cod" required>
 
@@ -22,7 +23,8 @@ if (!$_GET['ad-ident'] || empty($_GET['ad-ident'])) {
     <label class="form-label">Senha Atual <span>*</span></label>
     <div class="position-relative auth-pass-inputgroup mb-3">
       <input type="password" class="form-control pe-5 password-input" name="senha_atual" required>
-      <button class="btn btn-link position-absolute end-0 top-0 text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
+      <button class="btn btn-link position-absolute end-0 top-0 text-muted password-addon" type="button"
+        id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
       <div class="invalid-feedback">Digite a senha atual</div>
     </div>
   </div>
@@ -31,12 +33,14 @@ if (!$_GET['ad-ident'] || empty($_GET['ad-ident'])) {
     <label class="form-label" for="pwd">Senha <span>*</span></label>
     <div class="position-relative auth-pass-inputgroup mb-3">
       <input type="password" class="form-control pe-5 password-input" id="pwd" name="senha" required>
-      <button class="btn btn-link position-absolute end-0 top-0 text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
+      <button class="btn btn-link position-absolute end-0 top-0 text-muted password-addon" type="button"
+        id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
       <div class="invalid-feedback">Digite a senha</div>
     </div>
   </div>
 
-  <div id="criterios" class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert" style="display: none;">
+  <div id="criterios" class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert"
+    style="display: none;">
     <i class="ri-error-warning-line label-icon"></i><strong>Erro</strong> - A senha deve atender os critérios!
     <!-- <button  type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
   </div>
@@ -71,12 +75,14 @@ if (!$_GET['ad-ident'] || empty($_GET['ad-ident'])) {
     <label class="form-label" for="cpwd">Confirmar senha <span>*</span></label>
     <div class="position-relative auth-pass-inputgroup mb-3">
       <input type="password" class="form-control pe-5 password-input" id="cpwd" name="conf_senha" required>
-      <button class="btn btn-link position-absolute end-0 top-0 text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
+      <button class="btn btn-link position-absolute end-0 top-0 text-muted password-addon" type="button"
+        id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
       <div class="invalid-feedback">Confirme a senha</div>
     </div>
   </div>
 
-  <div id="senha" class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert" style="display: none;">
+  <div id="senha" class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert"
+    style="display: none;">
     <i class="ri-error-warning-line label-icon"></i><strong>Erro</strong> - As senhas não correspondem!
     <!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
   </div>

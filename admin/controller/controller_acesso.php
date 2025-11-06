@@ -1,7 +1,7 @@
 <?php
 // session_start();
 ob_start(); // Limpa o buff de saida
-include '../conexao/conexao.php';
+include '../../conexao/conexao.php';
 
 // NECESSÁRIO PARA ENVIAR O EMAIL
 use PHPMailer\PHPMailer\Exception;
@@ -193,7 +193,7 @@ if (isset($_GET['func']) && $_GET['func'] == "reset_pass") {
       $admin_id = $row['admin_id']; // CRIPTOGRAFA ID
 
       $mail = new PHPMailer(true);
-      include '../conexao/email.php';
+      include '../../conexao/email.php';
 
       // E-MAIL QUE VAI RECEBER A MENSAGEM
       //$mail->addAddress($admin_email, 'RESERVM');

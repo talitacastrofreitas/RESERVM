@@ -161,18 +161,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
 
     // TRATAMENTO DE REDIRECIONAMENTO FINAL
     if ($acao === 'deletar') {
-      // Redireciona para a lista principal, sem ID
-      header("Location: ../admin/solicitacao_analise.php");
+      $redirect_url = "../admin/solicitacao_analise.php";
     } else {
-      // Redireciona para a análise (com ID)
-      header("Location: ../admin/solicitacao_analise.php?i=" . urlencode($oco_id_redirecionamento));
+      $redirect_url = "../admin/solicitacao_analise.php?i=" . urlencode($oco_id_redirecionamento);
     }
-    exit;
 
+    // } catch (Exception $e) {
+    //   $conn->rollBack();
+    //   $_SESSION["erro"] = $e->getMessage();
+    //   $redirect_url = empty($oco_id_original) ? ($_SERVER['HTTP_REFERER'] ?? '../admin/solicitacao_analise.php') : "../admin/solicitacao_analise.php?i=" . urlencode($oco_id_original);
+    //   header("Location: " . $redirect_url);
+    //   exit;
+    // }
   } catch (Exception $e) {
     $conn->rollBack();
     $_SESSION["erro"] = $e->getMessage();
-    $redirect_url = empty($oco_id_original) ? ($_SERVER['HTTP_REFERER'] ?? '../admin/solicitacao_analise.php') : "../admin/solicitacao_analise.php?i=" . urlencode($oco_id_original);
+
+    // NOVA LÓGICA: SÓ REDIRECIONA PARA ANALISE.PHP
+    $redirect_base = '../admin/solicitacao_analise.php';
+
+    if (!empty($oco_id_original)) {
+      $redirect_url = $redirect_base . "?i=" . urlencode($oco_id_original);
+    } else {
+      $redirect_url = $redirect_base;
+    }
+
     header("Location: " . $redirect_url);
     exit;
   }
