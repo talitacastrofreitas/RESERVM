@@ -1,0 +1,6 @@
+projectKey=RESERVM
+serverUrl=http://localhost:9000
+serverVersion=25.6.0.109173
+dashboardUrl=http://localhost:9000/dashboard?id=RESERVM
+ceTaskId=f601567a-b9dc-4534-a8af-d131e99d0700
+ceTaskUrl=http://localhost:9000/api/ce/task?id=f601567a-b9dc-4534-a8af-d131e99d0700
