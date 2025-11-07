@@ -30,9 +30,7 @@
           <div class="col-md-6 d-flex align-items-center d-flex justify-content-md-end justify-content-center">
 
             <div class="d-inline-flex justify-content-center justify-content-md-end gap-2">
-              <!-- <button class="btn botao botao_roxo waves-effect mt-3 mt-md-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample"><i class="ri-filter-3-line align-bottom me-1"></i> Filtro</button> -->
-
-              <button class="btn botao botao_amarelo waves-effect mt-3 mt-md-0" data-bs-toggle="modal"
+                            <button class="btn botao botao_amarelo waves-effect mt-3 mt-md-0" data-bs-toggle="modal"
                 data-bs-toggle="button" data-bs-target="#modal_cad_solicitacao">+ Nova Solicitação</button>
             </div>
 
@@ -394,8 +392,7 @@
                 </div>
               </div>
 
-              <!--end col-->
-            </div>
+                        </div>
 
           </div>
         </div>
@@ -411,34 +408,40 @@
               <th nowrap="nowrap"><span class="me-2">Solicitante</span></th>
               <th nowrap="nowrap"><span class="me-2">Data Solicitação</span></th>
               <th nowrap="nowrap"><span class="me-2">Status</span></th>
-              <!-- <th width="20px"></th> -->
-            </tr>
+                          </tr>
           </thead>
           <tbody>
 
             <?php
             try {
-              $stmt = $conn->prepare("SELECT * FROM solicitacao
-    LEFT JOIN solicitacao_status ON solicitacao_status.solic_sta_solic_id = solicitacao.solic_id
-    LEFT JOIN status_solicitacao ON status_solicitacao.stsolic_id = solicitacao_status.solic_sta_status
-    LEFT JOIN componente_curricular ON componente_curricular.compc_id = solicitacao.solic_comp_curric
-    LEFT JOIN cursos ON cursos.curs_id = solicitacao.solic_curso
-    LEFT JOIN curso_coordenador ON curso_coordenador.curs_id = solicitacao.solic_curso -- ADICIONADO NOVO JOIN
-    LEFT JOIN conf_cursos_extensao_curricularizada ON conf_cursos_extensao_curricularizada.cexc_id = solicitacao.solic_nome_curso
-    LEFT JOIN conf_semestre ON conf_semestre.cs_id = solicitacao.solic_semestre
-    LEFT JOIN usuarios ON usuarios.user_id = solicitacao.solic_cad_por
-    LEFT JOIN admin ON admin.admin_id = solicitacao.solic_cad_por
+              $stmt = $conn->prepare("
+    SELECT 
+        s.*, ss.solic_sta_status, sts.stsolic_status, cc.compc_componente, c.curs_curso, 
+        u.user_nome, a.admin_nome, s.solic_data_cad
+    FROM solicitacao s
+    LEFT JOIN solicitacao_status ss ON ss.solic_sta_solic_id = s.solic_id
+    LEFT JOIN status_solicitacao sts ON sts.stsolic_id = ss.solic_sta_status
+    LEFT JOIN componente_curricular cc ON cc.compc_id = s.solic_comp_curric
+    LEFT JOIN cursos c ON c.curs_id = s.solic_curso
+    
+    -- REMOVIDO: LEFT JOIN curso_coordenador
+
+    LEFT JOIN conf_cursos_extensao_curricularizada cce ON cce.cexc_id = s.solic_nome_curso
+    LEFT JOIN conf_semestre cs ON cs.cs_id = s.solic_semestre
+    LEFT JOIN usuarios u ON u.user_id = s.solic_cad_por
+    LEFT JOIN admin a ON a.admin_id = s.solic_cad_por
     WHERE 
         (
             -- FILA 1: Solicitado (2) E sem Coordenador (Nova pendência SAAP)
             (
-                solicitacao_status.solic_sta_status = 2 
+                ss.solic_sta_status = 2 
                 AND 
-                curso_coordenador.coordenador_matricula IS NULL -- ALTERAÇÃO AQUI
+                -- Subconsulta para verificar se o curso NÃO TEM coordenador
+                (SELECT COUNT(*) FROM curso_coordenador ccc WHERE ccc.curs_id = s.solic_curso) = 0
             )
             OR
-            -- FILA 2: Aprovado pelo Coordenador (5) ou Recusado pelo Coordenador (7) (Pendência de Reserva/Processamento SAAP)
-            solicitacao_status.solic_sta_status IN (5, 7)
+            -- FILA 2: Aprovado pelo Coordenador (5) ou Em Análise SAAP (7) (Pendência de Reserva/Processamento SAAP)
+            ss.solic_sta_status IN (5, 7)
         )
 ");
               $stmt->execute();
@@ -470,13 +473,16 @@
 
 
                 // PEGA O PRIMEIRO NOME E ÚLTIMO NOME
-                if (isset($user_nome)) {
-                  $partesNome = explode(" ", $user_nome);
+                $nome_completo = $user_nome ?: $admin_nome; // Pega o nome do solicitante (usuário ou admin)
+
+                if (!empty($nome_completo)) {
+                  $partesNome = explode(" ", $nome_completo);
+                  $primeiroNome = $partesNome[0];
+                  $ultimoNome = end($partesNome);
                 } else {
-                  $partesNome = explode(" ", $admin_nome);
+                    $primeiroNome = 'Nome';
+                    $ultimoNome = 'Não Encontrado';
                 }
-                $primeiroNome = $partesNome[0];
-                $ultimoNome = end($partesNome);
 
                 ?>
                 <tr role="button" data-href='solicitacao_analise.php?i=<?= $solic_id ?>'>
@@ -488,32 +494,7 @@
                       class="hide_data"><?= date('Ymd', strtotime($solic_data_cad)) ?></span><?= date('d/m/Y H:i', strtotime($solic_data_cad)) ?>
                   </td>
                   <td scope="row"><span class="badge <?= $status_color ?>"><?= $stsolic_status ?></span></td>
-                  <!-- <td class="text-end">
-                    <div class="dropdown dropdown drop_tabela d-inline-block">
-                      <button class="btn btn_soft_verde_musgo btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="ri-more-fill align-middle"></i>
-                      </button>
-                      <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal" data-bs-target="#modal_edit_espaco"
-                            data-bs-esp_id="<?= $esp_id ?>"
-                            data-bs-esp_codigo="<?= $esp_codigo ?>"
-                            data-bs-esp_nome_local="<?= $esp_nome_local ?>"
-                            data-bs-esp_nome_local_resumido="<?= $esp_nome_local_resumido ?>"
-                            data-bs-esp_tipo_espaco="<?= $esp_tipo_espaco ?>"
-                            data-bs-esp_andar="<?= $esp_andar ?>"
-                            data-bs-esp_pavilhao="<?= $esp_pavilhao ?>"
-                            data-bs-esp_quant_maxima="<?= $esp_quant_maxima ?>"
-                            data-bs-esp_quant_media="<?= $esp_quant_media ?>"
-                            data-bs-esp_quant_minima="<?= $esp_quant_minima ?>"
-                            data-bs-esp_unidade="<?= $esp_unidade ?>"
-                            data-bs-esp_recursos="<?= $esp_recursos ?>"
-                            data-bs-esp_status="<?= $esp_status ?>"
-                            title="Editar"><i class="fa-regular fa-pen-to-square me-2"></i> Editar</a></li>
-                        <li><a href="../router/web.php?r=esp&func=exc_esp&esp_id=<?= $esp_id ?>" class="dropdown-item remove-item-btn del-btn" title="Excluir"><i class="fa-regular fa-trash-can me-2"></i> Excluir</a></li>
-                      </ul>
-                    </div>
-                  </td> -->
-                </tr>
+                                  </tr>
               <?php }
             } catch (PDOException $e) {
               // echo "Erro: " . $e->getMessage();
@@ -522,6 +503,7 @@
           </tbody>
         </table>
       </div>
+      
     </div>
   </div>
 </div>
@@ -553,7 +535,6 @@
 </script>
 
 
-<!-- CADASTRAR SOLICITAÇÃO -->
 <div class="modal fade modal_padrao" id="modal_cad_solicitacao" tabindex="-1" aria-labelledby="modal_cad_solicitacao"
   aria-modal="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -562,7 +543,7 @@
         <h5 class="modal-title" id="modal_cad_solicitacao">Cadastrar Solicitação</h5>
         <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close"><i
             class="fa-solid fa-xmark"></i></button>
-      </div>
+        </div>
       <div class="modal-body">
         <form class="needs-validation" method="POST" action="../router/web.php?r=AdminSolic" autocomplete="off"
           novalidate>
@@ -599,7 +580,7 @@
                 </select>
                 <div class="invalid-feedback">Este campo é obrigatório</div>
               </div>
-            </div>
+              </div>
 
             <div class="col-md-6" id="campo_solic_nome_curso" style="display: none;">
               <div class="mb-3">
@@ -679,10 +660,9 @@
 
             <div class="col-md-6" id="campo_solic_contato" style="display: none;">
               <div class="mb-3">
-                <label class="form-label">Telefone para contato <!--<span>*</span>--></label>
+                <label class="form-label">Telefone para contato </label>
                 <input type="text" class="form-control cel_tel" name="solic_contato" id="cad_solic_contato">
-                <!-- <div class="invalid-feedback">Este campo é obrigatório</div> -->
-              </div>
+                              </div>
             </div>
 
             <div class="col-lg-12">
@@ -696,7 +676,7 @@
         </form>
       </div>
     </div>
-  </div>
+    </div>
 </div>
 
 <script>
@@ -710,10 +690,10 @@
       $('[id^="campo_"]').hide().find('input, select').prop('required', false);
 
       if (tipoAtiv == '1') {
-        // 1	ATIVIDADE ACADÊMICA
+        // 1  ATIVIDADE ACADÊMICA
         $('#campo_solic_curso').show().find('#cad_solic_curso').prop('required', true);
       } else if (tipoAtiv == '2') {
-        // 2	ATIVIDADE ADMINISTRATIVA
+        // 2  ATIVIDADE ADMINISTRATIVA
         $('[id^="campo_"]').hide();
         // $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
 
@@ -726,17 +706,17 @@
       }
 
       if ([2, 5, 6, 9, 13, 14, 17, 18, 21].includes(parseInt(curso))) {
-        // 2	BIOMEDICINA
-        // 5	EDUCAÇÃO FÍSICA
-        // 6	ENFERMAGEM
-        // 9	FISIOTERAPIA
-        // 13	LIGA ACADÊMICA
-        // 14	MEDICINA
-        // 17	NÚCLEO COMUM
-        // 18	ODONTOLOGIA
-        // 21	PSICOLOGIA
+        // 2  BIOMEDICINA
+        // 5  EDUCAÇÃO FÍSICA
+        // 6  ENFERMAGEM
+        // 9  FISIOTERAPIA
+        // 13 LIGA ACADÊMICA
+        // 14 MEDICINA
+        // 17 NÚCLEO COMUM
+        // 18 ODONTOLOGIA
+        // 21 PSICOLOGIA
         $('#campo_solic_comp_curric').show().find('#cad_solic_comp_curric').prop('required', true);
-        // 0	OUTRO
+        // 0  OUTRO
         if (compCurric == '0') {
           // $('#campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
 
@@ -757,7 +737,7 @@
       }
 
       if (curso == '8') {
-        // 8	EXTENSÃO CURRICULARIZADA
+        // 8  EXTENSÃO CURRICULARIZADA
         $('#campo_solic_nome_curso').show().find('#cad_solic_nome_curso').prop('required', true);
         if (nomeCurso) {
           // $('#campo_solic_nome_atividade, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
@@ -769,11 +749,11 @@
       }
 
       if ([7, 10, 19, 28, 31].includes(parseInt(curso))) {
-        // 7	EXTENSÃO
-        // 10	GRUPO DE PESQUISA
-        // 19	PROGRAMA CANDEAL
-        // 28	NIDD
-        // 31	RESERVAS ADMINISTRATIVAS
+        // 7  EXTENSÃO
+        // 10 GRUPO DE PESQUISA
+        // 19 PROGRAMA CANDEAL
+        // 28 NIDD
+        // 31 RESERVAS ADMINISTRATIVAS
         // $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input').prop('required', true);
 
         $('#campo_solic_nome_atividade, #campo_solic_nome_prof_resp, #campo_solic_contato').show();
@@ -782,8 +762,8 @@
       }
 
       if ([11, 22].includes(parseInt(curso))) {
-        // 11	LATO SENSU
-        // 22	STRICTO SENSU
+        // 11 LATO SENSU
+        // 22 STRICTO SENSU
 
         // $('#campo_solic_nome_curso_text, #campo_solic_nome_comp_ativ, #campo_solic_semestre, #campo_solic_nome_prof_resp, #campo_solic_contato').show().find('input, select').prop('required', true);
 
@@ -828,5 +808,4 @@
 
 <?php include 'includes/footer.php'; ?>
 
-<!-- SELECT2 FORM -->
 <script src="includes/select/select2.js"></script>

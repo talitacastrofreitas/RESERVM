@@ -76,6 +76,7 @@ $perfil_id = $global_admin_perfil ?? 0;
                             ");
 
                             $stmt->execute();
+
                             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                 $oco_id = $row['oco_id'];
                                 $solic_id = $row['res_solic_id'];

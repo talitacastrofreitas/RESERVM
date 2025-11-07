@@ -176,7 +176,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
       $stmt_update->execute([':status' => $oco_status, ':tipo_ocorrencia' => $oco_tipo_ocorrencia, ':hora_inicio' => $oco_hora_inicio_realizado, ':hora_fim' => $oco_hora_fim_realizado, ':parecer' => $oco_parecer_tecnico, ':carga_horaria' => $oco_carga_horaria, ':autor_edicao' => $rvm_admin_id, ':id_original' => $oco_id_original]);
       $oco_id = $oco_id_original;
 
-<<<<<<< HEAD
         } elseif ($acao === 'validar') {
             if (empty($oco_id_original)) {
                 throw new Exception("ID da ocorrência para validação não fornecido.");
@@ -311,111 +310,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
     $_SESSION["erro"] = "Requisição inválida.";
     header("Location: " . ($_SERVER['HTTP_REFERER'] ?? '../admin/solicitacao_analise.php'));
     exit;
-=======
-    } elseif ($acao === 'validar') {
-      if (empty($oco_id_original)) {
-        throw new Exception("ID da ocorrência para validação não fornecido.");
-      }
-      $log_acao = 'Validação Rápida';
-      $oco_id_redirecionamento = $oco_id_original;
 
-      // 1. Pega os horários do registro atual para cálculo
-      $stmt_tempos = $conn->prepare("SELECT oco_hora_inicio_realizado, oco_hora_fim_realizado FROM ocorrencias WHERE oco_id = :oco_id");
-
-      $stmt_tempos->execute([':oco_id' => $oco_id_original]);
-      $tempos = $stmt_tempos->fetch(PDO::FETCH_ASSOC);
-
-      if (!$tempos || empty($tempos['oco_hora_inicio_realizado']) || empty($tempos['oco_hora_fim_realizado'])) {
-        throw new Exception("Não é possível validar: horários de início ou fim não estão definidos.");
-      }
-      // 2. Calcula a carga horária
-      $inicio = new DateTime($tempos['oco_hora_inicio_realizado']);
-      $fim = new DateTime($tempos['oco_hora_fim_realizado']);
-      $intervalo = $inicio->diff($fim);
-      $carga_horaria = $intervalo->format('%H:%I:%S'); // <--- A CARGA HORÁRIA É CALCULADA AQUI
-
-      // 3. Atualiza o status e a carga horária no registro principal
-      $sql_update = "UPDATE ocorrencias SET oco_status = 2, oco_carga_horaria_calculada = :carga_horaria, oco_autor_edicao = :autor_edicao, oco_data_edicao = GETDATE() WHERE oco_id = :oco_id";
-      $stmt_update = $conn->prepare($sql_update);
-      $stmt_update->execute([
-        ':carga_horaria' => $carga_horaria,
-        ':autor_edicao' => $rvm_admin_id,
-        ':oco_id' => $oco_id_original
-      ]);
-
-      $oco_id = $oco_id_original; // Define o ID para o log
-
-    } elseif ($acao === 'deletar') { // <-- NOVO BLOCO
-      $oco_id_original = $_GET['oco_id'] ?? NULL;
-      if (empty($oco_id_original)) {
-        throw new Exception("ID da ocorrência para exclusão não fornecido.");
-      }
-
-      $log_acao = 'Exclusão';
-      $oco_id_redirecionamento = $oco_id_original;
-
-      // SQL para DELETAR
-      $sql = "DELETE FROM ocorrencias WHERE oco_id = :oco_id";
-      $stmt = $conn->prepare($sql);
-      $stmt->execute([':oco_id' => $oco_id_original]);
-
-      $oco_id = $oco_id_original; // Define o ID para o log
-
-    } else {
-      throw new Exception("Ação inválida.");
-    }
-
-    $log_dados = ['POST' => $_POST, 'GET' => $_GET];
-    $sqlLog = "INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES (:modulo, upper(:acao), :acao_id, :dados, :user_id, GETDATE())";
-    $stmtLog = $conn->prepare($sqlLog);
-    $stmtLog->execute([':modulo' => 'OCORRÊNCIAS', ':acao' => $log_acao, ':acao_id' => $oco_id, ':dados' => json_encode($log_dados, JSON_UNESCAPED_UNICODE), ':user_id' => $rvm_admin_id]);
-
-    $conn->commit();
-
-    if ($acao === 'cadastrar') {
-      $_SESSION["msg"] = "Ocorrência cadastrada com sucesso!";
-    } elseif ($acao === 'atualizar' || $acao === 'atualizar_admin') {
-      $_SESSION["msg"] = "Ocorrência atualizada com sucesso!";
-    } elseif ($acao === 'validar') {
-      $_SESSION["msg"] = "Ocorrência validada com sucesso!";
-    } elseif ($acao === 'deletar') { // <-- NOVO: Mensagem de sucesso para deletar
-      $_SESSION["msg"] = "Ocorrência excluída com sucesso!";
-    }
-
-    // TRATAMENTO DE REDIRECIONAMENTO FINAL
-    if ($acao === 'deletar') {
-      $redirect_url = "../admin/solicitacao_analise.php";
-    } else {
-      $redirect_url = "../admin/solicitacao_analise.php?i=" . urlencode($oco_id_redirecionamento);
-    }
-
-    // } catch (Exception $e) {
-    //   $conn->rollBack();
-    //   $_SESSION["erro"] = $e->getMessage();
-    //   $redirect_url = empty($oco_id_original) ? ($_SERVER['HTTP_REFERER'] ?? '../admin/solicitacao_analise.php') : "../admin/solicitacao_analise.php?i=" . urlencode($oco_id_original);
-    //   header("Location: " . $redirect_url);
-    //   exit;
-    // }
-  } catch (Exception $e) {
-    $conn->rollBack();
-    $_SESSION["erro"] = $e->getMessage();
-
-    // NOVA LÓGICA: SÓ REDIRECIONA PARA ANALISE.PHP
-    $redirect_base = '../admin/solicitacao_analise.php';
-
-    if (!empty($oco_id_original)) {
-      $redirect_url = $redirect_base . "?i=" . urlencode($oco_id_original);
-    } else {
-      $redirect_url = $redirect_base;
-    }
-
-    header("Location: " . $redirect_url);
-    exit;
-  }
-} else {
-  $_SESSION["erro"] = "Requisição inválida.";
-  header("Location: " . ($_SERVER['HTTP_REFERER'] ?? '../admin/solicitacao_analise.php'));
-  exit;
->>>>>>> 37aa9c8fd78f14fcc367b2475fb179438e032599
 }
 ?>

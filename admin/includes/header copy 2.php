@@ -23,47 +23,44 @@ if (empty($_SESSION['session_admin_logged_in'])) {
 
 <?php
 // =================================================================================
-// 1. CONTAGEM DA FILA 'SOLICITADO' (Status 2 SEM COORDENADOR OU Status 5 ou 7) - CORRIGIDO
+// 1. CONTAGEM DA FILA 'SOLICITADO' (Status 7 OU 5 OU Status 2 SEM COORDENADOR) - ALTERADO
 // Status 2 E SEM coordenador (SAAP) OU Status 5 ou 7 (Pendente de Reserva/SAAP)
-$query_solic_submetida = "
-    SELECT 
-        COUNT(s.solic_id) 
-    FROM 
-        solicitacao s
-    LEFT JOIN 
-        solicitacao_status ss ON ss.solic_sta_solic_id = s.solic_id
-    WHERE 
+$query_solic_submetida = "SELECT 
+    COUNT(s.solic_id) 
+FROM 
+    solicitacao s
+LEFT JOIN 
+    solicitacao_status ss ON ss.solic_sta_solic_id = s.solic_id
+LEFT JOIN 
+    curso_coordenador cc ON cc.curs_id = s.solic_curso
+WHERE 
+    (
         (
-            -- REGRA 1: Status 2 E Sem Coordenador (Vai para SAAP)
-            (
-                ss.solic_sta_status = 2 
-                AND 
-                -- Subconsulta: Se a contagem de coordenadores para o curso for ZERO.
-                (SELECT COUNT(*) FROM curso_coordenador ccc WHERE ccc.curs_id = s.solic_curso) = 0
-            )
-            OR
-            -- REGRA 2: Status 5 (Aprovado Coord) ou 7 (Em Análise SAAP)
-            ss.solic_sta_status IN (5, 7) 
-        )";
+            ss.solic_sta_status = 2 
+            AND 
+            cc.coordenador_matricula IS NULL 
+        )
+        OR
+        ss.solic_sta_status IN (5, 7) -- Status 5 e 7 INCLUÍDOS
+    )";
 
 $stmt_solic_submetida = $conn->prepare($query_solic_submetida);
 $stmt_solic_submetida->execute();
 $count_solic_submetida = $stmt_solic_submetida->fetchColumn();
 
 // =================================================================================
-// 2. CONTAGEM DA FILA 'PENDÊNCIAS COORDENADOR' (Status 2 ou 3 E COM COORDENADOR) - CORRIGIDO
+// 2. CONTAGEM DA FILA 'PENDÊNCIAS COORDENADOR' (Status 2 ou 3 E COM COORDENADOR)
 // Status 2 ou 3 E COM coordenador (Coordenador)
-$query_pend_coord_total = "
-    SELECT 
-        COUNT(DISTINCT s.solic_id) /* Usando DISTINCT para garantir contagem única, mesmo com múltiplos JOINs */
-    FROM 
-        solicitacao s
-    LEFT JOIN 
-        solicitacao_status ss ON ss.solic_sta_solic_id = s.solic_id
-    INNER JOIN 
-        curso_coordenador cc ON cc.curs_id = s.solic_curso -- INNER JOIN: Deve ter Coordenador
-    WHERE 
-        ss.solic_sta_status IN (2, 3)";
+$query_pend_coord_total = "SELECT 
+  COUNT(DISTINCT s.solic_id)
+FROM 
+    solicitacao s
+LEFT JOIN 
+    solicitacao_status ss ON ss.solic_sta_solic_id = s.solic_id
+INNER JOIN 
+    curso_coordenador cc ON cc.curs_id = s.solic_curso -- INNER JOIN: Deve ter Coordenador
+WHERE 
+    ss.solic_sta_status IN (2, 3)";
 
 $stmt_pend_coord_total = $conn->prepare($query_pend_coord_total);
 $stmt_pend_coord_total->execute();
@@ -296,9 +293,8 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
                   <li class="nav-item">
                     <a href="solicitacoes_submetidas.php" class="nav-link">Solicitado
                       <?php
-                      // REPETINDO A LÓGICA DO SOLICITADO (Status 5, 7 E Status 2 SEM Coordenador) - USANDO SUBQUERY PARA CORREÇÃO
-                      $query = "
-    SELECT 
+                      // REPETINDO A LÓGICA DO SOLICITADO (Status 5, 7 E Status 2 SEM Coordenador) - AJUSTADA!
+                      $query = "SELECT 
         COUNT(s.solic_id) 
     FROM 
         solicitacao s
@@ -310,12 +306,14 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
             (
                 ss.solic_sta_status = 2 
                 AND 
+                -- Subconsulta: Se a contagem de coordenadores para o curso for ZERO.
                 (SELECT COUNT(*) FROM curso_coordenador ccc WHERE ccc.curs_id = s.solic_curso) = 0
             )
             OR
             -- REGRA 2: Status 5 (Aprovado Coord) ou 7 (Em Análise SAAP)
             ss.solic_sta_status IN (5, 7) 
         )";
+
 
                       $stmt = $conn->prepare($query, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
                       $stmt->execute();
@@ -334,26 +332,25 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
                   <li class="nav-item">
                     <a href="solicitacoes_emAnalise.php" class="nav-link">Pendências do Coordenador
                       <?php
-                      // CONSULTA PARA PENDÊNCIAS COORDENADOR (Status 2 ou 3 E COM Coordenador) - CORRETO, USANDO DISTINCT
-                      $query_pend_coord_real_nav = "
-    SELECT 
-        COUNT(DISTINCT s.solic_id) 
-    FROM 
-        solicitacao s
-    LEFT JOIN 
-        solicitacao_status ss ON ss.solic_sta_solic_id = s.solic_id
-    INNER JOIN 
-        curso_coordenador cc ON cc.curs_id = s.solic_curso 
-    WHERE 
-        ss.solic_sta_status IN (2, 3)";
-                      $stmt_pend_coord_real_nav = $conn->prepare($query_pend_coord_real_nav);
-                      $stmt_pend_coord_real_nav->execute();
+                      // CONSULTA PARA PENDÊNCIAS COORDENADOR (Status 2 ou 3 E COM Coordenador)
+                      $query_pend_coord_real = "SELECT 
+    COUNT(DISTINCT s.solic_id)  /* <-- CORREÇÃO AQUI */
+FROM 
+    solicitacao s
+LEFT JOIN 
+    solicitacao_status ss ON ss.solic_sta_solic_id = s.solic_id
+INNER JOIN 
+    curso_coordenador cc ON cc.curs_id = s.solic_curso 
+WHERE 
+    ss.solic_sta_status IN (2, 3)";
+                      $stmt_pend_coord_real = $conn->prepare($query_pend_coord_real);
+                      $stmt_pend_coord_real->execute();
 
-                      $count_pend_coord_real_nav = $stmt_pend_coord_real_nav->fetchColumn();
+                      $count_pend_coord_real = $stmt_pend_coord_real->fetchColumn();
 
                       ?>
-                      <?php if ($count_pend_coord_real_nav) { // Usa a variável correta para o link ?>
-                        <div class="cont_sub"><?= $count_pend_coord_real_nav ?></div>
+                      <?php if ($count_pend_coord_real) { // Usa a variável correta para o link ?>
+                        <div class="cont_sub"><?= $count_pend_coord_real ?></div>
                       <?php } ?>
                     </a>
                   </li>

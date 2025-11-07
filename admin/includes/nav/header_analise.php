@@ -41,11 +41,9 @@ if (isset($_GET['i'])) {
 
     $tag_header_color = $status_colors[$solic_sta_status] ?? ''; // Usa '' como padrão se não existir
   } else {
-<<<<<<< HEAD
+
     header("Location: ../admin/solicitacao_analise.php");
-=======
-    header("Location: ../admin/solicitacoes.php");
->>>>>>> 37aa9c8fd78f14fcc367b2475fb179438e032599
+
     exit;
   }
 }

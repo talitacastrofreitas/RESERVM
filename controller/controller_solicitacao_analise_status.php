@@ -39,19 +39,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // ----------------------------------------------------------------
         // PASSO CRUCIAL: Buscar os e-mails dos administradores/operadores no banco de dados
         // ----------------------------------------------------------------
-        $admin_operator_emails = [];
-        $sql_get_admins = "SELECT admin_email FROM admin WHERE admin_status = 1 AND (admin_perfil = 1 OR admin_perfil = 2)";
-        $stmt_get_admins = $conn->prepare($sql_get_admins);
-        $stmt_get_admins->execute();
-        $results = $stmt_get_admins->fetchAll(PDO::FETCH_ASSOC);
+        // $admin_operator_emails = [];
+        // $sql_get_admins = "SELECT admin_email FROM admin WHERE admin_status = 1 AND (admin_perfil = 1 OR admin_perfil = 2)";
+        // $stmt_get_admins = $conn->prepare($sql_get_admins);
+        // $stmt_get_admins->execute();
+        // $results = $stmt_get_admins->fetchAll(PDO::FETCH_ASSOC);
 
-        foreach ($results as $row) {
-            $admin_operator_emails[] = $row['admin_email']; // Corrigido para 'admin_email'
-        }
+        // foreach ($results as $row) {
+        //     $admin_operator_emails[] = $row['admin_email']; // Corrigido para 'admin_email'
+        // }
 
-        if (empty($admin_operator_emails)) {
-            error_log("Nenhum e-mail de administrador/operador encontrado para notificações de solicitação (ID: " . ($solic_id ?? 'N/A') . "). Verifique a tabela 'admin'.");
-        }
+        // if (empty($admin_operator_emails)) {
+        //     error_log("Nenhum e-mail de administrador/operador encontrado para notificações de solicitação (ID: " . ($solic_id ?? 'N/A') . "). Verifique a tabela 'admin'.");
+        // }
+
+$admin_operator_emails = [];
+// CORREÇÃO AQUI: Excluir explicitamente o perfil 2 (Operador).
+// Assumindo que Perfil 1 é o Administrador principal/SAAP.
+$sql_get_admins = "SELECT admin_email FROM admin WHERE admin_status = 1 AND admin_perfil != 2"; //
+$stmt_get_admins = $conn->prepare($sql_get_admins);
+$stmt_get_admins->execute();
+$results = $stmt_get_admins->fetchAll(PDO::FETCH_ASSOC);
+
+foreach ($results as $row) {
+    $admin_operator_emails[] = $row['admin_email']; //
+}
+
+if (empty($admin_operator_emails)) {
+    error_log("Nenhum e-mail de administrador/SAAP encontrado para notificações de solicitação (ID: " . ($solic_id ?? 'N/A') . "). Verifique a tabela 'admin'."); //
+}
+
+
+
+
+
         // ----------------------------------------------------------------
         $coordenador_nome = 'Desconhecido'; // Valor padrão caso não encontre
         $sql_get_coordenador_nome = "SELECT user_nome FROM usuarios WHERE user_id = :user_id"; // Assumindo tabela 'usuarios'

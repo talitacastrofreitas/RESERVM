@@ -54,7 +54,7 @@ if (isset($dados['login_admin'])) {
             $intervalo = $data_hoje->diff($data_senha); // FAZ A DIFERENÇA ENTRE A DATA DE HOJE E A DATA DA ULTIMA ATUALIZAÇÃO DA SENHA
             $diferenca_data = $intervalo->days;
 
-<<<<<<< HEAD
+
             // if ($diferenca_data > 90 && $admin_matricula == $row_admin['admin_matricula'] && password_verify($dados['senha'], $row_admin['admin_senha']) == 1) {
             //   header("Location: ../admin/ad-newpass-ex.php?ad-ident=" . $row_admin['admin_id']);
             //   exit();
@@ -65,12 +65,7 @@ if (isset($dados['login_admin'])) {
     header("Location: ../admin/ad-newpass-ex.php?ad-ident=" . $admin_id_codificado); // << USAR ID CODIFICADO
     exit();
 } else {
-=======
-            if ($diferenca_data > 90 && $admin_matricula == $row_admin['admin_matricula'] && password_verify($dados['senha'], $row_admin['admin_senha']) == 1) {
-              header("Location: ../admin/ad-newpass-ex.php?ad-ident=" . $row_admin['admin_id']);
-              exit();
-            } else {
->>>>>>> 37aa9c8fd78f14fcc367b2475fb179438e032599
+
 
               // SE LOGIN E SENHA ESTIVEREM CORRETOS, ENTRA NO SISTEMA
               if ($admin_matricula == $row_admin['admin_matricula'] && password_verify($dados['senha'], $row_admin['admin_senha'])) {
@@ -82,8 +77,20 @@ if (isset($dados['login_admin'])) {
                 $_SESSION['reservm_admin_perfil'] = $row_admin['admin_perfil'];
                 $_SESSION['reservm_admin_status'] = $row_admin['admin_status'];
                 $_SESSION['reservm_admin_nivel_acesso'] = $row_admin['nivel_acesso'];
-                header("Location: $url_sistema/admin/solicitacoes_submetidas.php");
-
+                // header("Location: $url_sistema/admin/solicitacoes_submetidas.php");
+// =================================================================================
+                // LÓGICA DE REDIRECIONAMENTO POR PERFIL (CORREÇÃO APLICADA)
+                // =================================================================================
+                $PERFIL_OPERADOR = 2; // ID do Perfil Operador
+                
+                if ((int)$row_admin['admin_perfil'] === $PERFIL_OPERADOR) {
+                    // Se for Operador, vai para Reservas Confirmadas
+                    header("Location: $url_sistema/admin/reservas_confirmadas.php");
+                } else {
+                    // Se for Administrador (Perfil 1) ou qualquer outro, vai para Solicitações Submetidas
+                    header("Location: $url_sistema/admin/solicitacoes_submetidas.php");
+                }
+                // =================================================================================
                 // REGISTRA AÇÃO NO LOG
                 $stmt = $conn->prepare('INSERT INTO log (log_modulo, log_acao, log_acao_id, log_acao_user_id, log_data)
                                         VALUES (:modulo, :acao, :acao_id, :user_id, GETDATE())');
@@ -435,7 +442,7 @@ if (isset($_GET['func']) && $_GET['func'] == "upd_pass_ex") {
   $conf_senha = $_POST['conf_senha'];
   $senha_atual = $_POST['senha_atual'];
 
-<<<<<<< HEAD
+
 
 $url_retorno_erro = "../ad-newpass-ex.php?ad-ident=" . urlencode($_POST['cod']);
 
@@ -443,23 +450,16 @@ $url_retorno_erro = "../ad-newpass-ex.php?ad-ident=" . urlencode($_POST['cod']);
   if ($nova_senha !== $conf_senha) {
     $_SESSION["erro"] = "As senhas digitadas estão diferentes!";
    header("Location: $url_retorno_erro");
-=======
-  // VERIFICA SE AS SENHAS DIGITADAS SÃO IGUAIS ANTES DE HASH
-  if ($nova_senha !== $conf_senha) {
-    $_SESSION["erro"] = "As senhas digitadas estão diferentes!";
-    header('Location: ' . filter_var($_SERVER['HTTP_REFERER'] ?? '/', FILTER_SANITIZE_URL));
->>>>>>> 37aa9c8fd78f14fcc367b2475fb179438e032599
+
     exit();
   }
 
   // VERIFICA SE A SENHA ATUAL É DIFERENTE DA NOVA SENHA
   if ($nova_senha === $senha_atual) {
     $_SESSION["erro"] = "A nova senha precisa ser diferente da atual!";
-<<<<<<< HEAD
+
    header("Location: $url_retorno_erro");
-=======
-    header('Location: ' . filter_var($_SERVER['HTTP_REFERER'] ?? '/', FILTER_SANITIZE_URL));
->>>>>>> 37aa9c8fd78f14fcc367b2475fb179438e032599
+
     exit();
   }
 
@@ -480,22 +480,18 @@ $url_retorno_erro = "../ad-newpass-ex.php?ad-ident=" . urlencode($_POST['cod']);
 
     if (!$result) {
       $_SESSION["erro"] = "Usuário não encontrado!";
-<<<<<<< HEAD
+
      header("Location: $url_retorno_erro");
-=======
-      header('Location: ' . filter_var($_SERVER['HTTP_REFERER'] ?? '/', FILTER_SANITIZE_URL));
->>>>>>> 37aa9c8fd78f14fcc367b2475fb179438e032599
+
       exit();
     }
 
     // VERIFICA A SENHA ATUAL
     if (!password_verify($senha_atual, $result['admin_senha'])) {
       $_SESSION["erro"] = "A senha atual está incorreta!";
-<<<<<<< HEAD
+
      header("Location: $url_retorno_erro");
-=======
-      header('Location: ' . filter_var($_SERVER['HTTP_REFERER'] ?? '/', FILTER_SANITIZE_URL));
->>>>>>> 37aa9c8fd78f14fcc367b2475fb179438e032599
+
       exit();
     }
 
@@ -516,7 +512,6 @@ $url_retorno_erro = "../ad-newpass-ex.php?ad-ident=" . urlencode($_POST['cod']);
       ':user_id' => $admin_id
     ]);
 
-<<<<<<< HEAD
     // $conn->commit(); // CONFIRMA A TRANSAÇÃO
 
     // $_SESSION["msg"] = "Senha atualizada com sucesso!";
@@ -540,17 +535,7 @@ $mensagem_sucesso = urlencode("Senha atualizada com sucesso!");
     $conn->rollBack();
     $_SESSION["erro"] = "Erro ao tentar executar a ação. Tente novamente!";
     header("Location: $url_retorno_erro");
-=======
-    $conn->commit(); // CONFIRMA A TRANSAÇÃO
 
-    $_SESSION["msg"] = "Senha atualizada com sucesso!";
-    header("Location: $url_sistema/admin");
-    exit();
-  } catch (PDOException $e) {
-    $conn->rollBack();
-    $_SESSION["erro"] = "Erro ao tentar executar a ação. Tente novamente!";
-    header('Location: ' . filter_var($_SERVER['HTTP_REFERER'] ?? '/', FILTER_SANITIZE_URL));
->>>>>>> 37aa9c8fd78f14fcc367b2475fb179438e032599
     exit();
   }
 }
