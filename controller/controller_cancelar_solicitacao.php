@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solic_id_cancelar']) &
         $stmt_solicitacao->execute();
 
         // 2. Atualizar o status de TODAS as reservas vinculadas a esta solicitação para "Cancelada" (status 6)
-        $stmt_reservas = $conn->prepare("UPDATE reservas SET res_status = 7, res_motivo_cancelamento = :motivo WHERE res_solic_id = :solic_id");
+        $stmt_reservas = $conn->prepare("UPDATE reservas SET res_status = 4, res_motivo_cancelamento = :motivo WHERE res_solic_id = :solic_id");
         $stmt_reservas->bindParam(':motivo', $motivo_cancelamento);
         $stmt_reservas->bindParam(':solic_id', $solic_id);
         $stmt_reservas->execute();

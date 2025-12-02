@@ -102,9 +102,20 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
   <link href="../assets/css/select2.min.css" rel="stylesheet" />
   <script src="../assets/js/371.jquery.min.js" crossorigin="anonymous"></script>
   <script src="../assets/js/select2.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script> -->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+
+
+
+
   <link href="../assets/css/icons.min.css" rel="stylesheet" type="text/css" />
   <link href="../assets/css/custom.min.css" rel="stylesheet" type="text/css" />
   <link href="../assets/css/app.min.css" rel="stylesheet" type="text/css" />
@@ -294,7 +305,7 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
                   </li>
 
                   <li class="nav-item">
-                    <a href="solicitacoes_submetidas.php" class="nav-link">Solicitado
+                    <a href="solicitacoes_submetidas.php" class="nav-link">Submetido
                       <?php
                       // REPETINDO A LÓGICA DO SOLICITADO (Status 5, 7 E Status 2 SEM Coordenador) - USANDO SUBQUERY PARA CORREÇÃO
                       $query = "
@@ -434,6 +445,17 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
             <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
               <a class="nav-link menu-link" href="admin.php"><span>Administradores</span></a>
             </li>
+
+   <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
+              <a class="nav-link menu-link" href="calendario_visual.php"><span>Calendario</span></a>
+            </li>
+
+
+   <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
+              <a class="nav-link menu-link" href="espelhamento.php"><span>Espelhamento</span></a>
+            </li>
+
+
             <li class="nav-item <?php echo ($global_admin_perfil != 1) ? 'd-none' : ''; ?>">
               <a class="nav-link menu-link" href="#sidebarLanding" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarLanding"><span data-key="t-landing">Cadastros</span></a>
@@ -445,9 +467,9 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
                   <li class="nav-item">
                     <a href="cursos.php" class="nav-link">Cursos</a>
                   </li>
-                  <li class="nav-item">
+                  <!-- <li class="nav-item">
                     <a href="datas_bloqueadas.php" class="nav-link">Datas Bloqueadas</a>
-                  </li>
+                  </li> -->
                   <li class="nav-item">
                     <a href="espacos.php" class="nav-link">Espaços</a>
                   </li>

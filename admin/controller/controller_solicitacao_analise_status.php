@@ -158,26 +158,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       // [Bloco de Busca e Formatação de Reservas - Fim]
 
       // ENVIO DE E-MAIL PARA O SOLICITANTE (USUÁRIO)
-      $mail = new PHPMailer(true);
+   $mail = new PHPMailer(true);
       include '../conexao/email.php';
-      $mail->addAddress($sta_an_user_email, 'RESERVM');
+      
+      // Lista de destinatários
+      $destinatarios = [];
+
+      // 1. Verifica se a solicitação tem um Componente Curricular vinculado
+      $stmtComp = $conn->prepare("SELECT solic_comp_curric FROM solicitacao WHERE solic_id = ?");
+      $stmtComp->execute([$solic_id]);
+      $id_componente = $stmtComp->fetchColumn();
+
+      if ($id_componente) {
+          // 2. Busca TODOS os professores vinculados a este componente na nova tabela
+          $sqlProfs = "SELECT c.EMAIL, c.NOMESOCIAL 
+                       FROM componente_professores cp
+                       JOIN colaboradores c ON c.CHAPA = cp.cp_colaborador_matricula
+                       WHERE cp.cp_compc_id = ?";
+          $stmtProfs = $conn->prepare($sqlProfs);
+          $stmtProfs->execute([$id_componente]);
+          $professores = $stmtProfs->fetchAll(PDO::FETCH_ASSOC);
+
+          foreach ($professores as $prof) {
+              if (!empty($prof['EMAIL'])) {
+                  $destinatarios[$prof['EMAIL']] = $prof['NOMESOCIAL'];
+              }
+          }
+      }
+
+      // 3. Se não achou professores no componente (ou não tem componente), usa o dono da solicitação
+      if (empty($destinatarios) && !empty($sta_an_user_email)) {
+          $destinatarios[$sta_an_user_email] = 'Solicitante';
+      }
+
+      // CONFIGURAÇÃO DO EMAIL
       $mail->isHTML(true);
       $mail->Subject = 'CONFIRMAÇÃO: Solicitação Deferida e Reservada - ' . $sta_an_solic_codigo;
 
-      $email_conteudo = ''; // Reinicializa $email_conteudo
+      // GERA O CONTEÚDO (MANTÉM O LAYOUT ANTERIOR)
+      $email_conteudo = ''; 
       include '../includes/email/email_header.php';
-
-      $email_conteudo .= "
+    $email_conteudo .= "
             <tr style='background-color: #ffffff; text-align: center; color: #515050; display: flex; justify-content: center; padding:10px 50px 0 50px; line-height: 23px;'>
                 <td style='padding: 2em 2rem; display: inline-block; width:100%;'>
                     <p style='font-size: 1.188rem; font-weight: 500; margin: 0px 0px 20px 0px;'>
                         <strong>SOLICITAÇÃO RESERVADA</strong>
                     </p>
                     <p style='font-size: 1rem; font-weight: 400; margin: 0px 0px 15px 0px; text-align: left;'>
-                    Prezado(a) solicitante,
+                    Prezado(a) Professor(a),
                     </p>
                     <p style='font-size: 1rem; font-weight: 400; margin: 0px 0px 15px 0px; text-align: left;'>
-                    Sua solicitação de código <strong>" . $sta_an_solic_codigo . "</strong> foi deferida e as reservas de espaço foram confirmadas por <strong>" . $coordenador_nome . "</strong>.
+                    A solicitação de código <strong>" . $sta_an_solic_codigo . "</strong> referente ao seu componente curricular foi deferida.
                     </p>
                     
                     <p style='font-size: 1rem; font-weight: 500; margin: 25px 0px 10px 0px; text-align: left;'>
@@ -193,15 +224,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <a style='cursor: pointer;' href='$url_sistema'><button style='background: #38BE80; display: inline-block; text-decoration: none; border-radius: 4px; color: #fff; border: none; cursor: pointer; padding: 10px 15px; margin-top: 20px;' target='_blank'>Acesse o sistema</button></a>
                 </td>
             </tr>";
-
       include '../includes/email/email_footer.php';
       $mail->Body = $email_conteudo;
 
-      try {
-        $mail->send();
-      } catch (Exception $e) {
-        error_log("Erro ao enviar e-mail de deferimento para usuário: " . $e->getMessage());
+      foreach ($destinatarios as $email_dest => $nome_dest) {
+          try {
+              $mail->clearAddresses(); // Limpa destinatários anteriores do loop
+              $mail->addAddress($email_dest, $nome_dest);
+              $mail->send();
+          } catch (Exception $e) {
+              error_log("Erro ao enviar e-mail para $email_dest: " . $e->getMessage());
+          }
       }
+    
+
+      // try {
+      //   $mail->send();
+      // } catch (Exception $e) {
+      //   error_log("Erro ao enviar e-mail de deferimento para usuário: " . $e->getMessage());
+      // }
     }
     // --- Fim Lógica Deferimento SAAP ---
 

@@ -8,6 +8,7 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
 }
 ?>
 
+
 <div class="row">
   <div class="col-12">
     <div class="page-title-box d-md-flex align-items-center justify-content-between">
@@ -52,7 +53,7 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
 
             <?php
             try {
-              $stmt = $conn->prepare("SELECT dbloq_id, dbloq_data, dbloq_dia, dbloq_mes, dbloq_ano, dbloq_motivo, dbloq_status, dbloqm_motivo, week_id, week_dias, st_status FROM conf_dias_bloqueadas
+              $stmt = $conn->prepare("SELECT dbloq_id, dbloq_data, dbloq_dia, dbloq_mes, dbloq_ano, dbloq_motivo, dbloq_status, dbloqm_motivo, week_id, week_dias, st_status st_status, dbloq_cal_tipo, dbloq_cal_semestre FROM conf_dias_bloqueadas
                                       INNER JOIN conf_dias_semana ON conf_dias_semana.week_id = conf_dias_bloqueadas.dbloq_dia
                                       INNER JOIN conf_dias_bloqueadas_motivo ON conf_dias_bloqueadas_motivo.dbloqm_id = conf_dias_bloqueadas.dbloq_motivo
                                       INNER JOIN status ON status.st_id = conf_dias_bloqueadas.dbloq_status");
@@ -69,6 +70,8 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
                 $dbloqm_motivo = $row['dbloqm_motivo'];
                 $week_dias     = $row['week_dias'];
                 $st_status     = $row['st_status'];
+$dbloq_cal_tipo     = $row['dbloq_cal_tipo'];
+$dbloq_cal_semestre = $row['dbloq_cal_semestre'];
 
                 //CONFIGURAÇÃO DO STATUS
                 $status_color = ($dbloq_status == 1) ? 'bg_info_verde' : 'bg_info_cinza';
@@ -88,16 +91,20 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
                         <i class="ri-more-fill align-middle"></i>
                       </button>
                       <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal" data-bs-target="#modal_edit_dia_bloqueado"
-                            data-bs-dbloq_id="<?= htmlspecialchars($dbloq_id) ?>"
-                            data-bs-dbloq_data="<?= htmlspecialchars($dbloq_data) ?>"
-                            data-bs-dbloq_dia="<?= htmlspecialchars($dbloq_dia) ?>"
-                            data-bs-dbloq_dia_id="<?= htmlspecialchars($dbloq_dia) ?>"
-                            data-bs-dbloq_mes="<?= htmlspecialchars($dbloq_mes) ?>"
-                            data-bs-dbloq_ano="<?= htmlspecialchars($dbloq_ano) ?>"
-                            data-bs-dbloq_motivo="<?= htmlspecialchars($dbloq_motivo) ?>"
-                            data-bs-dbloq_status="<?= htmlspecialchars($dbloq_status) ?>"
-                            title="Editar"><i class="fa-regular fa-pen-to-square me-2"></i> Editar</a></li>
+                     <li><a href="" class="dropdown-item edit-item-btn" data-bs-toggle="modal" data-bs-target="#modal_edit_dia_bloqueado"
+    data-bs-dbloq_id="<?= htmlspecialchars($dbloq_id) ?>"
+    data-bs-dbloq_data="<?= htmlspecialchars($dbloq_data) ?>"
+    data-bs-dbloq_dia="<?= htmlspecialchars($dbloq_dia) ?>"
+    data-bs-dbloq_dia_id="<?= htmlspecialchars($dbloq_dia) ?>"
+    data-bs-dbloq_mes="<?= htmlspecialchars($dbloq_mes) ?>"
+    data-bs-dbloq_ano="<?= htmlspecialchars($dbloq_ano) ?>"
+    data-bs-dbloq_motivo="<?= htmlspecialchars($dbloq_motivo) ?>"
+    data-bs-dbloq_status="<?= htmlspecialchars($dbloq_status) ?>"
+    
+    data-bs-dbloq_cal_tipo="<?= htmlspecialchars($dbloq_cal_tipo) ?>"
+    data-bs-dbloq_cal_semestre="<?= htmlspecialchars($dbloq_cal_semestre) ?>"
+
+    title="Editar"><i class="fa-regular fa-pen-to-square me-2"></i> Editar</a></li>
                         <li><a href="../router/web.php?r=DataBloq&acao=deletar&dbloq_id=<?= $dbloq_id ?>" class="dropdown-item remove-item-btn del-btn" title="Excluir"><i class="fa-regular fa-trash-can me-2"></i> Excluir</a></li>
                       </ul>
                     </div>
@@ -213,6 +220,28 @@ if (!isset($_SESSION['reservm_admin_id']) || $_SESSION['reservm_admin_perfil'] !
                   <?php endforeach; ?>
                 </select>
                 <div class="invalid-feedback">Este campo é obrigatório</div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div>
+                <label class="form-label">Tipo de Calendário</label>
+                <select class="form-select text-uppercase" name="dbloq_cal_tipo">
+                  <option selected value=""></option>
+                  <option value="1" <?= ($_SESSION['form_dbloq']['dbloq_cal_tipo'] ?? '') == '1' ? 'selected' : '' ?>>ACADÊMICO</option>
+                  <option value="2" <?= ($_SESSION['form_dbloq']['dbloq_cal_tipo'] ?? '') == '2' ? 'selected' : '' ?>>ADMINISTRATIVO</option>
+                </select>
+                </div>
+            </div>
+
+            <div class="col-12">
+              <div>
+                <label class="form-label">Semestre</label>
+                <select class="form-select text-uppercase" name="dbloq_cal_semestre">
+                  <option selected value=""></option>
+                  <option value="1" <?= ($_SESSION['form_dbloq']['dbloq_cal_semestre'] ?? '') == '1' ? 'selected' : '' ?>>1º SEMESTRE</option>
+                  <option value="2" <?= ($_SESSION['form_dbloq']['dbloq_cal_semestre'] ?? '') == '2' ? 'selected' : '' ?>>2º SEMESTRE</option>
+                </select>
               </div>
             </div>
 
@@ -368,6 +397,28 @@ unset($_SESSION['form_dbloq']);
             </div>
 
             <div class="col-12">
+              <div>
+                <label class="form-label">Tipo de Calendário</label>
+                <select class="form-select text-uppercase dbloq_cal_tipo" name="dbloq_cal_tipo">
+                  <option selected value=""></option>
+                  <option value="1">ACADÊMICO</option>
+                  <option value="2">ADMINISTRATIVO</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div>
+                <label class="form-label">Semestre</label>
+                <select class="form-select text-uppercase dbloq_cal_semestre" name="dbloq_cal_semestre">
+                  <option selected value=""></option>
+                  <option value="1">1º SEMESTRE</option>
+                  <option value="2">2º SEMESTRE</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-12">
               <div class="form-check">
                 <input class="form-check-input dbloq_status" type="checkbox" id="dbloq_status" name="dbloq_status" value="1">
                 <label class="form-check-label" for="dbloq_status">Ativo</label>
@@ -430,6 +481,8 @@ unset($_SESSION['form_dbloq']);
       const dbloq_ano = button.getAttribute('data-bs-dbloq_ano')
       const dbloq_motivo = button.getAttribute('data-bs-dbloq_motivo')
       const dbloq_status = button.getAttribute('data-bs-dbloq_status')
+const dbloq_cal_tipo = button.getAttribute('data-bs-dbloq_cal_tipo')
+      const dbloq_cal_semestre = button.getAttribute('data-bs-dbloq_cal_semestre')
       // 
       const modalTitle = modal_edit_dia_bloqueado.querySelector('.modal-title')
       const modal_dbloq_id = modal_edit_dia_bloqueado.querySelector('.dbloq_id')
@@ -440,7 +493,9 @@ unset($_SESSION['form_dbloq']);
       const modal_dbloq_ano = modal_edit_dia_bloqueado.querySelector('.dbloq_ano')
       const modal_dbloq_motivo = modal_edit_dia_bloqueado.querySelector('.dbloq_motivo')
       const modal_dbloq_status = modal_edit_dia_bloqueado.querySelector('.dbloq_status')
-      //
+      const modal_dbloq_cal_tipo = modal_edit_dia_bloqueado.querySelector('.dbloq_cal_tipo')
+      const modal_dbloq_cal_semestre = modal_edit_dia_bloqueado.querySelector('.dbloq_cal_semestre')
+   
       modalTitle.textContent = 'Atualizar Dados'
       modal_dbloq_id.value = dbloq_id
 
@@ -456,6 +511,8 @@ unset($_SESSION['form_dbloq']);
       modal_dbloq_mes.value = dbloq_mes
       modal_dbloq_ano.value = dbloq_ano
       modal_dbloq_motivo.value = dbloq_motivo
+      modal_dbloq_cal_tipo.value = dbloq_cal_tipo
+      modal_dbloq_cal_semestre.value = dbloq_cal_semestre
       // VERIFICA DE O CHECKBOX ESTÁ MARCADO
       if (dbloq_status === '1') {
         modal_dbloq_status.checked = true;

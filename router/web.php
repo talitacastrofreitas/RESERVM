@@ -72,6 +72,11 @@ switch ($rota) {
     require '../admin/controller/controller_data_bloqueada.php';
     break;
 
+ // ROTA PARA O CALENDÁRIO (ADICIONE ESTE BLOCO)
+  case 'EventosCalendario':
+    require '../admin/controller/controller_eventos_calendario.php';
+    break;
+
 
   // COMPONENTE CURRICULAR
   case 'CompC':

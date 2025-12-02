@@ -394,10 +394,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
               $existe_fixa = verificarCodigoNoBanco($res_codigo_fixa, $conn);
             } while ($existe_fixa);
 
-            $stmt_insert_res->execute([
+        $stmt_insert_res->execute([
               ':res_id' => $res_id_loop,
               ':res_codigo' => $res_codigo_fixa,
-              ':res_solic_id' => $_POST['res_solic_id'],
+              ':res_solic_id' => $_POST['res_solic_id'], // Pode manter ou usar $res_solic_id
               ':res_tipo_reserva' => $_POST['res_tipo_reserva'],
               ':res_data' => $data_loop_formatada,
               ':res_mes' => $res_mes_loop,
@@ -410,21 +410,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || $_SERVER["REQUEST_METHOD"] == "GET")
               ':res_turno' => $_POST['res_turno'],
               ':res_tipo_aula' => $_POST['res_tipo_aula'],
               ':res_curso' => $_POST['res_curso'],
-              ':res_curso_nome' => $_POST['res_curso_nome'],
-              ':res_curso_extensao' => $_POST['res_curso_extensao'],
-              ':res_semestre' => $_POST['res_semestre'],
-              ':res_componente_atividade' => $_POST['res_componente_atividade'],
-              ':res_componente_atividade_nome' => $_POST['res_componente_atividade_nome'],
-              ':res_nome_atividade' => $_POST['res_nome_atividade'],
-              ':res_modulo' => $_POST['res_modulo'],
-              ':res_professor' => $_POST['res_professor'],
-              ':res_titulo_aula' => $_POST['res_titulo_aula'],
+              ':res_curso_nome' => $res_curso_nome, // CORRIGIDO: usa a variável tratada
+              ':res_curso_extensao' => $res_curso_extensao, // CORRIGIDO: usa a variável tratada
+              ':res_semestre' => $res_semestre, // CORRIGIDO
+              ':res_componente_atividade' => $res_componente_atividade, // CORRIGIDO
+              ':res_componente_atividade_nome' => $res_componente_atividade_nome, // CORRIGIDO
+              ':res_nome_atividade' => $res_nome_atividade, // CORRIGIDO
+              ':res_modulo' => $res_modulo, // CORRIGIDO
+              ':res_professor' => $res_professor, // CORRIGIDO
+              ':res_titulo_aula' => $res_titulo_aula, // CORRIGIDO
               ':res_espaco_id' => $res_espaco_id,
               ':res_campus' => $_POST['res_campus'],
               ':res_quant_pessoas' => $_POST['res_quant_pessoas'],
               ':res_recursos' => $_POST['res_recursos'],
-              ':res_recursos_add' => isset($_POST['res_recursos_add']) ? implode(', ', $_POST['res_recursos_add']) : null,
-              ':res_obs' => trim($_POST['res_obs']) !== '' ? nl2br(trim($_POST['res_obs'])) : NULL,
+              ':res_recursos_add' => $res_recursos_add, // CORRIGIDO
+              ':res_obs' => $res_obs, // CORRIGIDO
               ':res_user_id' => $rvm_admin_id
             ]);
           }

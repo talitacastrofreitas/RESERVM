@@ -28,6 +28,38 @@ function initializeTables() {
       },
     ],
   });
+//
+
+  new DataTable("#tab_espelhamento", {
+    order: [[1, "asc"]],
+    lengthMenu: [
+      [10, 25, 50, 100],
+      [10, 25, 50, 100],
+    ],
+    language: {
+      sProcessing: "Procurando...",
+      lengthMenu: "Mostrar _MENU_ registros",
+      zeroRecords: "Nenhum registro encontrado",
+      search: "",
+      info: "Mostrar _START_ até _END_ de _TOTAL_ registros",
+      infoEmpty: "",
+      infoFiltered: "(filtrado de _MAX_ registros totais)",
+      searchPlaceholder: "Busca",
+      paginate: {
+        first: "Primeiro",
+        last: "Último",
+        next: "Próximo",
+        previous: "Anterior",
+      },
+    },
+    aoColumnDefs: [
+      {
+        bSortable: false,
+        aTargets: [6], // Desativa a ordenação coluna 3
+      },
+    ],
+  });
+
   //
   new DataTable("#tab_user", {
     order: [[1, "asc"]],

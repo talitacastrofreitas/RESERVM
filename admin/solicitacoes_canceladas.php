@@ -21,7 +21,7 @@ $perfil_id = $global_admin_perfil ?? 0;
       <div class="page-title-right">
         <ol class="breadcrumb m-0">
           <li class="breadcrumb-item"><a href="painel.php">Solicitações</a></li>
-          <li class="breadcrumb-item active">Canceladas</li>
+          <li class="breadcrumb-item active">Cancelado</li>
         </ol>
       </div>
     </div>

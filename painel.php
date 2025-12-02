@@ -71,8 +71,25 @@ LEFT JOIN (
     AND DATEADD(SECOND, DATEDIFF(SECOND, 0, res_hora_inicio), CAST(res_data AS DATETIME)) > GETDATE()
     GROUP BY res_solic_id
 ) AS sub ON sub.res_solic_id = solicitacao.solic_id
-WHERE solicitacao.solic_cad_por = :solic_cad_por");
-              $stmt->execute([':solic_cad_por' => $global_user_id]);
+
+WHERE (
+    solicitacao.solic_cad_por = :user_id_dono
+    OR 
+    EXISTS (
+        SELECT 1 
+        FROM componente_professores cp
+        INNER JOIN colaboradores c ON c.CHAPA = cp.cp_colaborador_matricula
+        INNER JOIN usuarios u ON u.user_email = c.EMAIL
+        WHERE cp.cp_compc_id = solicitacao.solic_comp_curric
+        AND u.user_id = :user_id_prof
+    )
+)");
+
+// Passa o ID global para os dois parâmetros diferentes
+$stmt->execute([
+    ':user_id_dono' => $global_user_id,
+    ':user_id_prof' => $global_user_id
+]);
 
               while ($row_solic = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 // extract($row);

@@ -118,6 +118,28 @@ $("#cad_c_curso").select2({
   },
 });
 
+$("#edit_compc_curso").select2({
+  dropdownParent: $("#modal_edit_componente_curricular"),
+  placeholder: "Selecionar Curso",
+  //allowClear: true,
+  language: {
+    noResults: function (params) {
+      return "Dados não encontrado";
+    },
+  },
+});
+
+$("#compc_curso").select2({
+  dropdownParent: $("#modal_cad_componente_curricular"),
+  placeholder: "Selecionar Curso",
+  //allowClear: true,
+  language: {
+    noResults: function (params) {
+      return "Dados não encontrado";
+    },
+  },
+});
+
 // EDITAR COMPONENTE CURRICULAR
 $("#edit_conf_curso").select2({
   dropdownParent: $("#modal_edit_area_conhecimento"),
@@ -197,6 +219,30 @@ $("#edit_curs_matricula_prof").select2({
     },
   },
 });
+
+// CADASTRA COMPONENTE CURRICULAR
+$("#cad_professores").select2({
+  dropdownParent: $("#modal_cad_componente_curricular"),
+  placeholder: "Selecionar professor(a)",
+  allowClear: true,
+  language: {
+    noResults: function (params) {
+      return "Dados não encontrado";
+    },
+  },
+});
+// ATUALIZAR COMPONENTE CURRICULAR
+$("#edit_professores").select2({
+  dropdownParent: $("#modal_edit_componente_curricular"),
+  placeholder: "Selecionar professor(a)",
+  allowClear: true,
+  language: {
+    noResults: function (params) {
+      return "Dados não encontrado";
+    },
+  },
+});
+
 
 // CADASTRA OCORRÊNCIA
 $("#cad_oco_res_codigo").select2({
