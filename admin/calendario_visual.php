@@ -625,8 +625,8 @@ document.addEventListener('DOMContentLoaded', function() {
           
           // Define a cor cinza para inativos
           const corInativo = {
-              backgroundColor: '#d2d3d4ff', 
-              textColor: '#878a8dff',       
+              backgroundColor: '#38BE8033', 
+              textColor: '#38C172',       
               borderColor: '#dee2e6'      
           };
 

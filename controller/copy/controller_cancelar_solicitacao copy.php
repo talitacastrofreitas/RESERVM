@@ -5,9 +5,6 @@ include '../conexao/conexao.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solic_id_cancelar']) && isset($_POST['motivo_cancelamento_solicitacao'])) {
     $solic_id = filter_var($_POST['solic_id_cancelar'], FILTER_SANITIZE_STRING);
     $motivo_cancelamento = filter_var($_POST['motivo_cancelamento_solicitacao'], FILTER_SANITIZE_STRING);
-    
-    // Captura o ID do usuário logado para o log
-    $reservm_user_id = $_SESSION['reservm_user_id'];
 
     if (empty($solic_id) || empty($motivo_cancelamento)) {
         $_SESSION["erro"] = "Dados incompletos para o cancelamento da solicitação.";
@@ -18,33 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solic_id_cancelar']) &
     try {
         $conn->beginTransaction();
 
-        // 1. Atualizar o status da solicitação para "Cancelada" (status 7 - conforme seu código anterior)
+        // 1. Atualizar o status da solicitação para "Cancelada" (status 6)
         $stmt_solicitacao = $conn->prepare("UPDATE solicitacao_status SET solic_sta_status = 7, solic_motivo_cancelamento = :motivo WHERE solic_sta_solic_id = :solic_id");
         $stmt_solicitacao->bindParam(':motivo', $motivo_cancelamento);
         $stmt_solicitacao->bindParam(':solic_id', $solic_id);
         $stmt_solicitacao->execute();
 
-        // 2. Atualizar o status de TODAS as reservas vinculadas a esta solicitação para "Cancelada" (status 4)
+        // 2. Atualizar o status de TODAS as reservas vinculadas a esta solicitação para "Cancelada" (status 6)
         $stmt_reservas = $conn->prepare("UPDATE reservas SET res_status = 4, res_motivo_cancelamento = :motivo WHERE res_solic_id = :solic_id");
         $stmt_reservas->bindParam(':motivo', $motivo_cancelamento);
         $stmt_reservas->bindParam(':solic_id', $solic_id);
         $stmt_reservas->execute();
-
-        // -------------------------------
-        // REGISTRA NO LOG
-        // -------------------------------
-        $log_dados = ['POST' => $_POST, 'motivo' => $motivo_cancelamento];
-        $sqlLog = "INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data)
-                  VALUES (:modulo, :acao, :acao_id, :dados, :user_id, GETDATE())";
-        $stmtLog = $conn->prepare($sqlLog);
-        $stmtLog->execute([
-            ':modulo'  => 'SOLICITAÇÃO',
-            ':acao'    => 'CANCELAMENTO TOTAL',
-            ':acao_id' => $solic_id,
-            ':dados'   => json_encode($log_dados, JSON_UNESCAPED_UNICODE),
-            ':user_id' => $reservm_user_id
-        ]);
-        // -------------------------------
 
         $conn->commit();
         $_SESSION["msg"] = "Solicitação e todas as reservas vinculadas foram canceladas com sucesso!";

@@ -90,7 +90,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (empty($ids_solicitacoes)) throw new Exception("Nenhuma solicitação encontrada na origem para os componentes selecionados.");
 
         $total_reservas_criadas = 0;
-        $novo_solic_id = null; // Inicializa variável para uso posterior no log
 
         // --- PROCESSAMENTO ---
         foreach ($ids_solicitacoes as $id_original) {
@@ -253,39 +252,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
-        // ===========================================
-        // INSERÇÃO NO LOG GERAL (NOVO CÓDIGO)
-        // ===========================================
-        if ($total_reservas_criadas > 0) {
-            $log_dados = [
-                'periodo_origem' => $periodo_origem,
-                'periodo_destino' => $periodo_destino,
-                'total_reservas_criadas' => $total_reservas_criadas,
-                'componentes' => $componentes_selecionados
-            ];
-            
-            $sqlLog = "INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data)
-                       VALUES (:modulo, :acao, :acao_id, :dados, :user_id, GETDATE())";
-            $stmtLog = $conn->prepare($sqlLog);
-            $stmtLog->execute([
-                ':modulo'  => 'ESPELHAMENTO MEDICINA',
-                ':acao'    => 'CADASTRO',
-                ':acao_id' => 0, // 0 indica processamento em lote
-                ':dados'   => json_encode($log_dados, JSON_UNESCAPED_UNICODE),
-                ':user_id' => $admin_id
-            ]);
-        }
-        // ===========================================
-
         $conn->commit();
         $_SESSION["msg"] = "Sucesso! $total_reservas_criadas aulas geradas.";
         header("Location: ../espelhamento.php");
         exit();
 
     } catch (Exception $e) {
-        if (isset($conn) && $conn->inTransaction()) {
-            $conn->rollBack();
-        }
+        $conn->rollBack();
         $_SESSION["erro"] = "Erro: " . $e->getMessage();
         header("Location: " . $_SERVER['HTTP_REFERER']);
         exit();

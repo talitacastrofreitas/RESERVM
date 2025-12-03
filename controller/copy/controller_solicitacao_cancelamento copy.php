@@ -5,9 +5,6 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 ob_start();
 
-// Inclua a conexão se necessário, assumindo que ela já vem incluída ou instanciada antes
-// include '../conexao/conexao.php'; 
-
 // Certifique-se de que a conexão ($conn) e o $global_user_id estão disponíveis
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['acao']) || $_POST['acao'] !== 'solicitar_cancelamento') {
@@ -46,23 +43,26 @@ try {
 
         // 1. CHECAGEM SIMPLES DE EXISTÊNCIA, STATUS E NÃO CANCELAMENTO
         $sql_reserva_detalhes = "
-            SELECT 
-                r.res_solic_id, 
-                r.res_user_id, 
-                r.res_status 
-            FROM reservas r
-            -- Adiciona LEFT JOIN para checar o status do pedido de cancelamento (se houver)
-            LEFT JOIN solicitacao_cancelamento sc ON sc.solcanc_id = r.res_solic_cancelamento_id
-            WHERE r.res_id = :res_id
-            -- 1. Status da Reserva deve ser Ativo/Pendente (1 a 5)
-            AND (r.res_status IN (1, 2, 3, 4, 5) OR r.res_status IS NULL)
-            
-            -- 2. [CORREÇÃO AQUI] Permite se: A) Nunca houve pedido de cancelamento OU B) O último pedido foi NEGADO (Status 3)
-            AND (
-                (r.res_solic_cancelamento_id IS NULL OR LTRIM(RTRIM(r.res_solic_cancelamento_id)) = '')
-                OR sc.solcanc_status = 3
-            )
-        ";
+     
+
+
+        SELECT 
+            r.res_solic_id, 
+            r.res_user_id, 
+            r.res_status 
+        FROM reservas r
+        -- Adiciona LEFT JOIN para checar o status do pedido de cancelamento (se houver)
+        LEFT JOIN solicitacao_cancelamento sc ON sc.solcanc_id = r.res_solic_cancelamento_id
+        WHERE r.res_id = :res_id
+        -- 1. Status da Reserva deve ser Ativo/Pendente (1 a 5)
+        AND (r.res_status IN (1, 2, 3, 4, 5) OR r.res_status IS NULL)
+        
+        -- 2. [CORREÇÃO AQUI] Permite se: A) Nunca houve pedido de cancelamento OU B) O último pedido foi NEGADO (Status 3)
+        AND (
+            (r.res_solic_cancelamento_id IS NULL OR LTRIM(RTRIM(r.res_solic_cancelamento_id)) = '')
+            OR sc.solcanc_status = 3
+        )
+    ";
 
         $stmt_reserva = $conn->prepare($sql_reserva_detalhes);
         $stmt_reserva->bindParam(':res_id', $res_id, PDO::PARAM_STR);
@@ -101,6 +101,7 @@ try {
 
         // O ID da solicitação para o INSERT é o res_solic_id retornado.
         $solic_id = $solic_id_associado;
+        // CORREÇÃO: O fluxo segue para a inserção e update abaixo.
 
     } elseif ($tipo_cancelamento === 'Solicitacao') {
         // Status permitidos para SOLICITACAO:
@@ -149,27 +150,6 @@ try {
         $stmt_update_solic_main->bindParam(':solic_id', $solic_id_associado, PDO::PARAM_STR);
         $stmt_update_solic_main->execute();
     }
-
-    // -------------------------------
-    // REGISTRA NO LOG
-    // -------------------------------
-    $log_dados = [
-        'POST' => $_POST, 
-        'tipo' => $tipo_cancelamento, 
-        'id_alvo' => $id_alvo
-    ];
-    
-    $sqlLog = "INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data)
-              VALUES (:modulo, :acao, :acao_id, :dados, :user_id, GETDATE())";
-    $stmtLog = $conn->prepare($sqlLog);
-    $stmtLog->execute([
-        ':modulo'  => 'SOLICITAÇÃO CANCELAMENTO',
-        ':acao'    => 'SOLICITAR',
-        ':acao_id' => $solcanc_id, // ID do registro de cancelamento criado
-        ':dados'   => json_encode($log_dados, JSON_UNESCAPED_UNICODE),
-        ':user_id' => $usuario_logado_id
-    ]);
-    // -------------------------------
 
     // 7. COMMIT FINAL
     $conn->commit();

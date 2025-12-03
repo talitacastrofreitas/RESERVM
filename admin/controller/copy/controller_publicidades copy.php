@@ -125,11 +125,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                         if ($stmt->execute()) {
                             $_SESSION['msg'] = 'Publicidade adicionada com sucesso!';
-
-                            // LOG
-                            $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'CADASTRO', ?, ?, ?, GETDATE())");
-                            $stmtLog->execute([$last_id, json_encode(['titulo' => $titulo, 'file' => $finalFileName]), $admin_id]);
-
                             error_log("SUCESSO: Dados inseridos no banco de dados pelo Reservm. Caminho BD: " . $caminho_para_bd_compartilhado);
 
                             $ch = curl_init();
@@ -274,10 +269,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                     if ($stmt->execute()) {
                         $_SESSION['msg'] = 'Publicidade atualizada com sucesso!';
-// LOG
-                        $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'ATUALIZAÇÃO', ?, ?, ?, GETDATE())");
-                        $stmtLog->execute([$id, json_encode($_POST), $admin_id]);
-
                         error_log("SUCESSO: Publicidade ID " . $id . " atualizada no Reservm.");
                     } else {
                         $pdoErrorInfo = $stmt->errorInfo();
@@ -352,10 +343,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             $_SESSION['atencao'] = 'Publicidade excluída do Reservm, mas erro de comunicação com Painel TV para exclusão: (HTTP Status: ' . $http_code_painel_tv . '). Detalhes cURL: ' . $curl_error . '. Resposta: ' . $response_painel_tv;
                             error_log("ERRO HTTP (Painel TV - Exclusão): Status " . $http_code_painel_tv . " Resposta: " . $response_painel_tv . " cURL Error: " . $curl_error);
                         }
-// LOG
-                        $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'EXCLUSÃO', ?, ?, ?, GETDATE())");
-                        $stmtLog->execute([$id, json_encode(['arquivo' => $fileName]), $admin_id]);
-
                         $conn->commit();
                     } else {
                         $conn->rollBack();
@@ -387,11 +374,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 if ($stmt->execute()) {
                     $_SESSION['msg'] = 'Ordem de exibição atualizada com sucesso!';
-
-                    // LOG
-                     $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'ATUALIZAÇÃO ORDEM', ?, ?, ?, GETDATE())");
-                     $stmtLog->execute([$id, json_encode(['nova_ordem' => $newOrder]), $admin_id]);
-
                     error_log("SUCESSO: Ordem atualizada para ID " . $id . " no Reservm.");
                 } else {
                     $pdoErrorInfo = $stmt->errorInfo();
@@ -423,11 +405,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                     if ($stmt->execute($params)) {
                         $successCount = $stmt->rowCount();
-// LOG
-                         $log_acao = ($action === 'activate_multiple') ? 'ATIVAÇÃO EM MASSA' : 'DESATIVAÇÃO EM MASSA';
-                         $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', ?, 0, ?, ?, GETDATE())");
-                         $stmtLog->execute([$log_acao, json_encode(['ids' => $ids]), $admin_id]);
-
                         $conn->commit();
                         $_SESSION['msg'] = $successCount . ' publicidade(s) ' . ($status_to_set === 1 ? 'ativada(s)' : 'desativada(s)') . ' com sucesso no Reservm!';
                         error_log("SUCESSO: " . $successCount . " publicidade(s) " . ($status_to_set === 1 ? 'ativada(s)' : 'desativada(s)') . " no Reservm.");
@@ -518,10 +495,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     }
 
                     $conn->commit();
-// LOG
-                    $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'EXCLUSÃO EM MASSA', 0, ?, ?, GETDATE())");
-                    $stmtLog->execute([json_encode(['ids' => $idsToDelete]), $admin_id]);
-
                     $message = $deletedCount . ' publicidade(s) excluída(s) com sucesso';
                     if (!empty($fileErrors)) {
                         $message .= ' Alguns arquivos ou sincronizações com Painel TV falharam.';

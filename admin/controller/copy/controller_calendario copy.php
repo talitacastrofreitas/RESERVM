@@ -1,6 +1,6 @@
 <?php
 // controller_calendario.php
-// (VERSÃO COM LOG DE AUDITORIA ADICIONADO)
+// (VERSÃO CORRIGIDA ESTRUTURALMENTE E COM FIX DO INSERT)
 
 ob_start();
 header('Content-Type: application/json; charset=utf-8');
@@ -23,6 +23,7 @@ try {
             echo json_encode(['success' => false, 'message' => 'ID não fornecido.']);
             exit;
         }
+
         
         $sql = 'SELECT 
                     e.dbloq_id, 
@@ -72,14 +73,15 @@ try {
     // ==============================================
     elseif ($method === 'POST') {
         
-        $conn->beginTransaction(); // INICIA TRANSAÇÃO
-
+       
         $input = $_POST;
 
         // Pega o ID do usuário da sessão
         $userId = $_SESSION['reservm_admin_id'] ?? null; 
         if (!$userId) {
-            throw new Exception('Usuário não autenticado.');
+            http_response_code(403); 
+            echo json_encode(['success' => false, 'message' => 'Usuário não autenticado. Faça login novamente.']);
+            exit;
         }
 
         $id = $input['dbloq_id'] ?? null;
@@ -95,11 +97,12 @@ try {
         $status = isset($input['dbloq_status']) ? 1 : 0; 
 
         if (!$dataEvento || !$motivoId) {
-            throw new Exception('Data e Motivo são obrigatórios.');
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Data e Motivo são obrigatórios.']);
+            exit;
         }
 
         $isUpdate = !empty($id);
-        $log_acao = $isUpdate ? 'ATUALIZAÇÃO' : 'CADASTRO';
 
         if ($isUpdate) {
             // LÓGICA DE UPDATE
@@ -136,31 +139,12 @@ try {
 
         if ($isUpdate) {
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-            $id_final = $id;
         } else {
+           
             $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR); 
         }
         
         $stmt->execute();
-        
-        if (!$isUpdate) {
-            $id_final = $conn->lastInsertId();
-        }
-
-        // --- INSERÇÃO NO LOG ---
-        $log_dados = json_encode(['POST' => $_POST], JSON_UNESCAPED_UNICODE);
-        $sqlLog = "INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data)
-                   VALUES ('CALENDÁRIO', :acao, :id, :dados, :user_id, GETDATE())";
-        $stmtLog = $conn->prepare($sqlLog);
-        $stmtLog->execute([
-            ':acao' => $log_acao,
-            ':id' => $id_final,
-            ':dados' => $log_dados,
-            ':user_id' => $userId
-        ]);
-        // -----------------------
-
-        $conn->commit(); // CONFIRMA
         
         $message = $isUpdate ? 'Evento atualizado com sucesso!' : 'Evento cadastrado com sucesso!';
         
@@ -175,18 +159,20 @@ try {
     // ==============================================
     elseif ($method === 'DELETE') {
         
-        $conn->beginTransaction(); // INICIA TRANSAÇÃO
-
         // Segurança: Verifique o usuário
         $userId = $_SESSION['reservm_admin_id'] ?? null;
         if (!$userId) {
-            throw new Exception('Usuário não autenticado.');
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Usuário não autenticado.']);
+            exit;
         }
 
         // Pega o ID da URL 
         $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
         if (!$id) {
-            throw new Exception('ID não fornecido.');
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ID não fornecido.']);
+            exit;
         }
 
         $sql = "DELETE FROM conf_dias_bloqueadas WHERE dbloq_id = :id";
@@ -195,25 +181,9 @@ try {
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
-            
-            // --- INSERÇÃO NO LOG ---
-            $log_dados = json_encode(['GET' => $_GET], JSON_UNESCAPED_UNICODE);
-            $sqlLog = "INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data)
-                       VALUES ('CALENDÁRIO', 'EXCLUSÃO', :id, :dados, :user_id, GETDATE())";
-            $stmtLog = $conn->prepare($sqlLog);
-            $stmtLog->execute([
-                ':id' => $id,
-                ':dados' => $log_dados,
-                ':user_id' => $userId
-            ]);
-            // -----------------------
-
-            $conn->commit(); // CONFIRMA
-
             ob_clean();
             echo json_encode(['success' => true, 'message' => 'Evento excluído com sucesso!']);
         } else {
-            $conn->rollBack();
             ob_clean();
             http_response_code(404);
             echo json_encode(['success' => false, 'message' => 'Evento não encontrado ou já excluído.']);
@@ -221,7 +191,8 @@ try {
         exit;
     }
 
-    // Se não for GET nem POST nem DELETE
+    
+    // Se não for GET nem POST
     else {
         http_response_code(405); 
         echo json_encode(['success' => false, 'message' => 'Método de requisição inválido.']);
@@ -229,14 +200,11 @@ try {
     }
 
 } catch (Exception $e) {
-    if ($conn->inTransaction()) {
-        $conn->rollBack();
-    }
     ob_clean();
     http_response_code(500);
     echo json_encode([
         'success' => false, 
-        'message' => 'Erro interno: ' . $e->getMessage()
+        'message' => 'Erro interno do servidor: ' . $e->getMessage()
     ]);
     exit;
 }

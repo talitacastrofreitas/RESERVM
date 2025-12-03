@@ -8,8 +8,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || isset($_GET['acao'])) {
         
         $acao = $_REQUEST['acao'];
         $admin_id = $_SESSION['reservm_admin_id'] ?? 1;
-        $log_acao = '';
-        $log_id = 0;
 
         if ($acao == 'cadastrar') {
             $dt_ini = $_POST['data_inicio'];
@@ -19,9 +17,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || isset($_GET['acao'])) {
 
             $stmt = $conn->prepare("INSERT INTO conf_semestre_periodo (semp_data_inicio, semp_data_fim, semp_cad_id, semp_data_upd) VALUES (?, ?, ?, GETDATE())");
             $stmt->execute([$dt_ini, $dt_fim, $admin_id]);
-            
-            $log_id = $conn->lastInsertId();
-            $log_acao = 'CADASTRO';
             $_SESSION['msg'] = "Período cadastrado!";
 
         } elseif ($acao == 'editar') {
@@ -31,36 +26,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" || isset($_GET['acao'])) {
 
             $stmt = $conn->prepare("UPDATE conf_semestre_periodo SET semp_data_inicio = ?, semp_data_fim = ?, semp_cad_id = ?, semp_data_upd = GETDATE() WHERE semp_id = ?");
             $stmt->execute([$dt_ini, $dt_fim, $admin_id, $id]);
-            
-            $log_id = $id;
-            $log_acao = 'ATUALIZAÇÃO';
             $_SESSION['msg'] = "Período atualizado!";
 
         } elseif ($acao == 'deletar') {
             $id = $_GET['id'];
             $conn->prepare("DELETE FROM conf_semestre_periodo WHERE semp_id = ?")->execute([$id]);
-            
-            $log_id = $id;
-            $log_acao = 'EXCLUSÃO';
             $_SESSION['msg'] = "Período excluído!";
         }
-
-        // --- REGISTRO NO LOG ---
-        if ($log_acao !== '') {
-            $log_dados = ['POST' => $_POST, 'GET' => $_GET];
-            $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES (?, ?, ?, ?, ?, GETDATE())");
-            $stmtLog->execute(['SEMESTRE/PERIODO', $log_acao, $log_id, json_encode($log_dados, JSON_UNESCAPED_UNICODE), $admin_id]);
-        }
-        // -----------------------
 
         $conn->commit();
         header("Location: ../conf_semestre_periodo.php");
         exit();
 
     } catch (Exception $e) {
-        if ($conn->inTransaction()) {
-            $conn->rollBack();
-        }
+        $conn->rollBack();
         $_SESSION['erro'] = "Erro: " . $e->getMessage();
         header("Location: ../conf_semestre_periodo.php");
         exit();

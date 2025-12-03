@@ -19,51 +19,45 @@ if (isset($_GET['funcao']) && $_GET['funcao'] == "CadConfig") {
   try {
     $conn->beginTransaction(); // INICIA A TRANSAÇÃO
 
-    // PREPARA A QUERY DE ATUALIZAÇÃO
+    // ATUALIZA OS DADOS
     $sql = "UPDATE propostas_categorias SET propc_status = :propc_status, propc_msg = :propc_msg WHERE propc_id = :propc_id";
     $stmt = $conn->prepare($sql);
 
-    // PREPARA A QUERY DE LOG (Para ser executada dentro do loop)
-    $sqlLog = "INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data)
-               VALUES (:modulo, :acao, :acao_id, :dados, :user_id, GETDATE())";
-    $stmtLog = $conn->prepare($sqlLog);
-
-    // INICIALIZA TODOS OS REGISTROS COM 0 ANTES DE APLICAR AS ATUALIZAÇÕES DOS CHECKBOXES
+    // INICIALIZA TODOS OS REGISTROS COM 0 ANTES DE APLICAR AS ATUALIZAÇÕES DOS CHECHBOXES
     $resetSql = "UPDATE propostas_categorias SET propc_status = 0, propc_msg = :propc_msg";
     $stmtReset = $conn->prepare($resetSql);
     $stmtReset->execute([':propc_msg' => $propc_msg]);
 
     // LOOP
     foreach ($propc_id as $id => $valor) {
-      // 1. Executa a Atualização
       $stmt->execute([
         ':propc_status' => $valor,
         ':propc_msg' => $propc_msg,
         ':propc_id' => $id
       ]);
-
-      // 2. Executa o Log (Agora descomentado e funcional)
-      $stmtLog->execute([
-        ':modulo'    => 'CONFIGURAÇÕES',
-        ':acao'      => 'ATUALIZAÇÃO', // Ajustado para refletir a ação real (Update)
-        ':acao_id'   => $id,           // Usa o ID específico do item
-        ':dados'     => 'ID: ' . $id . '; Status: ' . $valor . '; Mensagem: ' . $propc_msg,
-        ':user_id'   => $reservm_admin_id
-      ]);
     }
 
-    $conn->commit(); // SE TUDO CORRER BEM, CONFIRMA
+    // REGISTRA AÇÃO NO LOG
+    // $stmt = $conn->prepare('INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data )
+    //                         VALUES (:modulo, :acao, :acao_id, :dados, :user_id, GETDATE())');
+    // $stmt->execute([
+    //   ':modulo'    => 'CONFIGURAÇÕES',
+    //   ':acao'      => 'CADASTRO',
+    //   ':acao_id'   => $propc_id,
+    //   ':dados'     => 'ID; ' . $id . '; Status: ' . $valor . '; Mensagem: ' . $propc_msg,
+    //   ':user_id'   => $reservm_admin_id
+    // ]);
+    // -------------------------------
+
+    $conn->commit(); // SE LOG FOR REGISTRADO CORRETAMENTE, REALIZA A AÇÃO
 
     $_SESSION["msg"] = "Configuração realizada!";
     header(sprintf('location: %s', $_SERVER['HTTP_REFERER']));
-    
   } catch (PDOException $e) {
     // echo "Erro: " . $e->getMessage();
-    if ($conn->inTransaction()) {
-        $conn->rollBack();
-    }
-    $_SESSION["erro"] = "Configuração não realizada! " . $e->getMessage();
+    $conn->rollBack();
+    $_SESSION["erro"] = "Configuração não realizado!" . $e->getMessage();
     header(sprintf('location: %s', $_SERVER['HTTP_REFERER']));
   }
+  // }
 }
-?>
