@@ -5,28 +5,30 @@ $admin_id = $_SESSION['id_usuario'] ?? $_SESSION['colaborador_id'] ?? $_SESSION[
 include '../../conexao/conexao.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-// Carregamento do Dotenv
+// $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../..');
+// $dotenv->load();
+// Sobe 2 níveis a partir de admin/controller (admin -> raiz)
 $dotenvCandidateDirs = [
     '/etc/reservm',                  // Linux recomendado (prioridade 1)
     'C:\\xampp\\etc\\reservm',       // Windows/XAMPP (prioridade 2)
 ];
-$dotenv = Dotenv\Dotenv::createImmutable($dotenvCandidateDirs);
-$dotenv->load();
+   $dotenv = Dotenv\Dotenv::createImmutable($dotenvCandidateDirs);
+    $dotenv->load();
 
 // Tenta pegar FULL_URL, se não existir, pega PAINEL_TV_BASE_URL
 $url_api_painel = $_ENV['PAINEL_TV_API_FULL_URL'] ?? $_ENV['PAINEL_TV_BASE_URL'] ?? '';
 
-// Remove espaços em branco que causam "Malformed input" no cURL
+// Remove espaços em branco que causam "Malformed input"
 define('PAINEL_TV_API_BASE_URL', trim($url_api_painel));
+
 define('PAINEL_TV_API_KEY', $_ENV['PAINEL_TV_API_KEY']);
 
 $url_sistema = $_ENV['RESERVM_BASE_URL'];
 
-// Diretorio de upload local no Reservm (Relativo ao arquivo controller)
+// Diretorio de upload local no Reservm
 $uploadDirLocalReservm = '../includes/files/banners/';
 error_log("Diretório de Upload LOCAL (Reservm) definido como: " . $uploadDirLocalReservm);
 
-// Verifica e cria diretório se necessário
 if (!is_dir($uploadDirLocalReservm)) {
     error_log("Diretório de upload LOCAL NÃO existe. Tentando criar: " . $uploadDirLocalReservm);
     if (!mkdir($uploadDirLocalReservm, 0777, true)) {
@@ -54,15 +56,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     error_log("Ação recebida: " . $action);
 
     switch ($action) {
-        // --- ADICIONAR PUBLICIDADE ---
         case 'add_publicidade':
             error_log("Iniciando 'add_publicidade' case (Reservm).");
             if (isset($_POST['tituloPublicidade']) && isset($_FILES['uploadArquivo'])) {
                 $titulo = trim($_POST['tituloPublicidade'] ?? '');
-               $duracao = !empty($_POST['duracao']) ? (int)$_POST['duracao'] : 10;
                 $file = $_FILES['uploadArquivo'];
 
-                // --- VALIDAÇÕES DO ARQUIVO ---
+                // --- VALIDAÇÕES DO ARQUIVO (MANTIDAS NO RESERVM) ---
                 if ($file['error'] !== UPLOAD_ERR_OK) {
                     $uploadErrors = [UPLOAD_ERR_INI_SIZE => 'O arquivo excede o tamanho máximo permitido no php.ini.', UPLOAD_ERR_FORM_SIZE => 'O arquivo excede o tamanho máximo especificado no formulário HTML.', UPLOAD_ERR_PARTIAL => 'O upload do arquivo foi feito apenas parcialmente.', UPLOAD_ERR_NO_FILE => 'Nenhum arquivo foi enviado.', UPLOAD_ERR_NO_TMP_DIR => 'Faltando uma pasta temporária para o upload.', UPLOAD_ERR_CANT_WRITE => 'Falha ao gravar o arquivo em disco.', UPLOAD_ERR_EXTENSION => 'Uma extensão do PHP interrompeu o upload do arquivo.'];
                     $errorMessage = $uploadErrors[$file['error']] ?? 'Erro de upload desconhecido (' . $file['error'] . ').';
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 error_log("MIME Type detectado: " . $mimeType);
                 if (!in_array($mimeType, $allowedTypes)) {
-                    $_SESSION['erro'] = 'Tipo de arquivo não permitido. Apenas imagens e vídeos MP4/WEBM são aceitos. MIME detectado: ' . $mimeType;
+                    $_SESSION['erro'] = 'Tipo de arquivo não permitido. Apenas imagens (JPG, PNG, GIF) e Vídeos (MP4, WEBM) são aceitos. MIME detectado: ' . $mimeType;
                     error_log($_SESSION['erro']);
                     header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
                     exit;
@@ -100,67 +100,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 if (in_array($mimeType, $allowedVideoTypes)) {
                     $mediaType = 'video';
                 }
+                error_log("Media Type definido como: " . $mediaType);
+
 
                 $originalFileNameBase = basename($file['name']);
                 $finalFileName = uniqid() . '_' . $originalFileNameBase;
 
                 $targetFilePathLocalReservm = $uploadDirLocalReservm . $finalFileName;
+                error_log("Nome do arquivo ÚNICO gerado para todos: " . $finalFileName);
+                error_log("Caminho de destino completo (local Reservm): " . $targetFilePathLocalReservm);
+                error_log("Caminho temporário do arquivo: " . $file['tmp_name']);
 
                 if (empty($titulo)) {
                     $titulo = pathinfo($originalFileNameBase, PATHINFO_FILENAME);
+                    error_log("Título ajustado para: " . $titulo);
                 }
 
-                // Move arquivo para pasta local do Reservm
+
                 if (move_uploaded_file($file['tmp_name'], $targetFilePathLocalReservm)) {
                     error_log("SUCESSO: Arquivo movido para o local no Reservm: " . $targetFilePathLocalReservm);
 
                     try {
+
                         $caminho_para_bd_compartilhado = 'files/banners/' . $finalFileName;
 
                         $stmt = $conn->query("SELECT ISNULL(MAX(ordem_exibicao), 0) + 1 AS next_order FROM publicidades");
                         $nextOrder = $stmt->fetch(PDO::FETCH_ASSOC)['next_order'];
+                        error_log("Próxima ordem de exibição (Reservm): " . $nextOrder);
 
-                        // $stmt = $conn->prepare("INSERT INTO publicidades (caminho_imagem, titulo, ativo, ordem_exibicao, media_type) VALUES (:caminho_imagem, :titulo, 1, :ordem_exibicao, :media_type)");
-                        // $stmt->bindParam(':caminho_imagem', $caminho_para_bd_compartilhado);
-                        // $stmt->bindParam(':titulo', $titulo);
-                        // $stmt->bindParam(':ordem_exibicao', $nextOrder, PDO::PARAM_INT);
-                        // $stmt->bindParam(':media_type', $mediaType);
+                        $stmt = $conn->prepare("INSERT INTO publicidades (caminho_imagem, titulo, ativo, ordem_exibicao, media_type) VALUES (:caminho_imagem, :titulo, 1, :ordem_exibicao, :media_type)");
+                        $stmt->bindParam(':caminho_imagem', $caminho_para_bd_compartilhado);
+                        $stmt->bindParam(':titulo', $titulo);
+                        $stmt->bindParam(':ordem_exibicao', $nextOrder, PDO::PARAM_INT);
+                        $stmt->bindParam(':media_type', $mediaType);
 
-                        $stmt = $conn->prepare("INSERT INTO publicidades (caminho_imagem, titulo, ativo, ordem_exibicao, media_type, duracao) VALUES (:caminho_imagem, :titulo, 1, :ordem_exibicao, :media_type, :duracao)");
-    $stmt->bindParam(':caminho_imagem', $caminho_para_bd_compartilhado);
-    $stmt->bindParam(':titulo', $titulo);
-    $stmt->bindParam(':ordem_exibicao', $nextOrder, PDO::PARAM_INT);
-    $stmt->bindParam(':media_type', $mediaType);
-    $stmt->bindParam(':duracao', $duracao, PDO::PARAM_INT); // NOVO BIND
+                      if ($stmt->execute()) {
+    // ADICIONE ESTA LINHA:
+    $last_id = $conn->lastInsertId(); 
 
-                        if ($stmt->execute()) {
-                            $last_id = $conn->lastInsertId();
-                            $_SESSION['msg'] = 'Publicidade adicionada com sucesso!';
+    $_SESSION['msg'] = 'Publicidade adicionada com sucesso!';
 
-                            // Log da Ação
-                            $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'CADASTRO', ?, ?, ?, GETDATE())");
-                            $stmtLog->execute([$last_id, json_encode(['titulo' => $titulo, 'file' => $finalFileName]), $admin_id]);
-
-                            error_log("SUCESSO: Dados inseridos no banco. Iniciando cURL para Painel.");
-
-                            // =================================================================================
-                            // CORREÇÃO CRÍTICA PARA WINDOWS/XAMPP: Caminho Absoluto para CURLFile
-                            // =================================================================================
-                            $caminhoAbsoluto = realpath($targetFilePathLocalReservm);
-                            
-                            // Fallback caso realpath falhe por algum motivo
-                            if (!$caminhoAbsoluto) {
-                                $caminhoAbsoluto = __DIR__ . '/../includes/files/banners/' . $finalFileName;
-                            }
+    // LOG (agora $last_id terá valor)
+    $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'CADASTRO', ?, ?, ?, GETDATE())");
+    $stmtLog->execute([$last_id, json_encode(['titulo' => $titulo, 'file' => $finalFileName]), $admin_id]);
+                            error_log("SUCESSO: Dados inseridos no banco de dados pelo Reservm. Caminho BD: " . $caminho_para_bd_compartilhado);
 
                             $ch = curl_init();
                             curl_setopt($ch, CURLOPT_URL, PAINEL_TV_API_BASE_URL);
                             curl_setopt($ch, CURLOPT_POST, true);
-                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Retorna a resposta
                             curl_setopt($ch, CURLOPT_POSTFIELDS, [
                                 'operation' => 'add_or_update_file',
-                                // Usa o caminho absoluto aqui:
-                                'file' => new CURLFile($caminhoAbsoluto, $mimeType, $finalFileName),
+                                'file' => new CURLFile($targetFilePathLocalReservm, $mimeType, $finalFileName),
                                 'final_file_name' => $finalFileName,
                                 'api_key' => PAINEL_TV_API_KEY
                             ]);
@@ -173,54 +164,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             if ($http_code_painel_tv === 200) {
                                 $data_response_painel_tv = json_decode($response_painel_tv, true);
                                 if (isset($data_response_painel_tv['status']) && $data_response_painel_tv['status'] === 'success') {
-                                    error_log("SUCESSO: Painel TV confirmou recebimento.");
+                                    error_log("SUCESSO: Arquivo enviado e registrado no Painel TV. Resposta: " . print_r($data_response_painel_tv, true));
                                 } else {
-                                    $_SESSION['atencao'] = 'Publicidade salva, mas erro no Painel TV: ' . ($data_response_painel_tv['message'] ?? 'Erro desconhecido.');
-                                    error_log("ERRO API Painel TV: " . print_r($data_response_painel_tv, true));
+                                    $_SESSION['atencao'] = 'Publicidade adicionada no Reservm, mas erro ao sincronizar arquivo com Painel TV: ' . ($data_response_painel_tv['message'] ?? 'Erro desconhecido.');
+                                    error_log("ERRO (Resposta Painel TV - Sincronização): " . print_r($data_response_painel_tv, true));
                                 }
                             } else {
-                                $_SESSION['atencao'] = 'Publicidade salva, mas falha de comunicação com Painel TV. HTTP: ' . $http_code_painel_tv;
-                                error_log("ERRO HTTP cURL: " . $curl_error . " | Resp: " . $response_painel_tv);
+                                $_SESSION['atencao'] = 'Publicidade adicionada no Reservm, mas erro de comunicação com Painel TV: (HTTP Status: ' . $http_code_painel_tv . '). Detalhes cURL: ' . $curl_error . '. Resposta: ' . $response_painel_tv;
+                                error_log("ERRO HTTP (Painel TV - Sincronização): Status " . $http_code_painel_tv . " Resposta: " . $response_painel_tv . " cURL Error: " . $curl_error);
                             }
 
                         } else {
-                            // Falha no INSERT
                             $pdoErrorInfo = $stmt->errorInfo();
-                            $_SESSION['erro'] = 'Erro ao salvar no banco. Detalhes: ' . ($pdoErrorInfo[2] ?? 'N/A');
-                            error_log("ERRO PDO Insert: " . print_r($pdoErrorInfo, true));
-                            if (file_exists($targetFilePathLocalReservm)) unlink($targetFilePathLocalReservm);
+                            $_SESSION['erro'] = 'Erro ao salvar publicidade no banco de dados. Detalhes: ' . ($pdoErrorInfo[2] ?? 'Erro desconhecido.');
+                            error_log("ERRO PDO (execute falhou): " . print_r($pdoErrorInfo, true));
+                            if (file_exists($targetFilePathLocalReservm)) {
+                                unlink($targetFilePathLocalReservm);
+                                error_log("Arquivo local removido após falha na inserção no BD: " . $targetFilePathLocalReservm);
+                            }
                         }
                     } catch (PDOException $e) {
-                        $_SESSION['erro'] = 'Erro interno: ' . $e->getMessage();
-                        error_log("ERRO PDO Exception: " . $e->getMessage());
-                        if (file_exists($targetFilePathLocalReservm)) unlink($targetFilePathLocalReservm);
+                        $_SESSION['erro'] = 'Erro interno do servidor ao adicionar publicidade: ' . $e->getMessage();
+                        error_log("ERRO PDO (Exception): " . $e->getMessage());
+                        if (file_exists($targetFilePathLocalReservm)) {
+                            unlink($targetFilePathLocalReservm);
+                            error_log("Arquivo local removido após exceção PDO: " . $targetFilePathLocalReservm);
+                        }
                     }
                 } else {
-                    $_SESSION['erro'] = 'Erro ao mover arquivo para pasta local.';
-                    error_log("FALHA move_uploaded_file: " . $targetFilePathLocalReservm);
+                    $_SESSION['erro'] = 'Erro ao mover o arquivo para o diretório local do Reservm.';
+                    error_log("FALHA: move_uploaded_file() local do Reservm falhou. Erro detalhado: " . (error_get_last()['message'] ?? 'N/A') . " Caminho: " . $targetFilePathLocalReservm);
                 }
             } else {
-                $_SESSION['erro'] = 'Dados incompletos.';
+                $_SESSION['erro'] = 'Dados incompletos para adicionar publicidade.';
+                error_log($_SESSION['erro'] . " POST: " . print_r($_POST, true) . " FILES: " . print_r($_FILES, true));
             }
             header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
             exit;
             break;
 
-        // --- EDITAR PUBLICIDADE ---
         case 'toggle_status_single':
             error_log("Iniciando 'update_publicidade' case (Reservm).");
             if (isset($_POST['id']) && isset($_POST['titulo'])) {
                 $id = (int) $_POST['id'];
                 $newTitulo = trim($_POST['titulo']);
-$newDuracao = !empty($_POST['duracao']) ? (int)$_POST['duracao'] : 10; // NOVO
                 $newAtivo = isset($_POST['ativo']) ? (int) $_POST['ativo'] : 0;
                 $caminhoImagemOriginal = $_POST['caminho_imagem_original'] ?? '';
                 $mediaTypeOriginal = $_POST['media_type_original'] ?? '';
                 $caminhoImagemAtualizado = $caminhoImagemOriginal;
                 $mediaTypeAtualizado = $mediaTypeOriginal;
+
                 $fileNameOriginal = basename($caminhoImagemOriginal);
 
-                // SE UM NOVO ARQUIVO FOI ENVIADO
+                // VERIFICA SE UM NOVO ARQUIVO FOI ENVIADO
                 if (isset($_FILES['novo_arquivo']) && $_FILES['novo_arquivo']['error'] == UPLOAD_ERR_OK) {
                     $novoArquivo = $_FILES['novo_arquivo'];
                     $fileExtension = strtolower(pathinfo($novoArquivo['name'], PATHINFO_EXTENSION));
@@ -232,15 +228,16 @@ $newDuracao = !empty($_POST['duracao']) ? (int)$_POST['duracao'] : 10; // NOVO
                     if (move_uploaded_file($novoArquivo['tmp_name'], $targetPath)) {
                         $caminhoImagemAtualizado = 'files/banners/' . $fileName;
 
-                        // 1. Exclui arquivo antigo Local
+                        // 1. EXCLUI O ARQUIVO ANTIGO DO RESERVM
                         if (!empty($caminhoImagemOriginal)) {
                             $caminhoCompletoAntigo = $uploadDirLocalReservm . basename($caminhoImagemOriginal);
                             if (file_exists($caminhoCompletoAntigo)) {
                                 unlink($caminhoCompletoAntigo);
+                                error_log("SUCESSO: Arquivo antigo removido do Reservm: " . $caminhoCompletoAntigo);
                             }
                         }
 
-                        // 2. Avisa Painel para excluir antigo
+                        // 2. NOTIFICA O PAINEL TV PARA EXCLUIR O ARQUIVO ANTIGO
                         if (!empty($fileNameOriginal)) {
                             $ch = curl_init();
                             curl_setopt($ch, CURLOPT_URL, PAINEL_TV_API_BASE_URL);
@@ -251,98 +248,95 @@ $newDuracao = !empty($_POST['duracao']) ? (int)$_POST['duracao'] : 10; // NOVO
                                 'file_name' => $fileNameOriginal,
                                 'api_key' => PAINEL_TV_API_KEY
                             ]);
-                            curl_exec($ch);
+                            $response_painel_tv = curl_exec($ch);
                             curl_close($ch);
+                            error_log("INFO: Solicitação de exclusão do arquivo antigo enviada ao Painel TV. Resposta: " . $response_painel_tv);
                         }
 
-                        // 3. Envia novo arquivo para Painel (COM CORREÇÃO DE CAMINHO ABSOLUTO)
-                        $caminhoAbsolutoEdit = realpath($targetPath);
-                        if (!$caminhoAbsolutoEdit) {
-                             $caminhoAbsolutoEdit = __DIR__ . '/../includes/files/banners/' . $fileName;
-                        }
-
+                        // 3. NOTIFICA O PAINEL TV PARA ADICIONAR O NOVO ARQUIVO
                         $ch = curl_init();
                         curl_setopt($ch, CURLOPT_URL, PAINEL_TV_API_BASE_URL);
                         curl_setopt($ch, CURLOPT_POST, true);
                         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                         curl_setopt($ch, CURLOPT_POSTFIELDS, [
                             'operation' => 'add_or_update_file',
-                            // Usa caminho absoluto aqui
-                            'file' => new CURLFile($caminhoAbsolutoEdit, $novoArquivo['type'], $fileName),
+                            'file' => new CURLFile($targetPath, $novoArquivo['type'], $fileName),
                             'final_file_name' => $fileName,
                             'api_key' => PAINEL_TV_API_KEY
                         ]);
-                        curl_exec($ch);
+                        $response_painel_tv = curl_exec($ch);
                         curl_close($ch);
+                        error_log("INFO: Solicitação de adição do novo arquivo enviada ao Painel TV. Resposta: " . $response_painel_tv);
 
                     } else {
                         $_SESSION['erro'] = 'Erro ao fazer upload do novo arquivo.';
+                        error_log($_SESSION['erro']);
                         header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
                         exit;
                     }
                 }
 
                 try {
-                    // 4. Atualiza BD
-                    // $stmt = $conn->prepare("UPDATE publicidades SET titulo = :titulo, ativo = :ativo, caminho_imagem = :caminho_imagem, media_type = :media_type WHERE id = :id");
-                    // $stmt->bindParam(':titulo', $newTitulo);
-                    // $stmt->bindParam(':ativo', $newAtivo, PDO::PARAM_INT);
-                    // $stmt->bindParam(':caminho_imagem', $caminhoImagemAtualizado);
-                    // $stmt->bindParam(':media_type', $mediaTypeAtualizado);
-                    // $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-                    $stmt = $conn->prepare("UPDATE publicidades SET titulo = :titulo, ativo = :ativo, caminho_imagem = :caminho_imagem, media_type = :media_type, duracao = :duracao WHERE id = :id");
-    
-    $stmt->bindParam(':titulo', $newTitulo);
-    $stmt->bindParam(':ativo', $newAtivo, PDO::PARAM_INT);
-    $stmt->bindParam(':caminho_imagem', $caminhoImagemAtualizado);
-    $stmt->bindParam(':media_type', $mediaTypeAtualizado);
-    $stmt->bindParam(':duracao', $newDuracao, PDO::PARAM_INT); // NOVO BIND
-    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+                    // 4. Atualiza o banco de dados
+                    $stmt = $conn->prepare("UPDATE publicidades SET titulo = :titulo, ativo = :ativo, caminho_imagem = :caminho_imagem, media_type = :media_type WHERE id = :id");
+                    $stmt->bindParam(':titulo', $newTitulo);
+                    $stmt->bindParam(':ativo', $newAtivo, PDO::PARAM_INT);
+                    $stmt->bindParam(':caminho_imagem', $caminhoImagemAtualizado);
+                    $stmt->bindParam(':media_type', $mediaTypeAtualizado);
+                    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
                     if ($stmt->execute()) {
                         $_SESSION['msg'] = 'Publicidade atualizada com sucesso!';
-                        
-                        // LOG
+// LOG
                         $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'ATUALIZAÇÃO', ?, ?, ?, GETDATE())");
                         $stmtLog->execute([$id, json_encode($_POST), $admin_id]);
 
+                        error_log("SUCESSO: Publicidade ID " . $id . " atualizada no Reservm.");
                     } else {
-                        $pdoInfo = $stmt->errorInfo();
-                        $_SESSION['erro'] = 'Erro ao atualizar BD: ' . $pdoInfo[2];
+                        $pdoErrorInfo = $stmt->errorInfo();
+                        $_SESSION['erro'] = 'Erro ao atualizar publicidade no banco de dados. Detalhes: ' . ($pdoErrorInfo[2] ?? 'Erro desconhecido.');
+                        error_log("ERRO PDO (update_publicidade): " . print_r($pdoErrorInfo, true));
                     }
                 } catch (PDOException $e) {
-                    $_SESSION['erro'] = 'Erro interno: ' . $e->getMessage();
+                    $_SESSION['erro'] = 'Erro interno do servidor ao atualizar publicidade: ' . $e->getMessage();
+                    error_log("ERRO PDO (Exception update_publicidade): " . $e->getMessage());
                 }
             } else {
-                $_SESSION['erro'] = 'Dados incompletos.';
+                $_SESSION['erro'] = 'Dados incompletos para atualizar publicidade.';
+                error_log($_SESSION['erro'] . " POST: " . print_r($_POST, true));
             }
             header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
             exit;
             break;
 
 
-        // --- EXCLUIR SINGLE ---
         case 'delete_publicidade_single':
-            error_log("Iniciando 'delete_publicidade_single' case.");
+            error_log("Iniciando 'delete_publicidade_single' case (Reservm).");
             if (isset($_POST['id']) && isset($_POST['caminho'])) {
                 $id = (int) $_POST['id'];
                 $caminho_imagem_no_bd = $_POST['caminho'];
                 $fileName = basename($caminho_imagem_no_bd);
+
                 $filePathLocalReservm = $uploadDirLocalReservm . $fileName;
 
                 try {
                     $conn->beginTransaction();
+
                     $stmt = $conn->prepare("DELETE FROM publicidades WHERE id = :id");
                     $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
                     if ($stmt->execute()) {
-                        // Exclui local
+
                         if (file_exists($filePathLocalReservm)) {
-                            unlink($filePathLocalReservm);
+                            if (!unlink($filePathLocalReservm)) {
+                                error_log("AVISO: Falha ao excluir arquivo local no Reservm: " . $filePathLocalReservm);
+                            } else {
+                                error_log("SUCESSO: Arquivo local removido no Reservm: " . $filePathLocalReservm);
+                            }
+                        } else {
+                            error_log("AVISO: Arquivo local não encontrado no Reservm para exclusão (já ausente ou caminho incorreto): " . $filePathLocalReservm);
                         }
 
-                        // Solicita exclusão remota
                         $ch = curl_init();
                         curl_setopt($ch, CURLOPT_URL, PAINEL_TV_API_BASE_URL);
                         curl_setopt($ch, CURLOPT_POST, true);
@@ -352,126 +346,159 @@ $newDuracao = !empty($_POST['duracao']) ? (int)$_POST['duracao'] : 10; // NOVO
                             'file_name' => $fileName,
                             'api_key' => PAINEL_TV_API_KEY
                         ]);
-                        $resp = curl_exec($ch);
-                        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+                        $response_painel_tv = curl_exec($ch);
+                        $http_code_painel_tv = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                        $curl_error = curl_error($ch);
                         curl_close($ch);
 
-                        if ($httpCode === 200) {
-                            $dataResp = json_decode($resp, true);
-                            if (isset($dataResp['status']) && $dataResp['status'] === 'success') {
-                                $_SESSION['msg'] = 'Excluído com sucesso!';
+                        if ($http_code_painel_tv === 200) {
+                            $data_response_painel_tv = json_decode($response_painel_tv, true);
+                            if (isset($data_response_painel_tv['status']) && $data_response_painel_tv['status'] === 'success') {
+                                $_SESSION['msg'] = 'Publicidade excluída com sucesso do Reservm e Painel TV!';
+                                error_log("SUCESSO: Comando de exclusão enviado e processado pelo Painel TV. Resposta: " . print_r($data_response_painel_tv, true));
                             } else {
-                                $_SESSION['atencao'] = 'Excluído localmente, mas erro remoto: ' . ($dataResp['message'] ?? 'Erro');
+                                $_SESSION['atencao'] = 'Publicidade excluída do Reservm, mas erro ao sincronizar exclusão com Painel TV: ' . ($data_response_painel_tv['message'] ?? 'Erro desconhecido.');
+                                error_log("ERRO (Resposta Painel TV - Exclusão): " . print_r($data_response_painel_tv, true));
                             }
                         } else {
-                            $_SESSION['atencao'] = 'Excluído localmente, mas erro de comunicação remota. HTTP: ' . $httpCode;
+                            $_SESSION['atencao'] = 'Publicidade excluída do Reservm, mas erro de comunicação com Painel TV para exclusão: (HTTP Status: ' . $http_code_painel_tv . '). Detalhes cURL: ' . $curl_error . '. Resposta: ' . $response_painel_tv;
+                            error_log("ERRO HTTP (Painel TV - Exclusão): Status " . $http_code_painel_tv . " Resposta: " . $response_painel_tv . " cURL Error: " . $curl_error);
                         }
-
-                        // LOG
+// LOG
                         $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'EXCLUSÃO', ?, ?, ?, GETDATE())");
                         $stmtLog->execute([$id, json_encode(['arquivo' => $fileName]), $admin_id]);
 
                         $conn->commit();
                     } else {
                         $conn->rollBack();
-                        $_SESSION['erro'] = 'Erro ao excluir do BD.';
+                        $pdoErrorInfo = $stmt->errorInfo();
+                        $_SESSION['erro'] = 'Erro ao excluir publicidade do banco de dados. Detalhes: ' . ($pdoErrorInfo[2] ?? 'Erro desconhecido.');
+                        error_log("ERRO PDO (delete_publicidade_single): " . print_r($pdoErrorInfo, true));
                     }
                 } catch (PDOException $e) {
                     $conn->rollBack();
-                    $_SESSION['erro'] = 'Erro Exception: ' . $e->getMessage();
+                    $_SESSION['erro'] = 'Erro interno do servidor ao excluir publicidade: ' . $e->getMessage();
+                    error_log("ERRO PDO (Exception delete_publicidade_single): " . $e->getMessage());
                 }
             } else {
-                $_SESSION['atencao'] = 'Dados incompletos.';
+                $_SESSION['atencao'] = 'Dados incompletos para excluir publicidade.';
+                error_log($_SESSION['atencao']);
             }
             header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
             exit;
             break;
 
-        // --- ATUALIZAR ORDEM ---
         case 'update_order_single':
             try {
                 $id = (int) $_POST['id'];
                 $newOrder = (int) $_POST['new_order'];
+
                 $stmt = $conn->prepare("UPDATE publicidades SET ordem_exibicao = :new_order WHERE id = :id");
                 $stmt->bindParam(':new_order', $newOrder, PDO::PARAM_INT);
                 $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
                 if ($stmt->execute()) {
-                    $_SESSION['msg'] = 'Ordem atualizada!';
+                    $_SESSION['msg'] = 'Ordem de exibição atualizada com sucesso!';
+
                     // LOG
-                    $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'ATUALIZAÇÃO ORDEM', ?, ?, ?, GETDATE())");
-                    $stmtLog->execute([$id, json_encode(['nova_ordem' => $newOrder]), $admin_id]);
+                     $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'ATUALIZAÇÃO ORDEM', ?, ?, ?, GETDATE())");
+                     $stmtLog->execute([$id, json_encode(['nova_ordem' => $newOrder]), $admin_id]);
+
+                    error_log("SUCESSO: Ordem atualizada para ID " . $id . " no Reservm.");
                 } else {
-                    $_SESSION['erro'] = 'Erro ao atualizar ordem.';
+                    $pdoErrorInfo = $stmt->errorInfo();
+                    $_SESSION['erro'] = 'Erro ao atualizar ordem de exibição. Detalhes: ' . ($pdoErrorInfo[2] ?? 'Erro desconhecido.');
+                    error_log("ERRO PDO (update_order_single): " . print_r($pdoErrorInfo, true));
                 }
             } catch (PDOException $e) {
-                $_SESSION['erro'] = 'Erro Exception: ' . $e->getMessage();
+                $_SESSION['erro'] = 'Erro interno do servidor ao atualizar ordem: ' . $e->getMessage();
+                error_log("ERRO PDO (Exception update_order_single): " . $e->getMessage());
             }
             header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
             exit;
             break;
 
-        // --- AÇÕES EM MASSA (ATIVAR/DESATIVAR) ---
         case 'activate_multiple':
         case 'deactivate_multiple':
-            if (isset($_POST['selected_ids']) && !empty($_POST['selected_ids'])) {
+            error_log("Iniciando ação em massa (Reservm): " . $action);
+            if (isset($_POST['selected_ids']) && is_array($_POST['selected_ids']) && !empty($_POST['selected_ids'])) {
                 $ids = $_POST['selected_ids'];
-                $status = ($action === 'activate_multiple') ? 1 : 0;
-                try {
-                    $conn->beginTransaction();
-                    $placeholders = implode(',', array_fill(0, count($ids), '?'));
-                    $stmt = $conn->prepare("UPDATE publicidades SET ativo = ? WHERE id IN ($placeholders)");
-                    $params = array_merge([$status], $ids);
-                    if ($stmt->execute($params)) {
-                        $count = $stmt->rowCount();
-                        // LOG
-                        $log_acao = ($action === 'activate_multiple') ? 'ATIVAÇÃO EM MASSA' : 'DESATIVAÇÃO EM MASSA';
-                        $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', ?, 0, ?, ?, GETDATE())");
-                        $stmtLog->execute([$log_acao, json_encode(['ids' => $ids]), $admin_id]);
-                        
-                        $conn->commit();
-                        $_SESSION['msg'] = "$count registros atualizados.";
-                    } else {
-                        $conn->rollBack();
-                        $_SESSION['erro'] = 'Erro ao atualizar em massa.';
-                    }
-                } catch (PDOException $e) {
-                    $conn->rollBack();
-                    $_SESSION['erro'] = 'Erro Exception: ' . $e->getMessage();
-                }
-            } else {
-                $_SESSION['atencao'] = 'Nenhum item selecionado.';
-            }
-            header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
-            exit;
-            break;
-
-        // --- EXCLUSÃO EM MASSA ---
-        case 'delete_multiple':
-            if (isset($_POST['selected_ids']) && !empty($_POST['selected_ids'])) {
-                $idsToDelete = $_POST['selected_ids'];
-                $deletedCount = 0;
+                $status_to_set = ($action === 'activate_multiple') ? 1 : 0;
+                $successCount = 0;
                 $errors = [];
 
                 try {
                     $conn->beginTransaction();
+                    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                    $stmt = $conn->prepare("UPDATE publicidades SET ativo = ? WHERE id IN ($placeholders)");
+                    $params = array_merge([$status_to_set], $ids);
+
+                    if ($stmt->execute($params)) {
+                        $successCount = $stmt->rowCount();
+// LOG
+                         $log_acao = ($action === 'activate_multiple') ? 'ATIVAÇÃO EM MASSA' : 'DESATIVAÇÃO EM MASSA';
+                         $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', ?, 0, ?, ?, GETDATE())");
+                         $stmtLog->execute([$log_acao, json_encode(['ids' => $ids]), $admin_id]);
+
+                        $conn->commit();
+                        $_SESSION['msg'] = $successCount . ' publicidade(s) ' . ($status_to_set === 1 ? 'ativada(s)' : 'desativada(s)') . ' com sucesso no Reservm!';
+                        error_log("SUCESSO: " . $successCount . " publicidade(s) " . ($status_to_set === 1 ? 'ativada(s)' : 'desativada(s)') . " no Reservm.");
+                    } else {
+                        $conn->rollBack();
+                        $pdoErrorInfo = $stmt->errorInfo();
+                        $_SESSION['erro'] = 'Erro ao atualizar status em massa no banco de dados. Detalhes: ' . ($pdoErrorInfo[2] ?? 'Erro desconhecido.');
+                        error_log("ERRO PDO (activate/deactivate_multiple): " . print_r($pdoErrorInfo, true));
+                    }
+                } catch (PDOException $e) {
+                    $conn->rollBack();
+                    $_SESSION['erro'] = 'Erro interno do servidor ao ativar/desativar publicidades: ' . $e->getMessage();
+                    error_log("ERRO PDO (Exception activate/deactivate_multiple): " . $e->getMessage());
+                }
+            } else {
+                $_SESSION['atencao'] = 'Nenhum item selecionado para ativar/desativar.';
+                error_log($_SESSION['atencao']);
+            }
+            header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
+            exit;
+            break;
+
+        case 'delete_multiple':
+            error_log("Iniciando 'delete_multiple' case (Reservm).");
+            if (isset($_POST['selected_ids']) && is_array($_POST['selected_ids']) && !empty($_POST['selected_ids'])) {
+                $idsToDelete = $_POST['selected_ids'];
+                $deletedCount = 0;
+                $fileErrors = [];
+
+                try {
+                    $conn->beginTransaction();
+
                     $placeholders = implode(',', array_fill(0, count($idsToDelete), '?'));
                     $stmt = $conn->prepare("SELECT id, caminho_imagem FROM publicidades WHERE id IN ($placeholders)");
                     $stmt->execute($idsToDelete);
-                    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    $itemsToDelete = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     $stmtDelete = $conn->prepare("DELETE FROM publicidades WHERE id = ?");
 
-                    foreach ($items as $item) {
+                    foreach ($itemsToDelete as $item) {
                         if ($stmtDelete->execute([$item['id']])) {
                             $deletedCount++;
-                            $fileName = basename($item['caminho_imagem']);
-                            $localPath = $uploadDirLocalReservm . $fileName;
+                            $caminho_imagem_no_bd = $item['caminho_imagem'];
 
-                            // Exclui local
-                            if (file_exists($localPath)) unlink($localPath);
 
-                            // Exclui remoto
+                            $fileName = basename($caminho_imagem_no_bd);
+
+                            $filePathLocalReservm = $uploadDirLocalReservm . $fileName;
+
+                            if (file_exists($filePathLocalReservm)) {
+                                if (!unlink($filePathLocalReservm)) {
+                                    $fileErrors[] = "Falha ao excluir arquivo local Reservm para ID {$item['id']}.";
+                                    error_log("Falha ao excluir arquivo local Reservm: " . $filePathLocalReservm);
+                                }
+                            } else {
+                                error_log("AVISO: Arquivo local Reservm não encontrado para ID {$item['id']}: " . $filePathLocalReservm);
+                            }
+
                             $ch = curl_init();
                             curl_setopt($ch, CURLOPT_URL, PAINEL_TV_API_BASE_URL);
                             curl_setopt($ch, CURLOPT_POST, true);
@@ -481,38 +508,65 @@ $newDuracao = !empty($_POST['duracao']) ? (int)$_POST['duracao'] : 10; // NOVO
                                 'file_name' => $fileName,
                                 'api_key' => PAINEL_TV_API_KEY
                             ]);
-                            curl_exec($ch);
+                            $response_painel_tv = curl_exec($ch);
+                            $http_code_painel_tv = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                            $curl_error = curl_error($ch);
                             curl_close($ch);
+
+                            if ($http_code_painel_tv === 200) {
+                                $data_response_painel_tv = json_decode($response_painel_tv, true);
+                                if (!(isset($data_response_painel_tv['status']) && $data_response_painel_tv['status'] === 'success')) {
+                                    $fileErrors[] = "Erro Painel TV ao excluir arquivo ID {$item['id']}: " . ($data_response_painel_tv['message'] ?? 'Erro desconhecido.');
+                                    error_log("ERRO (Resposta Painel TV - Exclusão em Massa): " . print_r($data_response_painel_tv, true));
+                                }
+                            } else {
+                                $fileErrors[] = "Erro de comunicação Painel TV ao excluir ID {$item['id']}: HTTP {$http_code_painel_tv}. Erro cURL: {$curl_error}.";
+                                error_log("ERRO HTTP (Painel TV - Exclusão em Massa): Status " . $http_code_painel_tv . " Resposta: " . $response_painel_tv . " cURL Error: " . $curl_error);
+                            }
                         } else {
-                            $errors[] = "Erro ao excluir ID {$item['id']}";
+                            $pdoErrorInfo = $stmtDelete->errorInfo();
+                            $fileErrors[] = "Falha ao excluir ID {$item['id']} do BD: " . ($pdoErrorInfo[2] ?? 'Erro desconhecido.');
+                            error_log("ERRO PDO (delete_multiple - delete): " . print_r($pdoErrorInfo, true));
                         }
                     }
+
                     $conn->commit();
-                    
-                    // LOG
+// LOG
                     $stmtLog = $conn->prepare("INSERT INTO log (log_modulo, log_acao, log_acao_id, log_dados, log_acao_user_id, log_data) VALUES ('PUBLICIDADE', 'EXCLUSÃO EM MASSA', 0, ?, ?, GETDATE())");
                     $stmtLog->execute([json_encode(['ids' => $idsToDelete]), $admin_id]);
 
-                    $_SESSION['msg'] = "$deletedCount itens excluídos.";
-                    if (!empty($errors)) $_SESSION['erro'] = implode(', ', $errors);
+                    $message = $deletedCount . ' publicidade(s) excluída(s) com sucesso';
+                    if (!empty($fileErrors)) {
+                        $message .= ' Alguns arquivos ou sincronizações com Painel TV falharam.';
+                        $_SESSION['erro'] = $message . ' Detalhes: ' . implode('; ', $fileErrors);
+                    } else {
+                        $_SESSION['msg'] = $message;
+                    }
+                    error_log("SUCESSO/ERRO EXCLUSÃO EM MASSA: " . $message);
 
                 } catch (PDOException $e) {
                     $conn->rollBack();
-                    $_SESSION['erro'] = 'Erro Exception: ' . $e->getMessage();
+                    $_SESSION['erro'] = 'Erro interno do servidor ao excluir publicidades em massa: ' . $e->getMessage();
+                    error_log("ERRO PDO (Exception delete_multiple): " . $e->getMessage());
                 }
             } else {
-                $_SESSION['atencao'] = 'Nenhum item selecionado.';
+                $_SESSION['atencao'] = 'Nenhum item selecionado para exclusão.';
+                error_log($_SESSION['atencao']);
             }
             header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
             exit;
             break;
 
         default:
-            $_SESSION['erro'] = 'Ação desconhecida.';
+            $_SESSION['erro'] = 'Ação não reconhecida: ' . $action;
+            error_log($_SESSION['erro']);
             header('Location: ' . $_SERVER['HTTP_REFERER'] ?? $url_sistema . '/admin/publicidades.php');
             exit;
+            break;
     }
 } else {
+    $_SESSION['erro'] = 'Acesso inválido ao script de ações.';
+    error_log($_SESSION['erro'] . " REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD'] . " ACTION: " . ($_POST['action'] ?? 'N/A'));
     header('Location: ' . $url_sistema . '/admin/publicidades.php');
     exit;
 }

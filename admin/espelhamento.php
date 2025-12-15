@@ -197,6 +197,7 @@ include 'includes/header.php';
                                 }
                                 ?>
                             </select>
+                             <div class="invalid-feedback">Este campo é obrigatório</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Período letivo de <strong>destino</strong> <span>*</span></label>
@@ -211,6 +212,7 @@ include 'includes/header.php';
                                 }
                                 ?>
                             </select>
+                             <div class="invalid-feedback">Este campo é obrigatório</div>
                         </div>
                     </div>
 
@@ -219,10 +221,12 @@ include 'includes/header.php';
                         <div class="col-md-6">
                             <label class="form-label">Data Início (Destino)<span>*</span></label>
                             <input type="text" class="form-control flatpickr_data" name="data_inicio_custom" required>
+                             <div class="invalid-feedback">Este campo é obrigatório</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Data Fim (Destino)<span>*</span></label>
                             <input type="text" class="form-control flatpickr_data" name="data_fim_custom" required>
+                             <div class="invalid-feedback">Este campo é obrigatório</div>
                         </div>
 
 

@@ -147,7 +147,7 @@ include 'includes/header.php';
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
                                                     <li>
-                                                        <a class="dropdown-item edit-publicidade-btn" href="#"
+                                                        <!-- <a class="dropdown-item edit-publicidade-btn" href="#"
                                                             data-bs-toggle="modal" data-bs-target="#modalEditarPublicidade"
                                                             data-id="<?= htmlspecialchars($pub['id']) ?>"
                                                             data-titulo="<?= htmlspecialchars($pub['titulo']) ?>"
@@ -156,7 +156,17 @@ include 'includes/header.php';
                                                             data-ativo="<?= htmlspecialchars($pub['ativo']) ?>"
                                                             data-preview-url="<?= $mediaPath ?>" title="Editar">
                                                             <i class="fa-regular fa-pen-to-square me-2"></i>Editar
-                                                        </a>
+                                                        </a> -->
+                                                        <a class="dropdown-item edit-publicidade-btn" href="#"
+   data-bs-toggle="modal" data-bs-target="#modalEditarPublicidade"
+   data-id="<?= htmlspecialchars($pub['id']) ?>"
+   data-titulo="<?= htmlspecialchars($pub['titulo']) ?>"
+   data-caminho-imagem="<?= htmlspecialchars($pub['caminho_imagem']) ?>"
+   data-media-type="<?= htmlspecialchars($pub['media_type']) ?>"
+   data-ativo="<?= htmlspecialchars($pub['ativo']) ?>"
+   data-duracao="<?= htmlspecialchars($pub['duracao']) ?>" data-preview-url="<?= $mediaPath ?>" title="Editar">
+   <i class="fa-regular fa-pen-to-square me-2"></i>Editar
+</a>
                                                     </li>
                                                     <li>
                                                         <a class="dropdown-item del-btn-publicidade" href="#"
@@ -209,16 +219,23 @@ include 'includes/header.php';
             </div>
             <div class="modal-body">
 
-                <div class="row justify-content-center m-0">
+            
+
+                <form id="formAdicionarPublicidadeModal" action="controller/controller_publicidades.php" method="POST"
+                    enctype="multipart/form-data" class="form_solicitacao needs-validation" novalidate>
+
+
+    <div class="row justify-content-center m-0 label_info label_info_verde mt-0 mb-3">
                     <div class="col-md-12">
 
-                        <div class="desc">
+                        <div class="">
                             <h6 class="text-uppercase">Instruções para Upload de Publicidade</h6>
 
                             <ol>
                                 <li class="mb-2">O preenchimento do título é <strong>opcional</strong>.</li>
                                 <li class="mb-2">Formatos aceitos: <strong>PNG, JPG, JPEG, GIF, MP4, WEBM</strong>.</li>
-                                <li>Tamanho máximo por arquivo: <strong>10 MB</strong>.</li>
+                                <li class="mb-2">Tamanho máximo por arquivo: <strong>10 MB</strong>.</li>
+                                <li><strong>Duração da publicidade: 15 segundos (valor padrão).</strong> O usuário pode ajustar a duração para mais ou menos tempo, conforme necessário.</li>
 
                             </ol>
 
@@ -226,10 +243,9 @@ include 'includes/header.php';
                     </div>
                 </div>
 
-                <form id="formAdicionarPublicidadeModal" action="controller/controller_publicidades.php" method="POST"
-                    enctype="multipart/form-data">
+
                     <input type="hidden" name="action" value="add_publicidade">
-                    <div class="modal-body">
+                    <!-- <div class="modal-body"> -->
                         <div class="col-12 mb-3">
                             <label for="tituloPublicidadeModal" class="form-label">Título</label>
                             <input type="text" class="form-control" id="tituloPublicidadeModal"
@@ -240,9 +256,16 @@ include 'includes/header.php';
                                     class="text-danger">*</small></label>
                             <input class="form-control" type="file" id="uploadArquivoModal" name="uploadArquivo"
                                 accept="image/*,video/mp4,video/webm" required>
+                                 <div class="invalid-feedback">Este campo é obrigatório</div>
                             <!-- <small class="text-muted">Formatos aceitos: Imagens (JPG, PNG, GIF) e Vídeos (MP4).</small> -->
                         </div>
-                    </div>
+
+                        <div class="col-12 mb-3">
+    <label for="duracaoPublicidadeModal" class="form-label">Duração (segundos)</label>
+    <input type="number" class="form-control" id="duracaoPublicidadeModal" name="duracao" value="10" min="5" required>
+    <small class="text-muted">Tempo padrão: 10 segundos.</small>
+</div>
+                    <!-- </div> -->
                     <div class="modal-footer">
                         <button type="button" class="btn botao btn-light waves-effect"
                             data-bs-dismiss="modal">Cancelar</button>
@@ -305,6 +328,10 @@ include 'includes/header.php';
                         <small class="form-text text-muted">A imagem/vídeo atual será substituído.</small>
                     </div>
 
+                    <div class="col-12 mb-3">
+    <label for="editPublicidadeDuracao" class="form-label">Duração (segundos)</label>
+    <input type="number" class="form-control" id="editPublicidadeDuracao" name="duracao" min="5" required>
+</div>
                     <!-- <div class="col-12 mb-3">
                         <div class="current-media-preview text-start">
                             <h6>Mídia Atual:</h6>
@@ -357,19 +384,21 @@ include 'includes/header.php';
         });
 
 
-        $(document).on('click', '.edit-publicidade-btn', function () {
-            const id = $(this).data('id');
-            const titulo = $(this).data('titulo');
-            const caminhoImagem = $(this).data('caminho-imagem');
-            const mediaType = $(this).data('media-type');
-            const ativo = $(this).data('ativo');
-            const previewUrl = $(this).data('preview-url');
-            $('#editPublicidadeId').val(id);
-            $('#editPublicidadeTitulo').val(titulo);
-            $('#editPublicidadeCaminhoOriginal').val(caminhoImagem);
-            $('#editPublicidadeMediaTypeOriginal').val(mediaType);
+       $(document).on('click', '.edit-publicidade-btn', function () {
+    const id = $(this).data('id');
+    const titulo = $(this).data('titulo');
+    const caminhoImagem = $(this).data('caminho-imagem');
+    const mediaType = $(this).data('media-type');
+    const ativo = $(this).data('ativo');
+    const duracao = $(this).data('duracao'); // NOVO
+    const previewUrl = $(this).data('preview-url');
 
-            $('#editPublicidadeAtivo').prop('checked', ativo == 1);
+    $('#editPublicidadeId').val(id);
+    $('#editPublicidadeTitulo').val(titulo);
+    $('#editPublicidadeDuracao').val(duracao); // NOVO: Preenche o input
+    $('#editPublicidadeCaminhoOriginal').val(caminhoImagem);
+    $('#editPublicidadeMediaTypeOriginal').val(mediaType);
+    $('#editPublicidadeAtivo').prop('checked', ativo == 1);
 
 
             const previewContentDiv = $('#editPublicidadePreviewContent');

@@ -473,6 +473,9 @@ $row_count_total = $count_solic_submetida + $count_pend_coord_total + $count_can
                   <li class="nav-item">
                     <a href="espacos.php" class="nav-link">Espaços</a>
                   </li>
+                      <li class="nav-item">
+                    <a href="publicidades.php" class="nav-link">Publicidades</a>
+                  </li>
                   <li class="nav-item">
                     <a href="recursos.php" class="nav-link">Recursos</a>
                   </li>
